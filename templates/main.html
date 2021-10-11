@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <title>My board main</title>
+    </head>
+
+    <body>
+        <h1><a href="/">Flask로 만든 간단한 게시판</a></h1>
+
+        <br>
+        
+        <h3>게시판 리스트</h3>
+
+        <div class="boards">
+            {% for board, name in boards.items() %}
+                <div class="board-{{ board }}">
+                    <h4><a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a></h4>
+                </div>
+            {% endfor %}
+        </div>
+    </body>
+</html>

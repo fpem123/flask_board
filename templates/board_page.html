@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <title>My board main</title>
+    </head>
+
+    <body>
+        <h1><a href="/">Flask로 만든 간단한 게시판</a></h1>
+
+        <br>
+        
+        <h3><a onclick="window.location.reload()">{{ board_name }} 게시판</a></h3>
+
+        <div class="articles" style="border:1px solid black; padding: 10px">
+            <table style="width: 100%;">
+                <th style="width: 5%;">번호</th>
+                <th style="width: 60%;">제목</th>
+                <th style="width: 10%;">작성자</th>
+                <th style="width: 15%;">작성일</th>
+                {% if articles  %}
+                {% for aid, title, uid, date_time in articles %}
+                <tr align="center">
+                    <td>{{ aid }}</td>
+                    <td align="left"><a href="{{ url_for('acrticlePage', board=board, aid=aid) }}">{{ title }}</a></td>
+                    <td>{{ uid }}</td>
+                    <td>{{ date_time }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            </table>
+            <br>
+            <p align="center">아직 작성된 글이 없습니다.</p>
+            {% endif %}
+            <br>
+            <hr>
+            <br>
+            <div class='btns'>
+                <a href="{{ url_for('articleCreate', board=board) }}">글쓰기</a>
+            </div>
+            <br>
+            <div class="page" align="center">
+                &nbsp;
+                {% for i in range(start, end) %}
+                    {% if i == page %}
+                        {{ i }}
+                    {% else %}
+                        <a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}<a></a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+    </body>
+</html>

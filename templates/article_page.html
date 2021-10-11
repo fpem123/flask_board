@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <title>My board main</title>
+    </head>
+
+    <body>
+        <h1><a href="/">Flask로 만든 간단한 게시판</a></h1>
+
+        <br>
+        
+        <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
+
+        <div class="article" style="border:1px solid black; padding: 10px">
+            <h3>{{ title }}</h3>
+            <label>{{ uid }} | {{ date }}</label><br><br>
+            <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
+            {{ content }}
+            </div>
+            <br>
+            <div class="btns">
+                <a href="{{ url_for('userChect', board=board, uid=uid, aid=aid, check_type='U') }}">수정</a>
+                <a href="{{ url_for('userChect', board=board, uid=uid, aid=aid, check_type='D') }}">삭제</a>
+                <a href="{{ url_for('articleCreate', board=board) }}">글쓰기</a>
+            </div>
+        </div>
+    </body>
+</html>
