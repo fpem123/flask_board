@@ -18,7 +18,7 @@ CREATE_ARTICLE_TABLE = """
         pwd char(10) not null,
         title char(20) not null,
         date_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
-        content text not null,
+        content blob not null,
         CONSTRAINT uid_fk FOREIGN KEY(uid) REFERENCES user(uid)
     );
 """
