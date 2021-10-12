@@ -383,14 +383,6 @@ def errorPage(signal=-1):
     else:
         return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 
-'''
-##############
-## 404 페이지
-##############
-@app.errorhandler(404)
-def notFoundPage():
-    return render_template('not_found_page.html'), 404
-'''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)
