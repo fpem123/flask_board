@@ -30,7 +30,7 @@ def articleCreate():
     try:
         board = request.args.get('board', type=str)
     except Exception as e:
-        print(e)
+        return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
@@ -54,7 +54,7 @@ def articleCreateCall():
         pwd = request.form['pwd']
         # media_files = request.form['media_files']
     except:
-        pass
+        return errorPage(2)
 
     try:
         ARTICLE_INSERT = """
@@ -77,7 +77,7 @@ def articleCreateCall():
         conn.commit()
 
     except Exception as e:
-        print(e)
+        return errorPage(1)
     
     return redirect(url_for('board', board=board))
 
@@ -91,7 +91,7 @@ def acrticlePage():
         board = request.args.get('board', type=str)
         aid = request.args.get('aid', type=int)
     except Exception as e:
-        print(e)
+        return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
@@ -106,7 +106,7 @@ def acrticlePage():
         res = cursor.fetchall()[0]
 
     except Exception as e:
-        print(e)
+        return errorPage(1)
 
     # 글 보기
     return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
@@ -124,7 +124,7 @@ def userChect():
         aid = request.args.get('aid', type=int)
         check_type = request.args.get('check_type', type=str)
     except Exception as e:
-        return 
+        return errorPage(2)
 
     return render_template('user_check.html', board=board, board_name=BOARD_DICT[board], 
     uid=uid, aid=aid, check_type=check_type), 200
@@ -142,7 +142,7 @@ def acrticleUpdate():
         uid = request.form['uid']
         pwd = request.form['pwd']
     except Exception as e:
-        print(e)
+        return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
@@ -162,12 +162,11 @@ def acrticleUpdate():
         else:
             return "block"
     except Exception as e:
-        return ""
-    # TO-DO : 글 수정 페이지
+        return errorPage(1)
 
 
 ##############
-## 글 수정
+## 글의 비밀번호와 같은지 확인
 ##############
 def isCollectPWD(pwd, aid):
     try:
@@ -180,7 +179,7 @@ def isCollectPWD(pwd, aid):
 
         return pwd == cursor.fetchall()[0][0]
     except Exception as e:
-        return False
+        return errorPage(1)
 
 
 ##############
@@ -201,12 +200,13 @@ def acrticleUpdateCall():
         title = request.form['title']
         content = request.form['content']
     except:
-        pass
+        return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
 
     if not isCollectPWD(pwd, aid):
+        # TO-DO : alert 메시지 전송
         return "block"
 
     try:
@@ -225,9 +225,7 @@ def acrticleUpdateCall():
         return redirect(url_for('board', board=board))
 
     except Exception as e:
-        print(e)
-
-        return 'error'
+        return errorPage(1)
 
 
 ##############
@@ -241,12 +239,13 @@ def articleDalete():
         aid = request.form['aid']
         pwd = request.form['pwd']
     except Exception as e:
-        print(e)
+        return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
 
     if not isCollectPWD(pwd, aid):
+        # TO-DO : alert 메시지 전송
         return "block"
 
     # 글 삭제
@@ -263,7 +262,7 @@ def articleDalete():
         print(res)
         conn.commit()
     except Exception as e:
-        print(e)
+        return errorPage(1)
 
     return redirect(url_for('articleDaleteDone', board=board))
 
@@ -276,10 +275,9 @@ def articleDaleteDone():
     try:
         board = request.args.get('board', type=str)
     except Exception as e:
-        print(e)
+        return errorPage(2)
 
     if isNotAllowBoard(board):
-        # TO-DO : 없는 게시판 페이지
         return errorPage(0)
 
     # TO-DO : 삭제 완료 페이지(meta 태그로 구현)
@@ -298,10 +296,9 @@ def board():
         option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
-        return render_template('error_page.html', errMsg="")
+        return errorPage(2)
 
     if isNotAllowBoard(board):
-        # TO-DO : 없는 게시판 페이지
         return errorPage(0)
 
     isSearch = option != 'all'
@@ -335,6 +332,9 @@ def board():
     articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
 
 
+##############
+## 게시판 페이지에 사용할 SQL 쿼리
+##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
         SELECT  aid, title, uid, date_time
@@ -378,8 +378,15 @@ def main():
 ##############
 @app.errorhandler(404)
 def errorPage(signal=-1):
+    #   0 = 잘못된 게시판
+    #   1 = DB 에러
+    #   2 = request 에러
     if signal == 0:
         return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
+    elif signal == 1:
+        return render_template('error_page.html', errMsg="DB 확인 중 문제가 발생했습니다.")
+    elif signal == 2:
+        return render_template('error_page.html', errMsg="잘못된 요청입니다.")
     else:
         return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 
