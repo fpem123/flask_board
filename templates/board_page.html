@@ -20,10 +20,11 @@
                 <th style="width: 5%;">조회수</th>
                 <th style="width: 5%;">추천</th>
                 {% if articles %}
-                {% for aid, title, uid, date_time, view, hit in articles %}
+                {% for aid, uid, title, date_time, view, hit, num_comment in articles %}
                 <tr align="center">
                     <td>{{ aid }}</td>
-                    <td align="left"><a href="{{ url_for('acrticlePage', board=board, aid=aid) }}">{{ title }}</a></td>
+                    <td align="left"><a href="{{ url_for('acrticlePage', board=board, aid=aid) }}">{{ title }}
+                        <label style = "font-size:0.9em; color: gray;">({{num_comment}})</label></a></td>
                     <td>{{ uid }}</td>
                     <td>{{ date_time }}</td>
                     <td>{{ view }}</td>

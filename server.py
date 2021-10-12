@@ -372,6 +372,7 @@ def board():
         ARTICLE_SELECT = boardQueryBuilder(board, option, keyword)
         cursor.execute(ARTICLE_SELECT)
         res = cursor.fetchall()
+        print(res)
 
         tmp = (page - 1) * art_per_page
         res = res[tmp:min(tmp + art_per_page, a_cnt)]
@@ -380,6 +381,7 @@ def board():
         conn.commit()
         
     except Exception as e:
+        print(e)
         res = False
 
     # 게시판 페이지, db에서 가져온 정보
@@ -392,8 +394,9 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
-        SELECT  aid, title, uid, date_time, view, hit
-        FROM    article
+        SELECT  article.aid, article.uid, title, article.date_time, view, hit, count()
+        FROM    article left join comment
+                on article.aid = comment.aid
         WHERE   board='{board}'"""
 
     if option == 'title, content':
@@ -410,11 +413,11 @@ def boardQueryBuilder(board, option, keyword)->str:
         """
     elif option == 'uid':
         query += f""" and
-        uid like '%{keyword}%' ESCAPE '$'
+        article.uid like '%{keyword}%' ESCAPE '$'
         """
     
     query += """
-    ORDER BY aid DESC;
+    ORDER BY article.aid DESC;
     """
 
     return query
