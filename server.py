@@ -1,5 +1,5 @@
 from flask import (Flask, request, render_template, 
-                redirect, url_for, flash)
+                redirect, url_for, flash, jsonify)
 import math
 import sqlite3
 
@@ -11,7 +11,8 @@ BOARD_DICT = {'etc':'기타',
 
 conn = sqlite3.connect("test.db", check_same_thread=False)
 cursor = conn.cursor()
-
+cursor.execute('PRAGMA foreign_keys=ON;')
+conn.commit()
 
 ##############
 ## 허용되지 않은 게시판인지 확인
@@ -19,6 +20,44 @@ cursor = conn.cursor()
 ##############
 def isNotAllowBoard(board):
     return board not in BOARD_DICT
+
+
+##############
+## 댓글 작성 요청
+## return : 실패시 alert, 성공시 새로고침
+##############
+@app.route('/comment/write_submit',  methods=['POST'])
+def commentCreateCall():
+    try:
+        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
+        aid = request.form['aid']
+        uid = request.form['uid']
+        pwd = request.form['pwd']
+        comment = request.form['comment']
+    except Exception as e:
+        return {'result': False}, 400
+
+    try:
+        COMMENT_INSERT = """
+            INSERT INTO comment (
+                aid,
+                uid,
+                pwd,
+                comment
+            ) VALUES (
+                ?,
+                ?,
+                ?,
+                ?
+            )
+        """
+        cursor.execute(COMMENT_INSERT, (aid, uid, pwd, comment))
+        res = cursor.fetchall()
+        conn.commit()
+    except Exception as e:
+        return {'result': False}, 500
+    
+    return {'result': True}, 200
 
 
 ##############
@@ -46,7 +85,6 @@ def articleCreate():
 @app.route('/board/write_submit',  methods=['POST'])
 def articleCreateCall():
     try:
-        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         board = request.form['board']
         title = request.form['title']
         content = request.form['content']
@@ -97,20 +135,39 @@ def acrticlePage():
         return errorPage(0)
 
     try:
-        ARTICLE_SELECT = f"""
-            SELECT  uid, date_time, title, content
-            FROM    article
+        VIEW_UP = f"""
+            UPDATE  article
+            SET     view = view + 1
             WHERE   aid={aid};
         """
-        cursor.execute(ARTICLE_SELECT)
-        res = cursor.fetchall()[0]
+        cursor.execute(VIEW_UP)
+        conn.commit()
 
+        ARTICLE_SELECT = f"""
+            SELECT  article.uid, article.date_time, title, content, view, hit, count()
+            FROM    article left join comment
+                    on article.aid = comment.aid
+            WHERE   article.aid={aid};
+        """
+        cursor.execute(ARTICLE_SELECT)
+        article = cursor.fetchall()[0]
+
+        COMMENT_SELECT = f"""
+            SELECT  cid, uid, comment, date_time
+            FROM    comment
+            WHERE   aid={aid}
+            ORDER BY cid ASC;
+        """
+        cursor.execute(COMMENT_SELECT)
+        comments = cursor.fetchall()
+        conn.commit()
     except Exception as e:
         return errorPage(1)
 
     # 글 보기
     return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-     uid=res[0], date=res[1], title=res[2], content=res[3], aid=aid), 200
+     uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
+     num_comment=article[6], comments=comments, aid=aid), 200
 
 
 ##############
@@ -254,12 +311,11 @@ def articleDalete():
         ARTIECLE_DELTE = f"""
             DELETE
             FROM article
-            WHERE aid = {aid}
+            WHERE aid = {aid};
         """
 
         cursor.execute(ARTIECLE_DELTE)
         res = cursor.fetchall()
-        print(res)
         conn.commit()
     except Exception as e:
         return errorPage(1)
@@ -324,7 +380,6 @@ def board():
         conn.commit()
         
     except Exception as e:
-        print('error')
         res = False
 
     # 게시판 페이지, db에서 가져온 정보
@@ -337,7 +392,7 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
-        SELECT  aid, title, uid, date_time
+        SELECT  aid, title, uid, date_time, view, hit
         FROM    article
         WHERE   board='{board}'"""
 

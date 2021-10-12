@@ -9,13 +9,19 @@
 
         <br>
 
-        <div class="boards">
-            {{ errMsg }}
-
+        <div class="errBox" style="border:1px solid black; padding: 10px">
             <br>
             <br>
-
-            <a href="javascript:history.back()">뒤로가기</a>
+                <div class="errMsg" align="center">
+                    {{ errMsg }}
+                </div>
+            <br>
+            <br>
+            <div class="btns" align="center">
+                <a href="javascript:history.back()" 
+                style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+            </div>
+            <br>
         </div>
     </body>
 </html>

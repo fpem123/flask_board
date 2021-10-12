@@ -12,18 +12,22 @@
         <h3><a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="articles" style="border:1px solid black; padding: 10px">
-            <table style="width: 100%;">
+            <table style="width: 100%;" border="1">
                 <th style="width: 5%;">번호</th>
-                <th style="width: 60%;">제목</th>
-                <th style="width: 10%;">작성자</th>
-                <th style="width: 15%;">작성일</th>
-                {% if articles  %}
-                {% for aid, title, uid, date_time in articles %}
+                <th style="width: 45%;">제목</th>
+                <th style="width: 15%;">작성자</th>
+                <th style="width: 20%;">작성일</th>
+                <th style="width: 5%;">조회수</th>
+                <th style="width: 5%;">추천</th>
+                {% if articles %}
+                {% for aid, title, uid, date_time, view, hit in articles %}
                 <tr align="center">
                     <td>{{ aid }}</td>
                     <td align="left"><a href="{{ url_for('acrticlePage', board=board, aid=aid) }}">{{ title }}</a></td>
                     <td>{{ uid }}</td>
                     <td>{{ date_time }}</td>
+                    <td>{{ view }}</td>
+                    <td>{{ hit }}</td>
                 </tr>
                 {% endfor %}
             </table>
