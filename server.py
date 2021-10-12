@@ -23,8 +23,66 @@ def isNotAllowBoard(board):
 
 
 ##############
+## 게시글 추천 요청
+## return : dict
+##############
+@app.route('/article/hit',  methods=['POST'])
+def articleHit():
+    try:
+        uid = request.form['uid']
+        aid = request.form['aid']
+    except Exception as e:
+        return {'result': False}, 400
+    
+    try:
+        READ_HIT_HISTORY = f"""
+            SELECT  *
+            FROM    hit_history
+            WHERE   aid={aid} and uid='{uid}';
+        """
+        cursor.execute(READ_HIT_HISTORY)
+        res = cursor.fetchall()
+
+        if res:
+            return {'result': False}, 200
+
+        INSERT_HIT_USER = """
+            INSERT INTO hit_history (
+                aid,
+                uid
+            ) VALUES (
+                ?,
+                ?
+            )
+        """
+        cursor.execute(INSERT_HIT_USER, (aid, uid))
+        res = cursor.fetchall()
+
+        ARTICLE_HIT_UP = f"""
+            UPDATE  article
+            SET     hit = hit + 1
+            WHERE   aid={aid};
+        """
+        cursor.execute(ARTICLE_HIT_UP)
+        res = cursor.fetchall()
+
+        READ_ARTICLE_HIT = f"""
+            SELECT  hit
+            FROM    article
+            WHERE   aid={aid};
+        """
+        cursor.execute(READ_ARTICLE_HIT)
+        res = cursor.fetchall()[0][0]
+        conn.commit()
+
+        return {'result': True, 'hit': res}, 200
+    except Exception as e:
+        return {'result': False}, 500
+
+
+##############
 ## 댓글 작성 요청
-## return : 실패시 alert, 성공시 새로고침
+## return : boolean
 ##############
 @app.route('/comment/write_submit',  methods=['POST'])
 def commentCreateCall():
@@ -54,10 +112,11 @@ def commentCreateCall():
         cursor.execute(COMMENT_INSERT, (aid, uid, pwd, comment))
         res = cursor.fetchall()
         conn.commit()
+
+        return {'result': True}, 200
     except Exception as e:
         return {'result': False}, 500
     
-    return {'result': True}, 200
 
 
 ##############
@@ -114,10 +173,10 @@ def articleCreateCall():
         res = cursor.fetchall()
         conn.commit()
 
+        return redirect(url_for('board', board=board))
     except Exception as e:
         return errorPage(1)
     
-    return redirect(url_for('board', board=board))
 
 
 ##############
@@ -161,13 +220,14 @@ def acrticlePage():
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
         conn.commit()
+        
+        # 글 보기
+        return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
+        uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
+        num_comment=article[6], comments=comments, aid=aid), 200
     except Exception as e:
         return errorPage(1)
 
-    # 글 보기
-    return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-     uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
-     num_comment=article[6], comments=comments, aid=aid), 200
 
 
 ##############
@@ -180,11 +240,12 @@ def userChect():
         uid = request.args.get('uid', type=str)
         aid = request.args.get('aid', type=int)
         check_type = request.args.get('check_type', type=str)
+
+        return render_template('user_check.html', board=board, board_name=BOARD_DICT[board], 
+        uid=uid, aid=aid, check_type=check_type), 200
     except Exception as e:
         return errorPage(2)
 
-    return render_template('user_check.html', board=board, board_name=BOARD_DICT[board], 
-    uid=uid, aid=aid, check_type=check_type), 200
 
 
 ##############
@@ -317,10 +378,11 @@ def articleDalete():
         cursor.execute(ARTIECLE_DELTE)
         res = cursor.fetchall()
         conn.commit()
+
+        return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
         return errorPage(1)
 
-    return redirect(url_for('articleDaleteDone', board=board))
 
 
 ##############
@@ -372,6 +434,7 @@ def board():
         ARTICLE_SELECT = boardQueryBuilder(board, option, keyword)
         cursor.execute(ARTICLE_SELECT)
         res = cursor.fetchall()
+
         print(res)
 
         tmp = (page - 1) * art_per_page
@@ -380,13 +443,12 @@ def board():
         end = min((page // 10 + 1) * 10, p_cnt) + 1
         conn.commit()
         
+        # 게시판 페이지, db에서 가져온 정보
+        return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
+        articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
     except Exception as e:
-        print(e)
         res = False
 
-    # 게시판 페이지, db에서 가져온 정보
-    return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
-    articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
 
 
 ##############
@@ -394,7 +456,7 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
-        SELECT  article.aid, article.uid, title, article.date_time, view, hit, count()
+        SELECT  article.aid, article.uid, title, article.date_time, view, hit, count(cid)
         FROM    article left join comment
                 on article.aid = comment.aid
         WHERE   board='{board}'"""
@@ -417,6 +479,7 @@ def boardQueryBuilder(board, option, keyword)->str:
         """
     
     query += """
+    GROUP BY article.aid
     ORDER BY article.aid DESC;
     """
 

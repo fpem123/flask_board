@@ -60,9 +60,27 @@ CREATE_COMMENT_TABLE = """
     );
 """
 
+#   hid : pk, 추천기록 id
+#   uid : fk, 추천한 사람 id
+#   aid : fk, 추천된 게시물 id
+#   date_time : 댓글 작성시간
+CREATE_ARTICLE_HIT_HISTORY_TABLE = """
+    create table if not exists hit_history(
+        hid integer not null primary key autoincrement,
+        aid char(10) not null,
+        uid char(10) not null,
+        date_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
+        CONSTRAINT uid_fk FOREIGN KEY(uid) REFERENCES user(uid)
+         ON UPDATE CASCADE ON DELETE SET NULL,
+        CONSTRAINT aid_fk FOREIGN KEY(aid) REFERENCES article(aid)
+         ON UPDATE CASCADE ON DELETE SET NULL 
+    );
+"""
+
 conn.execute(CREATE_USER_TABLE)
 conn.execute(CREATE_ARTICLE_TABLE)
 conn.execute(CREATE_COMMENT_TABLE)
+conn.execute(CREATE_ARTICLE_HIT_HISTORY_TABLE)
 
 conn.commit()
 conn.close()

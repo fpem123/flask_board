@@ -15,9 +15,60 @@
             <h3>{{ title }}</h3>
             <div style="float:left;">{{ uid }} | {{ date }}</div>
             <div style="float:right;">조회수 {{ view }} | 추천 {{ hit }}</div>
+            <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
             <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
                 <pre>{{ content }}</pre>
+            </div>
+            
+            <br>
+
+            <div class="btns" align="center">
+                <script>
+                    function sendHit(){
+                        let aid = document.getElementById( 'aid' ).value;
+                        let uid = document.getElementById( 'uid' ).value;
+
+                        if (uid === ''){
+                            alert("추천은 로그인한 유저만 가능합니다.");
+
+                            return
+                        }
+
+                        const formData = new FormData();
+                        const url = '/article/hit';
+                        let signal = true;
+
+                        formData.append('aid', aid);
+                        formData.append('uid', uid);
+
+                        fetch (url, { method: 'POST', body: formData })
+                        .then(response=>{
+                            if (response.status === 200)
+                                return response.json()
+                            else{
+                                signal = false;
+                                alert("추천 실패");
+                            }
+                        }).catch(err => {
+                            if (signal){
+                                signal = false;
+                                alert("추천 실패");
+                            }
+                        }).then(result => {
+                            if (result['result'])
+                                window.location.reload(true);
+                            else if (signal){
+                                signal = false;
+                                alert("추천은 1회만 가능합니다.");
+                            }
+                        }).catch(err => {
+                            if (signal)
+                                alert("추천 실패");
+                        });
+                    }
+                </script>
+                <button onclick="return sendHit()">추천하기 ({{ hit }})</button>
             </div>
 
             <br>
@@ -86,7 +137,6 @@
             </script>
 
             <div class="write-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
-                <input type="hidden" id="aid" value='{{ aid }}'>
                 <input type="text" id="uid" placeholder="ID" 
                 maxlength='10' style="width:100px; height:20px;" onkeydown="if(event.keyCode==13) return false">
                 <input type="password" id="pwd" placeholder="PASSWORD" 
