@@ -435,8 +435,6 @@ def board():
         cursor.execute(ARTICLE_SELECT)
         res = cursor.fetchall()
 
-        print(res)
-
         tmp = (page - 1) * art_per_page
         res = res[tmp:min(tmp + art_per_page, a_cnt)]
         start = (page // 10) * 10 + 1
