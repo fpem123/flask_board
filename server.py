@@ -33,7 +33,7 @@ def articleCreate():
         print(e)
 
     if isNotAllowBoard(board):
-        pass
+        return errorPage(0)
 
     # 글 작성 페이지
     return render_template('article_write.html', board=board, board_name=BOARD_DICT[board]), 200
@@ -83,20 +83,6 @@ def articleCreateCall():
 
 
 ##############
-## 글 검색 페이지
-##############
-@app.route('/board/<board>/search', methods=['GET'])
-def articleSearch(board):
-    if isNotAllowBoard(board):
-        return 'none'
-    
-    print(request.args)
-
-    # TO-DO : 글 검색 페이지
-    return render_template(f'search_page.html', board=board), 200
-
-
-##############
 ## 글 페이지
 ##############
 @app.route('/board/view', methods=['GET'])
@@ -108,7 +94,7 @@ def acrticlePage():
         print(e)
 
     if isNotAllowBoard(board):
-        pass
+        return errorPage(0)
 
     try:
         ARTICLE_SELECT = f"""
@@ -159,7 +145,7 @@ def acrticleUpdate():
         print(e)
 
     if isNotAllowBoard(board):
-        pass
+        return errorPage(0)
 
     try:
         PWD_GET = f"""
@@ -218,7 +204,7 @@ def acrticleUpdateCall():
         pass
 
     if isNotAllowBoard(board):
-        pass
+        return errorPage(0)
 
     if not isCollectPWD(pwd, aid):
         return "block"
@@ -258,7 +244,7 @@ def articleDalete():
         print(e)
 
     if isNotAllowBoard(board):
-        pass
+        return errorPage(0)
 
     if not isCollectPWD(pwd, aid):
         return "block"
@@ -294,7 +280,7 @@ def articleDaleteDone():
 
     if isNotAllowBoard(board):
         # TO-DO : 없는 게시판 페이지
-        return render_template('board_missing.html'), 200
+        return errorPage(0)
 
     # TO-DO : 삭제 완료 페이지(meta 태그로 구현)
     return render_template(f'article_delete.html', board=board, board_name=BOARD_DICT[board]), 200
@@ -309,12 +295,16 @@ def board():
         board = request.args.get('board', type=str)
         page = request.args.get('page', type=int, default=1)          # 현재 페이지
         art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
-        print(e)
+        return render_template('error_page.html', errMsg="")
 
     if isNotAllowBoard(board):
         # TO-DO : 없는 게시판 페이지
-        return render_template('board_missing.html'), 200
+        return errorPage(0)
+
+    isSearch = option != 'all'
 
     try:
         BOARD_COUNT = f"""
@@ -325,28 +315,54 @@ def board():
         cursor.execute(BOARD_COUNT)
         a_cnt = cursor.fetchall()[0][0]         # 글의 수
         p_cnt = math.ceil(a_cnt / art_per_page)  # 전체 페이지 개수
-        print(p_cnt)
 
-        ARTICLE_SELECT = f"""
-            SELECT  aid, title, uid, date_time
-            FROM    article
-            WHERE   board='{board}'
-            ORDER BY aid DESC;
-        """
+        ARTICLE_SELECT = boardQueryBuilder(board, option, keyword)
         cursor.execute(ARTICLE_SELECT)
         res = cursor.fetchall()
+
         tmp = (page - 1) * art_per_page
         res = res[tmp:min(tmp + art_per_page, a_cnt)]
         start = (page // 10) * 10 + 1
         end = min((page // 10 + 1) * 10, p_cnt) + 1
-
+        conn.commit()
+        
     except Exception as e:
-        print(e)
+        print('error')
         res = False
 
     # 게시판 페이지, db에서 가져온 정보
     return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
-    articles=res, page=page, start=start, end=end), 200
+    articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
+
+
+def boardQueryBuilder(board, option, keyword)->str:
+    query = f"""
+        SELECT  aid, title, uid, date_time
+        FROM    article
+        WHERE   board='{board}'"""
+
+    if option == 'title, content':
+        query += f""" and (
+        title like '%{keyword}%' ESCAPE '$' or
+        content like '%{keyword}%' ESCAPE '$') """
+    elif option == 'title':
+        query += f""" and
+        title like '%{keyword}%' ESCAPE '$'
+        """
+    elif option == 'content':
+        query += f""" and
+        content like '%{keyword}%' ESCAPE '$'
+        """
+    elif option == 'uid':
+        query += f""" and
+        uid like '%{keyword}%' ESCAPE '$'
+        """
+    
+    query += """
+    ORDER BY aid DESC;
+    """
+
+    return query
 
 
 ##############
@@ -357,10 +373,24 @@ def main():
     return render_template('main.html', boards=BOARD_DICT), 200
 
 
+##############
+## 에러 페이지
+##############
 @app.errorhandler(404)
-def errorPage():
-    return render_template('not_found.html'), 404
+def errorPage(signal=-1):
+    if signal == 0:
+        return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
+    else:
+        return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 
+'''
+##############
+## 404 페이지
+##############
+@app.errorhandler(404)
+def notFoundPage():
+    return render_template('not_found_page.html'), 404
+'''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)

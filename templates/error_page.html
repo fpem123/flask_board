@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <title>My board main</title>
+    </head>
+
+    <body>
+        <h1><a href="{{ url_for('main') }}">Flask로 만든 간단한 게시판</a></h1>
+
+        <br>
+
+        <div class="boards">
+            {{ errMsg }}
+
+            <br>
+            <br>
+
+            <a href="javascript:history.back()">뒤로가기</a>
+        </div>
+    </body>
+</html>
