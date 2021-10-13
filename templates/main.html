@@ -9,7 +9,67 @@
 
         <br>
         
+        <div class="member">
+            <script>
+                function sendLogin() {
+                    let uid = document.getElementById( 'uid' ).value;
+                    let pwd = document.getElementById( 'pwd' ).value;
+
+                    const formData = new FormData();
+                    const url = '/member/login/request';
+                    let signal = true;
+
+                    formData.append('uid', uid);
+                    formData.append('pwd', pwd);
+
+                    fetch (url, { method: 'POST', body: formData })
+                    .then(response=>{
+                        if (response.status === 200)
+                            return response.json()
+                        else if (response.status === 400) {
+                            signal = false;
+                            alert("잘못된 요청입니다.");
+                        }
+                        else if (response.status === 500) {
+                            signal = false;
+                            alert("서버에서 에러가 발생했습니다.");
+                        }
+                        else {
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).catch(err => {
+                        if (signal){
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).then(result => {
+                        if (result['result']){
+                            alert(result['nickname'] + "로그인 성공.");
+                        }
+                        else if (signal){
+                            signal = false;
+                            alert("아이디 또는 비밀번호를 확인해주세요.");
+                        }
+                    }).catch(err => {
+                        if (signal)
+                            alert("에러가 발생했습니다.");
+                    });
+                };
+            </script>
+            <input type="text" id="uid" placeholder="ID" 
+            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <input type="password" id="pwd" placeholder="PASSWORD" 
+            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <button onclick="return sendLogin()">로그인</button>
+            <br>
+            <a href="{{ url_for('main') }}">회원가입</a>
+        </div>
+
+        <br>
+
         <h3>게시판 리스트</h3>
+
 
         <div class="boards">
             {% for board, name in boards.items() %}

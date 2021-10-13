@@ -3,6 +3,8 @@ from flask import (Flask, request, render_template,
 import math
 import sqlite3
 
+from flask.sessions import NullSession
+
 app = Flask(__name__)
 
 BOARD_DICT = {'etc':'기타', 
@@ -41,7 +43,29 @@ def isCollectArticlePWD(pwd: str, aid: int):
 
         return pwd == cursor.fetchall()[0][0]
     except Exception as e:
-        return errorPage(1)
+        raise Exception('DB 확인 에러!')
+
+
+def isExistUser(uid: str, nickname: str = None):
+    """
+    ### 존재하는 회원 id인지 확인
+    회원 전용
+    """
+    try:
+        # uid에 해당하는 유저가 있는지
+        SELECT_USER = f"""
+            SELECT  *
+            FROM    user
+            WHERE   uid = '{uid}'
+        """
+        if not nickname is None:
+            # uid에 해당하는 유저가 있는지
+            SELECT_USER += f" or nickname = '{nickname}'"
+        cursor.execute(SELECT_USER)
+
+        return cursor.fetchall()
+    except Exception as e:
+        raise Exception('DB 확인 에러!')
 
 
 def isCollectPWD(uid: str, pwd: int):
@@ -50,17 +74,17 @@ def isCollectPWD(uid: str, pwd: int):
     회원 전용
     """
     try:
-        # 게시물 비밀번호 획득
+        # 유저 비밀번호 획득
         SELECT_PWD = f"""
             SELECT  pwd
             FROM    user
-            WHERE   uid = {uid}
+            WHERE   uid = '{uid}'
         """
         cursor.execute(SELECT_PWD)
 
         return pwd == cursor.fetchall()[0][0]
     except Exception as e:
-        return errorPage(1)
+        raise Exception('DB 확인 에러!')
 
 
 ##############
@@ -84,16 +108,7 @@ def memberJoinRequest():
         return {'result': False}, 400
 
     try:
-        SELECT_EXIST = f"""
-            SELECT  uid, nickname
-            FROM    user
-            WHERE   uid = '{request_uid}' or
-                    nickname = '{request_nickname}';
-        """
-        cursor.execute(SELECT_EXIST)
-        res = cursor.fetchall()
-        print(res)
-        if res:
+        if isExistUser(request_uid, request_nickname):
             return {'result': False}, 200
     except Exception as e:
         return {'result': False}, 500
@@ -138,10 +153,27 @@ def memberLoginRequest():
     except Exception as e:
         return {'result': False}, 400
 
-    if isCollectPWD(request_uid, request_pwd):
-        return {'result': True}, 200
-    else:
-        return {'result': False}, 400
+    try:
+        # 존재하는 않는 유저
+        if not isExistUser(request_uid):
+            return  {'result': False}, 200
+
+        # 비밀번호가 일치하는지
+        if isCollectPWD(request_uid, request_pwd):
+            SELECT_USER_NICKNAME = f"""
+                SELECT  nickname
+                FROM    user
+                WHERE   uid = '{request_uid}';
+            """
+            cursor.execute(SELECT_USER_NICKNAME)
+            res = cursor.fetchall()[0][0]
+
+            return {'result': True, 'nickname': res}, 200
+        else:
+            return {'result': False}, 200
+    except Exception as e:
+        print(e)
+        return  {'result': False}, 500
 
 
 ##############
@@ -149,6 +181,7 @@ def memberLoginRequest():
 ##############
 @app.route('/member/logout')
 def memberLogout():
+    # 세션 끄기
     pass
 
 
