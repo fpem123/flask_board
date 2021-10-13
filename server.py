@@ -6,7 +6,9 @@ import sqlite3
 app = Flask(__name__)
 
 BOARD_DICT = {'etc':'기타', 
-    'game' : '게임'
+    'game' : '게임',
+    'anonymous' : '익명',
+    'n-members' : '비회원'
     }
 
 conn = sqlite3.connect("test.db", check_same_thread=False)
@@ -203,7 +205,7 @@ def acrticlePage():
         conn.commit()
 
         ARTICLE_SELECT = f"""
-            SELECT  article.uid, article.date_time, title, content, view, hit, count()
+            SELECT  article.uid, article.date_time, title, content, view, hit
             FROM    article left join comment
                     on article.aid = comment.aid
             WHERE   article.aid={aid};
@@ -220,11 +222,11 @@ def acrticlePage():
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
         conn.commit()
-        
+        print(comments)
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
         uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
-        num_comment=article[6], comments=comments, aid=aid), 200
+        comments=comments, aid=aid), 200
     except Exception as e:
         return errorPage(1)
 
@@ -440,7 +442,7 @@ def board():
         start = (page // 10) * 10 + 1
         end = min((page // 10 + 1) * 10, p_cnt) + 1
         conn.commit()
-        
+
         # 게시판 페이지, db에서 가져온 정보
         return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
         articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
