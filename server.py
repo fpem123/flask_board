@@ -8,7 +8,7 @@ app = Flask(__name__)
 BOARD_DICT = {'etc':'기타', 
     'game' : '게임',
     'anonymous' : '익명',
-    'n-members' : '비회원'
+    'no-member' : '비회원'
     }
 
 conn = sqlite3.connect("test.db", check_same_thread=False)
@@ -16,12 +16,158 @@ cursor = conn.cursor()
 cursor.execute('PRAGMA foreign_keys=ON;')
 conn.commit()
 
+
 ##############
 ## 허용되지 않은 게시판인지 확인
 ## return : boolean
 ##############
 def isNotAllowBoard(board):
     return board not in BOARD_DICT
+
+
+def isCollectArticlePWD(pwd: str, aid: int):
+    """
+    ### 글의 비밀번호와 입력된 비밀번호가 같은지 확인
+    비회원 게시판 전용
+    """
+    try:
+        # 게시물 비밀번호 획득
+        SELECT_PWD = f"""
+            SELECT  pwd
+            FROM    article
+            WHERE   aid = {aid}
+        """
+        cursor.execute(SELECT_PWD)
+
+        return pwd == cursor.fetchall()[0][0]
+    except Exception as e:
+        return errorPage(1)
+
+
+def isCollectPWD(uid: str, pwd: int):
+    """
+    ### 회원 비밀번호와 입력된 비밀번호가 같은지 확인
+    회원 전용
+    """
+    try:
+        # 게시물 비밀번호 획득
+        SELECT_PWD = f"""
+            SELECT  pwd
+            FROM    user
+            WHERE   uid = {uid}
+        """
+        cursor.execute(SELECT_PWD)
+
+        return pwd == cursor.fetchall()[0][0]
+    except Exception as e:
+        return errorPage(1)
+
+
+##############
+## 회원 가입 페이지
+##############
+@app.route('/member/join')
+def memberJoin():
+    return render_template('member_join.html'), 200
+
+
+##############
+## 회원 가입 요청
+##############
+@app.route('/member/join/request', methods=['POST'])
+def memberJoinRequest():
+    try:
+        request_uid = request.form['uid']
+        request_pwd = request.form['pwd']
+        request_nickname = request.form['nickname']
+    except Exception as e:
+        return {'result': False}, 400
+
+    try:
+        SELECT_EXIST = f"""
+            SELECT  uid, nickname
+            FROM    user
+            WHERE   uid = '{request_uid}' or
+                    nickname = '{request_nickname}';
+        """
+        cursor.execute(SELECT_EXIST)
+        res = cursor.fetchall()
+        print(res)
+        if res:
+            return {'result': False}, 200
+    except Exception as e:
+        return {'result': False}, 500
+
+    try:
+        INSERT_USER = """
+            INSERT INTO user (
+                uid,
+                pwd,
+                nickname
+            ) VALUES (
+                ?,
+                ?,
+                ?
+            )
+        """
+        cursor.execute(INSERT_USER, (request_uid, request_pwd, request_nickname))
+        conn.commit()
+        res = cursor.fetchall()
+        print("회원가입완료")
+        return {'result': True}, 200
+    except Exception as e:
+        return {'result': False}, 500
+
+
+##############
+## 로그인 페이지
+##############
+@app.route('/member/login')
+def memberLogin():
+    return render_template('member_login.html'), 200
+
+
+##############
+## 로그인 요청
+##############
+@app.route('/member/login/request', methods=['POST'])
+def memberLoginRequest():
+    try:
+        request_uid = request.form['uid']
+        request_pwd = request.form['pwd']
+    except Exception as e:
+        return {'result': False}, 400
+
+    if isCollectPWD(request_uid, request_pwd):
+        return {'result': True}, 200
+    else:
+        return {'result': False}, 400
+
+
+##############
+## 로그아웃 페이지
+##############
+@app.route('/member/logout')
+def memberLogout():
+    pass
+
+
+##############
+## 회원 정보 수정 페이지
+##############
+@app.route('/member/update')
+def memberUpdate():
+    # TO-DO : 비밀번호 검문 필요
+    return render_template('member_update.html'), 200
+
+
+##############
+## 회원 탈퇴 요청
+##############
+@app.route('/member/secession')
+def memberSecessione():
+    # TO-DO : 비밀번호 검문 필요
+    return {'result': True}, 200
 
 
 ##############
@@ -37,6 +183,7 @@ def articleHit():
         return {'result': False}, 400
     
     try:
+        # 추천했던 유저인지 확인
         READ_HIT_HISTORY = f"""
             SELECT  *
             FROM    hit_history
@@ -48,6 +195,7 @@ def articleHit():
         if res:
             return {'result': False}, 200
 
+        # 추천 기록 추가
         INSERT_HIT_USER = """
             INSERT INTO hit_history (
                 aid,
@@ -60,6 +208,7 @@ def articleHit():
         cursor.execute(INSERT_HIT_USER, (aid, uid))
         res = cursor.fetchall()
 
+        # 추천수 증가
         ARTICLE_HIT_UP = f"""
             UPDATE  article
             SET     hit = hit + 1
@@ -67,7 +216,9 @@ def articleHit():
         """
         cursor.execute(ARTICLE_HIT_UP)
         res = cursor.fetchall()
+        conn.commit()
 
+        # 추천수 반환
         READ_ARTICLE_HIT = f"""
             SELECT  hit
             FROM    article
@@ -75,7 +226,6 @@ def articleHit():
         """
         cursor.execute(READ_ARTICLE_HIT)
         res = cursor.fetchall()[0][0]
-        conn.commit()
 
         return {'result': True, 'hit': res}, 200
     except Exception as e:
@@ -98,6 +248,7 @@ def commentCreateCall():
         return {'result': False}, 400
 
     try:
+        # 댓글 정보 추가
         COMMENT_INSERT = """
             INSERT INTO comment (
                 aid,
@@ -150,7 +301,7 @@ def articleCreateCall():
         title = request.form['title']
         content = request.form['content']
         uid = request.form['uid']
-        pwd = request.form['pwd']
+        pwd = request.form['pwd']   # 비회원 게시판일 때만 사용하도록
         # media_files = request.form['media_files']
     except:
         return errorPage(2)
@@ -180,7 +331,6 @@ def articleCreateCall():
         return errorPage(1)
     
 
-
 ##############
 ## 글 페이지
 ##############
@@ -196,6 +346,7 @@ def acrticlePage():
         return errorPage(0)
 
     try:
+        # 조회수 증가
         VIEW_UP = f"""
             UPDATE  article
             SET     view = view + 1
@@ -204,6 +355,7 @@ def acrticlePage():
         cursor.execute(VIEW_UP)
         conn.commit()
 
+        # 게시물 정보 반환
         ARTICLE_SELECT = f"""
             SELECT  article.uid, article.date_time, title, content, view, hit
             FROM    article left join comment
@@ -213,6 +365,7 @@ def acrticlePage():
         cursor.execute(ARTICLE_SELECT)
         article = cursor.fetchall()[0]
 
+        # 댓글 정보 반환
         COMMENT_SELECT = f"""
             SELECT  cid, uid, comment, date_time
             FROM    comment
@@ -222,7 +375,6 @@ def acrticlePage():
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
         conn.commit()
-        print(comments)
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
         uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
@@ -234,6 +386,7 @@ def acrticlePage():
 
 ##############
 ## 유저 체크 페이지
+## 비회원 게시판 전용 비밀번호 검문 페이지
 ##############
 @app.route('/board/check')
 def userChect():
@@ -268,36 +421,20 @@ def acrticleUpdate():
         return errorPage(0)
 
     try:
-        PWD_GET = f"""
-            SELECT  pwd, title, content
+        # 게시물 정보 획득 획득
+        SELECT_ARTICLE_INFO = f"""
+            SELECT  title, content
             FROM    article
             WHERE   aid = {aid}
         """
-        cursor.execute(PWD_GET)
+        cursor.execute(SELECT_ARTICLE_INFO)
         res = cursor.fetchall()[0]
 
-        if pwd == res[0]:
+        if isCollectArticlePWD(pwd, aid):
             return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
-            uid=uid, pwd=pwd, aid=aid, title=res[1], content=res[2]), 200
+            uid=uid, pwd=pwd, aid=aid, title=res[0], content=res[1]), 200
         else:
             return "block"
-    except Exception as e:
-        return errorPage(1)
-
-
-##############
-## 글의 비밀번호와 같은지 확인
-##############
-def isCollectPWD(pwd, aid):
-    try:
-        PWD_GET = f"""
-            SELECT  pwd
-            FROM    article
-            WHERE   aid = {aid}
-        """
-        cursor.execute(PWD_GET)
-
-        return pwd == cursor.fetchall()[0][0]
     except Exception as e:
         return errorPage(1)
 
@@ -325,20 +462,44 @@ def acrticleUpdateCall():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isCollectPWD(pwd, aid):
-        # TO-DO : alert 메시지 전송
-        return "block"
-
     try:
-        ARTICLE_UPDATE = f"""
-            UPDATE article
-            SET uid = '{uid}',
-                pwd = '{npwd}',
-                title = '{title}',
-                content = '{content}'
-            WHERE aid = '{aid}'
-        """
-        cursor.execute(ARTICLE_UPDATE)
+        # 회원은 아이디만으로도 글을 수정할 수 있다.
+        if board != 'no-member':
+            SELECT_ARTICLE_WRITER = f"""
+                SELECT  uid
+                FROM    article
+                WHERE   aid = {aid};
+            """
+            cursor.execute(SELECT_ARTICLE_WRITER)
+            writer = cursor.fetchall()[0][0]
+
+            if writer != uid:
+                # TO-DO : json을 보내도록 수정
+                return errorPage(2)
+
+            # 회원용 게시물 수정
+            UPDATE_ARTICLE = f"""
+                UPDATE article
+                SET title = '{title}',
+                    content = '{content}'
+                WHERE aid = '{aid}'
+            """
+        else:
+            # 비회원 용 검문
+            if not isCollectArticlePWD(pwd, aid):
+                # TO-DO : alert 메시지 전송
+                return "block"
+
+            # 비회원용 게시물 수정
+            UPDATE_ARTICLE = f"""
+                UPDATE article
+                SET uid = '{uid}',
+                    pwd = '{npwd}',
+                    title = '{title}',
+                    content = '{content}'
+                WHERE aid = '{aid}'
+            """
+        cursor.execute(UPDATE_ARTICLE)
         res = cursor.fetchall()
         conn.commit()
 
@@ -355,7 +516,8 @@ def acrticleUpdateCall():
 def articleDalete():
     try:
         board = request.args.get('board', type=str)
-
+        
+        requester = request.form['uid']     # 삭제 요청자
         aid = request.form['aid']
         pwd = request.form['pwd']
     except Exception as e:
@@ -364,12 +526,25 @@ def articleDalete():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isCollectPWD(pwd, aid):
+    if not isCollectArticlePWD(pwd, aid):
         # TO-DO : alert 메시지 전송
         return "block"
 
     # 글 삭제
     try:
+        # 회원은 아이디만으로도 글을 삭제할 수 있다.
+        if board != 'no-member':
+            GET_ARTICLE_WRITER = f"""
+                SELECT  uid
+                FROM    article
+                WHERE   aid = {aid};
+            """
+            cursor.execute(GET_ARTICLE_WRITER)
+            writer = cursor.fetchall()[0][0]
+
+            if writer != requester:
+                # TO-DO : json을 보내도록 수정
+                return errorPage(2)
 
         ARTIECLE_DELTE = f"""
             DELETE
@@ -494,14 +669,25 @@ def main():
     return render_template('main.html', boards=BOARD_DICT), 200
 
 
-##############
-## 에러 페이지
-##############
+
 @app.errorhandler(404)
-def errorPage(signal=-1):
-    #   0 = 잘못된 게시판
-    #   1 = DB 에러
-    #   2 = request 에러
+def errorPage(signal: int = -1) -> str:
+    """
+        ### 에러 페이지 함수
+        
+        ### In
+        * signal (type: int, default: -1):
+            0 = 존재하지 않는 게시판
+
+            1 = DB 에러
+
+            2 = request 에러
+
+            other = 잘못된 페이지
+
+        ### Out
+        * render_template('error_page.html', errMsg: 에러메시지)
+    """
     if signal == 0:
         return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
     elif signal == 1:

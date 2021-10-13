@@ -82,5 +82,9 @@ conn.execute(CREATE_ARTICLE_TABLE)
 conn.execute(CREATE_COMMENT_TABLE)
 conn.execute(CREATE_ARTICLE_HIT_HISTORY_TABLE)
 
+#### TO-DO 비 회원 게시판 전용 테이블 ####
+
+
+
 conn.commit()
 conn.close()
