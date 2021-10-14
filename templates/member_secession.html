@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <title>My board main</title>
+    </head>
+
+    <body>
+        <h1><a href="{{ url_for('main') }}">Flask로 만든 간단한 게시판</a></h1>
+
+        <br>
+
+        {% include 'frame_member.html' %}
+
+        <br>
+
+        <h3>회원탈퇴</h3>
+
+
+        <div class="member-secession">
+            {% if session.get("uid") %}
+            <script>
+                function sendSecession() {
+                    let uid = document.getElementById( 'uid' ).value;
+                    let pwd = document.getElementById( 'pwd' ).value;
+                    let confirm = document.getElementById( 'confirm' ).value;
+
+                    if (confirm !== '탈퇴합니다'){
+                        alert("탈퇴를 원한다면 탈퇴합니다를 입력해주세요.");
+                        return
+                    }
+
+                    const formData = new FormData();
+                    const url = '/member/secession/request';
+                    let signal = true;
+
+                    formData.append('uid', uid);
+                    formData.append('pwd', pwd);
+
+                    fetch (url, { method: 'POST', body: formData })
+                    .then(response=>{
+                        if ([200, 400, 500].includes(response.status))
+                            return response.json()
+                        else{
+                            signal = false;
+                            alert("탈퇴 실패");
+                        }
+                    }).catch(err => {
+                        if (signal){
+                            signal = false;
+                            alert("탈퇴 실패");
+                        }
+                    }).then(result => {
+                        if (result['result']){
+                            alert(result['msg']);
+                            location.href="/";
+                        }
+                        else if (signal){
+                            alert(result['msg']);
+                        }
+                    });
+                }
+            </script>
+
+            <p>{{ session.get("nickname") }} 님 정말 탈퇴를 원한다면 비밀번호와 탈퇴합니다를 입력해주세요.</p>
+            <input type="password" id="pwd" placeholder="PASSWORD" 
+            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <br><br>
+            <input type="text" id="confirm" placeholder="탈퇴합니다" 
+            maxlength='5' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <br><br>
+            <button onclick="return sendSecession()" type="submit" style="width:80px; height:40px">회원탈퇴</button>
+            {% else %}
+                <p>비회원은 할 수 없는 작업입니다.</p>
+
+                <div class="btns" align="center">
+                    <a href="javascript:history.back()" 
+                    style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+                </div>
+            {% endif %}
+        </div>
+    </body>
+</html>

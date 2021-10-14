@@ -109,6 +109,10 @@ def getNickname(uid: str):
         raise Exception('DB 확인 에러!')
 
 
+def makeReturnDict(result: bool, msg: str) -> dict:
+    return {"result": result, "msg": msg}
+
+
 @app.route('/clear')
 def masterClear():
     session.clear()
@@ -132,15 +136,14 @@ def memberJoinRequest():
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
         request_nickname = request.form['nickname']
-        print(request.form)
     except Exception as e:
-        return {'result': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
     if isExistUser(request_uid, request_nickname):
-        return {'result': False}, 200
+        return makeReturnDict(False, '이미 존재하는 아이디 또는 닉네임입니다.'), 200
 
     if isLogin():
-        return {'result': False}, 400
+        return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
 
     try:
         INSERT_USER = """
@@ -157,10 +160,9 @@ def memberJoinRequest():
         cursor.execute(INSERT_USER, (request_uid, request_pwd, request_nickname))
         conn.commit()
         res = cursor.fetchall()
-        print("회원가입완료")
-        return {'result': True}, 200
+        return makeReturnDict(True, '회원가입 성공'), 200
     except Exception as e:
-        return {'result': False}, 500
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -180,14 +182,14 @@ def memberLoginRequest():
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
     except Exception as e:
-        return {'result': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
     # 존재하는 않는 유저
     if not isExistUser(request_uid):
-        return {'result': False}, 200
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 200
 
     if isLogin():
-        return {'result': False}, 400
+        return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
 
     try:
 
@@ -205,11 +207,11 @@ def memberLoginRequest():
             session['uid'] = request_uid
             session['nickname'] = getNickname(request_uid)
 
-            return {'result': True, 'nickname': res}, 200
+            return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 200
         else:
-            return {'result': False}, 200
+            return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 200
     except Exception as e:
-        return  {'result': False}, 500
+        return  makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -218,15 +220,15 @@ def memberLoginRequest():
 @app.route('/member/logout/request', methods=["POST"])
 def memberLogout():
     if not isLogin():
-        return {'reuslt': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
     try:
         # 세션 나가기
         session.pop("uid", None)
         session.pop("nickname", None)
-        return {'result': True}, 200
+        return makeReturnDict(True, '로그아웃 성공'), 200
     except Exception as e:
-        return {'result': False}, 500
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -239,12 +241,56 @@ def memberUpdate():
 
 
 ##############
-## 회원 탈퇴 요청
+## 회원 탈퇴 페이지
 ##############
 @app.route('/member/secession')
 def memberSecessione():
-    # TO-DO : 비밀번호 검문 필요
-    return {'result': True}, 200
+    return render_template('member_secession.html'), 200
+
+##############
+## 회원 탈퇴 요청
+##############
+@app.route('/member/secession/request', methods=["POST"])
+def memberSecessioneRequest():
+    try:
+        request_uid = request.form['uid']
+        request_pwd = request.form['pwd']
+    except Exception as e:
+        print(e)
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
+
+    if not isLogin():
+        return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
+
+    try:
+        SELECT_USER_PWD = f"""
+            SELECT  pwd
+            FROM    user
+            WHERE   uid='{request_uid}'
+        """
+        cursor.execute(SELECT_USER_PWD)
+        pwd = cursor.fetchall()[0][0]
+
+        if pwd != request_pwd:
+            return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
+
+        DELETE_USER = f"""
+            DELETE  
+            FROM    user
+            WHERE   uid='{request_uid}'
+        """
+        cursor.execute(DELETE_USER)
+        res = cursor.fetchall()
+        conn.commit()
+
+        memberLogout()
+
+        return makeReturnDict(True, "탈퇴 성공"), 200
+    except Exception as e:
+        return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
 
 ##############
@@ -257,10 +303,13 @@ def articleHit():
         uid = request.form['uid']
         aid = request.form['aid']
     except Exception as e:
-        return {'result': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
-    if not isExistUser(uid) or not isLogin():
-        return {'result': False}, 400
+    if not isExistUser(uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
+
+    if not isLogin():
+        return makeReturnDict(False, '로그인이 필요한 작업입니다.'),400
 
     try:
         # 추천했던 유저인지 확인
@@ -273,7 +322,7 @@ def articleHit():
         res = cursor.fetchall()
 
         if res:
-            return {'result': False}, 200
+            return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 200
 
         # 추천 기록 추가
         INSERT_HIT_USER = """
@@ -307,9 +356,9 @@ def articleHit():
         cursor.execute(READ_ARTICLE_HIT)
         res = cursor.fetchall()[0][0]
 
-        return {'result': True, 'hit': res}, 200
+        return makeReturnDict(True, f'{res}'), 200
     except Exception as e:
-        return {'result': False}, 500
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -323,10 +372,13 @@ def commentCreateCall():
         request_uid = request.form['uid']
         comment = request.form['comment']
     except Exception as e:
-        return {'result': False}, 400
-
-    if not isLogin() or not isExistUser(request_uid):
-        return {'result': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+ 
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
+    
+    if not isLogin():
+        return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
 
     try:
         # 댓글 정보 추가
@@ -345,9 +397,9 @@ def commentCreateCall():
         res = cursor.fetchall()
         conn.commit()
 
-        return {'result': True}, 200
+        return makeReturnDict(True, '댓글작성 성공.'), 200
     except Exception as e:
-        return {'result': False}, 500
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
 
 ##############
@@ -360,10 +412,13 @@ def commentDeleteCall():
         cid = request.form['cid']
         request_uid = request.form['uid']
     except Exception as e:
-        return {'result': False}, 400
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
-    if not isLogin() or not isExistUser(request_uid):
-        return {'result': False}, 400
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
+    
+    if not isLogin():
+        return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
 
     try:
         # 댓글 작성자 가져오기
@@ -376,7 +431,7 @@ def commentDeleteCall():
         writer = cursor.fetchall()[0][0]
 
         if writer != request_uid:
-            return {'result': False}, 400
+            return makeReturnDict(False, '작성자와 일치하지 않습니다.'), 400
 
         # 댓글 삭제
         DELETE_COMMENT = f"""
@@ -388,9 +443,9 @@ def commentDeleteCall():
         res = cursor.fetchall()
         conn.commit()
 
-        return {'result': True}, 200
+        return makeReturnDict(True, '댓글삭제 성공.'), 200
     except Exception as e:
-        return {'result': False}, 500
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############

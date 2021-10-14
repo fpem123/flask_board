@@ -14,16 +14,8 @@
 
             fetch (url, { method: 'POST', body: formData })
             .then(response=>{
-                if (response.status === 200)
+                if ([200, 400, 500].includes(response.status))
                     return response.json()
-                else if (response.status === 400) {
-                    signal = false;
-                    alert("잘못된 요청입니다.");
-                }
-                else if (response.status === 500) {
-                    signal = false;
-                    alert("서버에서 에러가 발생했습니다.");
-                }
                 else {
                     signal = false;
                     alert("에러가 발생했습니다.");
@@ -35,16 +27,13 @@
                 }
             }).then(result => {
                 if (result['result']){
-                    alert("회원가입에 성공했습니다.");
+                    alert(result['msg']);
                     window.location.reload(true);
                 }
                 else if (signal){
                     signal = false;
-                    alert("아이디 또는 비밀번호를 확인해주세요.");
+                    alert(result["msg"]);
                 }
-            }).catch(err => {
-                if (signal)
-                    alert("에러가 발생했습니다.");
             });
         };
     </script>
@@ -69,12 +58,8 @@
 
             fetch (url, { method: 'POST', body: formData })
             .then(response=>{
-                if (response.status === 200)
+                if ([200, 400, 500].includes(response.status))
                     return response.json()
-                else if (response.status === 500) {
-                    signal = false;
-                    alert("서버에서 에러가 발생했습니다.");
-                }
                 else {
                     signal = false;
                     alert("에러가 발생했습니다.");
@@ -90,17 +75,16 @@
                 }
                 else if (signal){
                     signal = false;
-                    alert("아이디 또는 비밀번호를 확인해주세요.");
+                    alert(result['msg']);
                 }
-            }).catch(err => {
-                if (signal)
-                    alert("에러가 발생했습니다.");
             });
         };
     </script>
     <input type="hidden" id="uid" value="{{ session.get('uid') }}">
     <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
     <p>{{ session.get('nickname') }}님 환영합니다.</p>
-    <button onclick="return sendLogout()">로그아웃</button>
+    <button onclick="return sendLogout()"
+    style="width:80px; height:40px; border:1px solid black; padding: 10px">로그아웃</button>
+    <a href="{{ url_for('memberSecessione') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
     {% endif %}
 </div>

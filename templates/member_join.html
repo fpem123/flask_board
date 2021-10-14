@@ -13,7 +13,8 @@
 
         <br>
 
-        <div class="member-info">
+        <div class="member-join">
+            {% if not session.get("uid") %}
             <script>
                 function sendInfo() {
                     let uid = document.getElementById( 'uid' ).value;
@@ -30,16 +31,8 @@
 
                     fetch (url, { method: 'POST', body: formData })
                     .then(response=>{
-                        if (response.status === 200)
+                        if ([200, 400, 500].includes(response.status))
                             return response.json()
-                        else if (response.status === 400) {
-                            signal = false;
-                            alert("잘못된 요청입니다.");
-                        }
-                        else if (response.status === 500) {
-                            signal = false;
-                            alert("서버에서 에러가 발생했습니다.");
-                        }
                         else {
                             signal = false;
                             alert("에러가 발생했습니다.");
@@ -51,16 +44,13 @@
                         }
                     }).then(result => {
                         if (result['result']){
-                            alert("회원가입에 성공했습니다.");
+                            alert(result['msg']);
                             location.href="/";
                         }
                         else if (signal){
                             signal = false;
-                            alert("이미 존재하는 아이디 또는 닉네임입니다.");
+                            alert(result['msg']);
                         }
-                    }).catch(err => {
-                        if (signal)
-                            alert("에러가 발생했습니다.");
                     });
                 };
             </script>
@@ -75,6 +65,9 @@
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
             <button onclick="return sendInfo()" type="submit" style="width:80px; height:40px">회원가입</button>
+            {% else %}
+            <p>로그인 상태에선 불가능한 작업입니다.</p>
+            {% endif %}
         </div>
     </body>
 </html>
