@@ -1,5 +1,13 @@
 # Flask, SQLite3 를 이용하여 만든 간단한 게시판입니다.
 
+## 사용법
+
+* requirements : Flask, sqlite3
+
+* create_table.py 먼저 실행하고 server.py 실행하기
+
+
+
 ## DONE
 
 * 게시판 검색
@@ -18,7 +26,9 @@
 
 ## WORKING
 
-* 비회원 게시판
+* 회원 정보수정, 탈퇴
+
+* 중복 html코드들 frame화
 
 ---
 
@@ -28,10 +38,11 @@
 
 * 댓글 답글?
 
-* 회원 정보수정, 탈퇴
 
 * 글에 미디어 파일 첨부와 글 꾸미기가 가능하게
 
 * html script들 모아서 하나의 javascript 로 만들기
 
 * 리펙토링
+
+* 비회원 게시판

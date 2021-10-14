@@ -1,4 +1,3 @@
-from os import SEEK_CUR
 from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
