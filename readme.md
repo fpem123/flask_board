@@ -6,7 +6,7 @@
 
 * create_table.py 먼저 실행하고 server.py 실행하기
 
-
+---
 
 ## DONE
 
