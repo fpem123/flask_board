@@ -315,24 +315,23 @@ def articleHit():
 
 ##############
 ## 댓글 작성 요청
-## return : boolean
 ##############
-@app.route('/comment/write_submit', methods=['POST'])
+@app.route('/comment/write', methods=['POST'])
 def commentCreateCall():
     try:
         # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         aid = request.form['aid']
-        uid = request.form['uid']
+        request_uid = request.form['uid']
         comment = request.form['comment']
     except Exception as e:
         return {'result': False}, 400
 
-    if not isLogin() or not isExistUser(uid):
+    if not isLogin() or not isExistUser(request_uid):
         return {'result': False}, 400
 
     try:
         # 댓글 정보 추가
-        COMMENT_INSERT = """
+        INSERT_COMMENT = """
             INSERT INTO comment (
                 aid,
                 uid,
@@ -343,7 +342,7 @@ def commentCreateCall():
                 ?
             )
         """
-        cursor.execute(COMMENT_INSERT, (aid, uid, comment))
+        cursor.execute(INSERT_COMMENT, (aid, request_uid, comment))
         res = cursor.fetchall()
         conn.commit()
 
@@ -351,6 +350,48 @@ def commentCreateCall():
     except Exception as e:
         return {'result': False}, 500
     
+
+##############
+## 댓글 삭제 요청
+##############
+@app.route('/comment/delete', methods=['POST'])
+def commentDeleteCall():
+    try:
+        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
+        cid = request.form['cid']
+        request_uid = request.form['uid']
+    except Exception as e:
+        return {'result': False}, 400
+
+    if not isLogin() or not isExistUser(request_uid):
+        return {'result': False}, 400
+
+    try:
+        # 댓글 작성자 가져오기
+        SELECT_COMMENT_WRITER = f"""
+            SELECT  uid
+            FROM    comment
+            WHERE   cid={cid}
+        """
+        cursor.execute(SELECT_COMMENT_WRITER)
+        writer = cursor.fetchall()[0][0]
+
+        if writer != request_uid:
+            return {'result': False}, 400
+
+        # 댓글 삭제
+        DELETE_COMMENT = f"""
+            DELETE   
+            FROM    comment
+            WHERE   cid={cid}
+        """
+        cursor.execute(DELETE_COMMENT)
+        res = cursor.fetchall()
+        conn.commit()
+
+        return {'result': True}, 200
+    except Exception as e:
+        return {'result': False}, 500
 
 
 ##############
