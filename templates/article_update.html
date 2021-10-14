@@ -12,14 +12,16 @@
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="write" style="border:1px solid black; padding: 10px">
+            {% if session.get('uid') %}
             <form action="{{ url_for('acrticleUpdateCall', board=board) }}" method="POST">
-                <input type="hidden" name="pwd" value="{{ pwd }}">
+                <!-- <input type="hidden" name="pwd" value="{{ pwd }}"> -->
                 <input type="hidden" name="aid" value='{{ aid }}'>
-                <input type="text" name="uid" value="{{ uid }}" placeholder="ID" 
-                maxlength='10' style="width:100px; height:20px;">
+                <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                <!--
                 <input type="password" name="npwd" value="{{ pwd }}" placeholder="PASSWORD" 
                 maxlength='10' style="width:100px; height:20px;">
                 <br><br>
+                -->
                 <input type="text" name="title" value="{{ title }}"
                 placeholder="제목을 입력하세요." style="width:300px; height:20px">
                 <br><br>
@@ -29,6 +31,9 @@
                 <br><br>
                 <input type="submit" value="완료" style="width:80px; height:40px">
             </form>
+            {% else %}
+            <p>비회원은 불가능한 작업입니다.</p>
+            {% endif %}
         </div>
     </body>
 </html>

@@ -8,21 +8,131 @@
         <h1><a href="{{ url_for('main') }}">Flask로 만든 간단한 게시판</a></h1>
 
         <br>
-        
+
+        <div class="member">
+            {% if not session['uid'] %}
+            <script>
+                function sendLogin() {
+                    let uid = document.getElementById( 'uid' ).value;
+                    let pwd = document.getElementById( 'pwd' ).value;
+
+                    const formData = new FormData();
+                    const url = '/member/login/request';
+                    let signal = true;
+
+                    formData.append('uid', uid);
+                    formData.append('pwd', pwd);
+
+                    fetch (url, { method: 'POST', body: formData })
+                    .then(response=>{
+                        if (response.status === 200)
+                            return response.json()
+                        else if (response.status === 400) {
+                            signal = false;
+                            alert("잘못된 요청입니다.");
+                        }
+                        else if (response.status === 500) {
+                            signal = false;
+                            alert("서버에서 에러가 발생했습니다.");
+                        }
+                        else {
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).catch(err => {
+                        if (signal){
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).then(result => {
+                        if (result['result']){
+                            alert(result['nickname'] + "로그인 성공.");
+                            window.location.reload(true);
+                        }
+                        else if (signal){
+                            signal = false;
+                            alert("아이디 또는 비밀번호를 확인해주세요.");
+                        }
+                    }).catch(err => {
+                        if (signal)
+                            alert("에러가 발생했습니다.");
+                    });
+                };
+            </script>
+            <input type="text" id="uid" placeholder="ID" 
+            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <input type="password" id="pwd" placeholder="PASSWORD" 
+            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            <button onclick="return sendLogin()">로그인</button>
+            <br>
+            <a href="{{ url_for('main') }}">회원가입</a>
+            {% else %}
+            <script>
+                function sendLogout() {
+                    let uid = document.getElementById( 'uid' ).value;
+                    let nickname = document.getElementById( 'nickname' ).value;
+
+                    const formData = new FormData();
+                    const url = '/member/logout/request';
+                    let signal = true;
+
+                    formData.append('uid', uid);
+
+                    fetch (url, { method: 'POST', body: formData })
+                    .then(response=>{
+                        if (response.status === 200)
+                            return response.json()
+                        else if (response.status === 500) {
+                            signal = false;
+                            alert("서버에서 에러가 발생했습니다.");
+                        }
+                        else {
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).catch(err => {
+                        if (signal){
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).then(result => {
+                        if (result['result']){
+                            alert(nickname + "님 로그아웃 완료.");
+                            window.location.reload(true);
+                        }
+                        else if (signal){
+                            signal = false;
+                            alert("아이디 또는 비밀번호를 확인해주세요.");
+                        }
+                    }).catch(err => {
+                        if (signal)
+                            alert("에러가 발생했습니다.");
+                    });
+                };
+            </script>
+            <input type="hidden" id="uid" value="{{ session.get('uid') }}">
+            <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
+            <p>{{ session.get('nickname') }}님 환영합니다.</p>
+            <button onclick="return sendLogout()">로그아웃</button>
+            {% endif %}
+        </div>
+
+        <br>
+
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="article" style="border:1px solid black; padding: 10px">
             <h3>{{ title }}</h3>
             {% if board == 'anonymous' %}
-            <div style="float:left;">익명 | {{ date }}</div>
+            <div style="float:left;">익명 | {{ article_date }}</div>
             {% else %}
-            <div style="float:left;">{{ uid }} | {{ date }}</div>
+            <div style="float:left;">{{ article_uid }} | {{ article_date }}</div>
             {% endif %}
-            <div style="float:right;">조회수 {{ view }} | 추천 {{ hit }}</div>
+            <div style="float:right;">조회수 {{ article_view }} | 추천 {{ article_hit }}</div>
             <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
             <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
-                <pre>{{ content }}</pre>
+                <pre>{{ article_content }}</pre>
             </div>
             
             <br>
@@ -72,7 +182,7 @@
                         });
                     }
                 </script>
-                <button onclick="return sendHit()">추천하기 ({{ hit }})</button>
+                <button onclick="return sendHit()">추천하기 ({{ article_hit }})</button>
             </div>
 
             <br>
@@ -84,7 +194,7 @@
                     {% for cid, cuid, comment, cdate_time in comments %}
                     <tr align="center">
                         {% if board == 'anonymous' %}
-                            {% if cuid == uid %}
+                            {% if cuid == article_uid %}
                             <td style="width: 10%;">글쓴이</td>
                             {% else %}
                             <td style="width: 10%;">익명</td>
@@ -105,65 +215,74 @@
 
             <br>
 
-            <script>
-                function sendComment() {
-                    let aid = document.getElementById( 'aid' ).value;
-                    let uid = document.getElementById( 'uid' ).value;
-                    let pwd = document.getElementById( 'pwd' ).value;
-                    let comment = document.getElementById( 'comment' ).value;
-
-                    const formData = new FormData();
-                    const url = '/comment/write_submit';
-                    let signal = true;
-
-                    formData.append('aid', aid);
-                    formData.append('uid', uid);
-                    formData.append('pwd', pwd);
-                    formData.append('comment', comment);
-
-                    fetch (url, { method: 'POST', body: formData })
-                    .then(response=>{
-                        if (response.status === 200)
-                            return response.json()
-                        else{
-                            signal = false;
-                            alert("댓글 등록 실패");
-                        }
-                    }).catch(err => {
-                        if (signal){
-                            signal = false;
-                            alert("댓글 등록 실패");
-                        }
-                    }).then(result => {
-                        if (result['result'])
-                            window.location.reload(true);
-                        else if (signal){
-                            signal = false;
-                            alert("댓글 등록 실패");
-                        }
-                    }).catch(err => {
-                        if (signal)
-                            alert("댓글 등록 실패");
-                    });
-                };
-            </script>
-
             <div class="write-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
-                <input type="text" id="uid" placeholder="ID" 
-                maxlength='10' style="width:100px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-                <input type="password" id="pwd" placeholder="PASSWORD" 
-                maxlength='10' style="width:100px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-                <br>
-                <input onkeydown="if(event.keyCode==13) return sendComment()" type="text" id="comment" style="width:80%; height: 50px; resize: none;"></textarea>
-                <br>
-                <button onclick="return sendComment()" type="submit" style="width:80px; height:40px">댓글 달기</button>
+                {% if session['uid'] %}
+                <script>
+                    function sendComment() {
+                        let aid = document.getElementById( 'aid' ).value;
+                        let uid = document.getElementById( 'uid' ).value;
+                        let comment = document.getElementById( 'comment' ).value;
+
+                        const formData = new FormData();
+                        const url = '/comment/write_submit';
+                        let signal = true;
+
+                        formData.append('aid', aid);
+                        formData.append('uid', uid);
+                        formData.append('comment', comment);
+
+                        fetch (url, { method: 'POST', body: formData })
+                        .then(response=>{
+                            if (response.status === 200)
+                                return response.json()
+                            else{
+                                signal = false;
+                                alert("댓글 등록 실패");
+                            }
+                        }).catch(err => {
+                            if (signal){
+                                signal = false;
+                                alert("댓글 등록 실패");
+                            }
+                        }).then(result => {
+                            if (result['result'])
+                                window.location.reload(true);
+                            else if (signal){
+                                signal = false;
+                                alert("댓글 등록 실패");
+                            }
+                        }).catch(err => {
+                            if (signal)
+                                alert("댓글 등록 실패");
+                        });
+                    };
+                </script>
+                <p>
+                    <label>{{ session.get('uid') }}</label><br><br>
+                    <input onkeydown="if(event.keyCode==13) return sendComment()" type="text" id="comment" style="width:80%; height: 50px; resize: none;"></textarea>
+                    
+                    <button onclick="return sendComment()" type="submit" style="width:80px; height:40px">댓글 달기</button>
+                </p>
+                {% else %}
+                <p align='center'>로그인 한 유저만 댓글을 작성할 수 있습니다.</p>
+                {% endif %}
             </div>
 
             <br>
 
             <div class="btns">
-                <a href="{{ url_for('userChect', board=board, uid=uid, aid=aid, check_type='U') }}">수정</a>
-                <a href="{{ url_for('userChect', board=board, uid=uid, aid=aid, check_type='D') }}">삭제</a>
+                {% if session.get('uid') == article_uid %}
+                <form name="update_action" action="{{ url_for('acrticleUpdate', board=board) }}" method="post">
+                    <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                    <input type="hidden" name="aid" value="{{ aid }}">
+                </form>
+                <form name="delete_action" action="{{ url_for('articleDalete', board=board) }}" method="post">
+                    <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                    <input type="hidden" name="aid" value="{{ aid }}">
+                </form>
+                <a onclick="javascript:document.update_action.submit();">수정</a>
+                <a onclick="javascript:document.delete_action.submit();">삭제</a>
+                {% endif %}
                 <a href="{{ url_for('articleCreate', board=board) }}">글쓰기</a>
             </div>
         </div>

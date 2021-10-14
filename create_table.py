@@ -17,7 +17,6 @@ CREATE_USER_TABLE = """
 #   aid : pk, 글 번호
 #   board : 글이 있는 게시판
 #   uid : fk, 작성자
-#   pwd : 글 비밀번호
 #   title : 글 제목
 #   date_time : 글 작성시간
 #   content : 글 내용
@@ -28,7 +27,6 @@ CREATE_ARTICLE_TABLE = """
         aid integer not null primary key autoincrement,
         board char(10) not null,
         uid char(10) not null,
-        pwd char(10) not null,
         title char(20) not null,
         date_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
         content blob not null,
@@ -42,15 +40,13 @@ CREATE_ARTICLE_TABLE = """
 #   cid : pk, 댓글 id
 #   uid : fk, 댓글 작성자 id
 #   aid : fk, 댓글 작성된 게시물 id
-#   pwd : 댓글 비밀번호
 #   comment : 댓글 내용
 #   date_time : 댓글 작성시간
 CREATE_COMMENT_TABLE = """
     create table if not exists comment(
         cid integer not null primary key autoincrement,
         aid char(10) not null,
-        uid char(10) not null,
-        pwd char(10) not null,
+        uid char(10),
         comment char(100) not null,
         date_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
         CONSTRAINT uid_fk FOREIGN KEY(uid) REFERENCES user(uid)
@@ -67,8 +63,8 @@ CREATE_COMMENT_TABLE = """
 CREATE_ARTICLE_HIT_HISTORY_TABLE = """
     create table if not exists hit_history(
         hid integer not null primary key autoincrement,
-        aid char(10) not null,
-        uid char(10) not null,
+        aid char(10),
+        uid char(10),
         date_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
         CONSTRAINT uid_fk FOREIGN KEY(uid) REFERENCES user(uid)
          ON UPDATE CASCADE ON DELETE SET NULL,

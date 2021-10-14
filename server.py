@@ -1,11 +1,12 @@
-from flask import (Flask, request, render_template, 
-                redirect, url_for, flash, jsonify)
+from os import SEEK_CUR
+from flask import Flask
+from flask import session, request
+from flask import render_template, redirect, url_for, escape, flash
 import math
 import sqlite3
 
-from flask.sessions import NullSession
-
 app = Flask(__name__)
+app.secret_key = "1q2w3e4r!"
 
 BOARD_DICT = {'etc':'기타', 
     'game' : '게임',
@@ -62,7 +63,6 @@ def isExistUser(uid: str, nickname: str = None):
             # uid에 해당하는 유저가 있는지
             SELECT_USER += f" or nickname = '{nickname}'"
         cursor.execute(SELECT_USER)
-
         return cursor.fetchall()
     except Exception as e:
         raise Exception('DB 확인 에러!')
@@ -87,6 +87,32 @@ def isCollectPWD(uid: str, pwd: int):
         raise Exception('DB 확인 에러!')
 
 
+
+def getNickname(uid: str):
+    """
+    ### 회원의 닉네임을 가져옴
+    회원 전용
+    """
+    try:
+        # 유저 비밀번호 획득
+        SELECT_NICKNAME = f"""
+            SELECT  nickname
+            FROM    user
+            WHERE   uid = '{uid}'
+        """
+        cursor.execute(SELECT_NICKNAME)
+
+        return escape(cursor.fetchall()[0][0])
+    except Exception as e:
+        raise Exception('DB 확인 에러!')
+
+
+@app.route('/clear')
+def masterClear():
+    session.clear()
+    return 'Clear'
+
+
 ##############
 ## 회원 가입 페이지
 ##############
@@ -104,6 +130,7 @@ def memberJoinRequest():
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
         request_nickname = request.form['nickname']
+        print(request.form)
     except Exception as e:
         return {'result': False}, 400
 
@@ -168,21 +195,29 @@ def memberLoginRequest():
             cursor.execute(SELECT_USER_NICKNAME)
             res = cursor.fetchall()[0][0]
 
+            # 세션에 유저 추가
+            session['uid'] = request_uid
+            session['nickname'] = getNickname(request_uid)
+
             return {'result': True, 'nickname': res}, 200
         else:
             return {'result': False}, 200
     except Exception as e:
-        print(e)
         return  {'result': False}, 500
 
 
 ##############
 ## 로그아웃 페이지
 ##############
-@app.route('/member/logout')
+@app.route('/member/logout/request', methods=["POST"])
 def memberLogout():
-    # 세션 끄기
-    pass
+    try:
+        # 세션 나가기
+        session.pop("uid", None)
+        session.pop("nickname", None)
+        return {'result': True}, 200
+    except Exception as e:
+        return {'result': False}, 500
 
 
 ##############
@@ -269,13 +304,12 @@ def articleHit():
 ## 댓글 작성 요청
 ## return : boolean
 ##############
-@app.route('/comment/write_submit',  methods=['POST'])
+@app.route('/comment/write_submit', methods=['POST'])
 def commentCreateCall():
     try:
         # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         aid = request.form['aid']
         uid = request.form['uid']
-        pwd = request.form['pwd']
         comment = request.form['comment']
     except Exception as e:
         return {'result': False}, 400
@@ -286,16 +320,14 @@ def commentCreateCall():
             INSERT INTO comment (
                 aid,
                 uid,
-                pwd,
                 comment
             ) VALUES (
-                ?,
                 ?,
                 ?,
                 ?
             )
         """
-        cursor.execute(COMMENT_INSERT, (aid, uid, pwd, comment))
+        cursor.execute(COMMENT_INSERT, (aid, uid, comment))
         res = cursor.fetchall()
         conn.commit()
 
@@ -330,20 +362,22 @@ def articleCreate():
 @app.route('/board/write_submit',  methods=['POST'])
 def articleCreateCall():
     try:
+        uid = request.form['uid']
         board = request.form['board']
         title = request.form['title']
         content = request.form['content']
-        uid = request.form['uid']
-        pwd = request.form['pwd']   # 비회원 게시판일 때만 사용하도록
+        #pwd = request.form['pwd']   # 비회원 게시판일 때만 사용하도록
         # media_files = request.form['media_files']
-    except:
+    except Exception as e:
         return errorPage(2)
+
+    if not session.get('uid'):
+        return errorPage(4)
 
     try:
         ARTICLE_INSERT = """
             INSERT INTO article (
                 uid,
-                pwd,
                 board,
                 title,
                 content
@@ -351,11 +385,10 @@ def articleCreateCall():
                 ?,
                 ?,
                 ?,
-                ?,
                 ?
             )
         """
-        cursor.execute(ARTICLE_INSERT, (uid, pwd, board, title, content))
+        cursor.execute(ARTICLE_INSERT, (uid, board, title, content))
         res = cursor.fetchall()
         conn.commit()
 
@@ -408,10 +441,11 @@ def acrticlePage():
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
         conn.commit()
+
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-        uid=article[0], date=article[1], title=article[2], content=article[3], view=article[4], hit=article[5], 
-        comments=comments, aid=aid), 200
+        aid=aid, article_uid=article[0], article_date=article[1], article_title=article[2], 
+        article_content=article[3], article_view=article[4], article_hit=article[5], comments=comments), 200
     except Exception as e:
         return errorPage(1)
 
@@ -421,53 +455,54 @@ def acrticlePage():
 ## 유저 체크 페이지
 ## 비회원 게시판 전용 비밀번호 검문 페이지
 ##############
-@app.route('/board/check')
-def userChect():
+@app.route('/board/anonymous_check')
+def anonymousCheck():
     try:
         board = request.args.get('board', type=str)
         uid = request.args.get('uid', type=str)
         aid = request.args.get('aid', type=int)
         check_type = request.args.get('check_type', type=str)
 
-        return render_template('user_check.html', board=board, board_name=BOARD_DICT[board], 
+        return render_template('anonymous_check.html', board=board, board_name=BOARD_DICT[board], 
         uid=uid, aid=aid, check_type=check_type), 200
     except Exception as e:
         return errorPage(2)
 
 
-
 ##############
 ## 글 수정 페이지
 ##############
-@app.route('/board/update', methods=["POST"])
+@app.route('/board/update', methods=['POST'])
 def acrticleUpdate():
     try:
         board = request.args.get('board', type=str)
 
+        request_uid = request.form['uid']
         aid = request.form['aid']
-        uid = request.form['uid']
-        pwd = request.form['pwd']
     except Exception as e:
         return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
 
+    if not session.get("uid"):
+        return errorPage(3)
+
     try:
         # 게시물 정보 획득 획득
         SELECT_ARTICLE_INFO = f"""
-            SELECT  title, content
+            SELECT  title, content, uid
             FROM    article
-            WHERE   aid = {aid}
+            WHERE   aid = {aid};
         """
         cursor.execute(SELECT_ARTICLE_INFO)
         res = cursor.fetchall()[0]
 
-        if isCollectArticlePWD(pwd, aid):
-            return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
-            uid=uid, pwd=pwd, aid=aid, title=res[0], content=res[1]), 200
-        else:
-            return "block"
+        if res[2] != request_uid:
+            return errorPage(3)
+
+        return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
+        aid=aid, title=res[0], content=res[1]), 200
     except Exception as e:
         return errorPage(1)
 
@@ -477,15 +512,13 @@ def acrticleUpdate():
 ##############
 @app.route('/board/update_submit', methods=['POST'])
 def acrticleUpdateCall():
-
     # 글 수정
     try:
         # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         board = request.args.get('board', type=str)
-
-        uid = request.form['uid']
-        pwd = request.form['pwd']
-        npwd = request.form['npwd']
+        request_uid = request.form['uid']
+        #pwd = request.form['pwd']
+        #npwd = request.form['npwd']
         aid = request.form['aid']
         title = request.form['title']
         content = request.form['content']
@@ -495,49 +528,35 @@ def acrticleUpdateCall():
     if isNotAllowBoard(board):
         return errorPage(0)
 
+    if not session.get("uid"):
+        return errorPage(3)
+
     try:
         # 회원은 아이디만으로도 글을 수정할 수 있다.
-        if board != 'no-member':
-            SELECT_ARTICLE_WRITER = f"""
-                SELECT  uid
-                FROM    article
-                WHERE   aid = {aid};
-            """
-            cursor.execute(SELECT_ARTICLE_WRITER)
-            writer = cursor.fetchall()[0][0]
+        SELECT_ARTICLE_WRITER = f"""
+            SELECT  uid
+            FROM    article
+            WHERE   aid = {aid};
+        """
+        cursor.execute(SELECT_ARTICLE_WRITER)
+        writer = cursor.fetchall()[0][0]
 
-            if writer != uid:
-                # TO-DO : json을 보내도록 수정
-                return errorPage(2)
+        if writer != request_uid:
+            return errorPage(2)
 
-            # 회원용 게시물 수정
-            UPDATE_ARTICLE = f"""
-                UPDATE article
-                SET title = '{title}',
-                    content = '{content}'
-                WHERE aid = '{aid}'
+        # 회원용 게시물 수정
+        UPDATE_ARTICLE = f"""
+            UPDATE article
+            SET title = '{title}',
+                content = '{content}'
+            WHERE aid = '{aid}'
             """
-        else:
-            # 비회원 용 검문
-            if not isCollectArticlePWD(pwd, aid):
-                # TO-DO : alert 메시지 전송
-                return "block"
 
-            # 비회원용 게시물 수정
-            UPDATE_ARTICLE = f"""
-                UPDATE article
-                SET uid = '{uid}',
-                    pwd = '{npwd}',
-                    title = '{title}',
-                    content = '{content}'
-                WHERE aid = '{aid}'
-            """
         cursor.execute(UPDATE_ARTICLE)
         res = cursor.fetchall()
         conn.commit()
 
         return redirect(url_for('board', board=board))
-
     except Exception as e:
         return errorPage(1)
 
@@ -550,34 +569,31 @@ def articleDalete():
     try:
         board = request.args.get('board', type=str)
         
-        requester = request.form['uid']     # 삭제 요청자
+        request_uid = request.form['uid']     # 삭제 요청자
         aid = request.form['aid']
-        pwd = request.form['pwd']
+        #pwd = request.form['pwd']
     except Exception as e:
         return errorPage(2)
 
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isCollectArticlePWD(pwd, aid):
-        # TO-DO : alert 메시지 전송
-        return "block"
+    if not session.get('uid'):
+        return errorPage(4)
 
     # 글 삭제
     try:
-        # 회원은 아이디만으로도 글을 삭제할 수 있다.
-        if board != 'no-member':
-            GET_ARTICLE_WRITER = f"""
-                SELECT  uid
-                FROM    article
-                WHERE   aid = {aid};
-            """
-            cursor.execute(GET_ARTICLE_WRITER)
-            writer = cursor.fetchall()[0][0]
+        GET_ARTICLE_WRITER = f"""
+            SELECT  uid
+            FROM    article
+            WHERE   aid = {aid};
+        """
+        cursor.execute(GET_ARTICLE_WRITER)
+        writer = cursor.fetchall()[0][0]
 
-            if writer != requester:
-                # TO-DO : json을 보내도록 수정
-                return errorPage(2)
+        if writer != request_uid:
+            # TO-DO : json을 보내도록 수정
+            return errorPage(2)
 
         ARTIECLE_DELTE = f"""
             DELETE
@@ -591,6 +607,7 @@ def articleDalete():
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
+        print(e)
         return errorPage(1)
 
 
@@ -608,7 +625,7 @@ def articleDaleteDone():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    # TO-DO : 삭제 완료 페이지(meta 태그로 구현)
+    # 삭제 완료 페이지, 2 초후 게시판으로 이동함
     return render_template(f'article_delete.html', board=board, board_name=BOARD_DICT[board]), 200
 
 
@@ -716,6 +733,10 @@ def errorPage(signal: int = -1) -> str:
 
             2 = request 에러
 
+            3 = 아이디가 다름
+
+            3 = 비회원 불가 작업
+
             other = 잘못된 페이지
 
         ### Out
@@ -727,6 +748,10 @@ def errorPage(signal: int = -1) -> str:
         return render_template('error_page.html', errMsg="DB 확인 중 문제가 발생했습니다.")
     elif signal == 2:
         return render_template('error_page.html', errMsg="잘못된 요청입니다.")
+    elif signal == 3:
+        return render_template('error_page.html', errMsg="작성자와 다른 유저입니다.")
+    elif signal == 4:
+        return render_template('error_page.html', errMsg="비회원은 할 수 없는 작업입니다.")
     else:
         return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 

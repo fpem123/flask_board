@@ -10,6 +10,7 @@
         <br>
         
         <div class="member">
+            {% if not session['uid'] %}
             <script>
                 function sendLogin() {
                     let uid = document.getElementById( 'uid' ).value;
@@ -46,6 +47,7 @@
                     }).then(result => {
                         if (result['result']){
                             alert(result['nickname'] + "로그인 성공.");
+                            window.location.reload(true);
                         }
                         else if (signal){
                             signal = false;
@@ -63,7 +65,56 @@
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <button onclick="return sendLogin()">로그인</button>
             <br>
-            <a href="{{ url_for('main') }}">회원가입</a>
+            <a href="{{ url_for('memberJoin') }}">회원가입</a>
+            {% else %}
+            <script>
+                function sendLogout() {
+                    let uid = document.getElementById( 'uid' ).value;
+                    let nickname = document.getElementById( 'nickname' ).value;
+
+                    const formData = new FormData();
+                    const url = '/member/logout/request';
+                    let signal = true;
+
+                    formData.append('uid', uid);
+
+                    fetch (url, { method: 'POST', body: formData })
+                    .then(response=>{
+                        if (response.status === 200)
+                            return response.json()
+                        else if (response.status === 500) {
+                            signal = false;
+                            alert("서버에서 에러가 발생했습니다.");
+                        }
+                        else {
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).catch(err => {
+                        if (signal){
+                            signal = false;
+                            alert("에러가 발생했습니다.");
+                        }
+                    }).then(result => {
+                        if (result['result']){
+                            alert(nickname + "님 로그아웃 완료.");
+                            window.location.reload(true);
+                        }
+                        else if (signal){
+                            signal = false;
+                            alert("아이디 또는 비밀번호를 확인해주세요.");
+                        }
+                    }).catch(err => {
+                        if (signal)
+                            alert("에러가 발생했습니다.");
+                    });
+                };
+            </script>
+            <input type="hidden" id="uid" value="{{ session.get('uid') }}">
+            <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
+            <p>{{ session.get('nickname') }}님 환영합니다.</p>
+            <button onclick="return sendLogout()">로그아웃</button>
+            {% endif %}
         </div>
 
         <br>
