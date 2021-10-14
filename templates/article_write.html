@@ -8,8 +8,10 @@
         <h1><a href="{{ url_for('main') }}">Flask로 만든 간단한 게시판</a></h1>
 
         <br>
-        <input type="hidden" name="uid" value="{{ session.get('uid') }}">
-        <input type="hidden" name="nickname" value="{{ session.get('nickname') }}">
+
+        {% include 'member_frame.html' %}
+
+        <br>
 
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
