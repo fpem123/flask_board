@@ -65,7 +65,7 @@ def isExistUser(uid: str, nickname: str = None):
         cursor.execute(SELECT_USER)
         return cursor.fetchall()
     except Exception as e:
-        raise Exception('DB 확인 에러!')
+        return False
 
 
 def isCollectPWD(uid: str, pwd: int):
@@ -86,6 +86,9 @@ def isCollectPWD(uid: str, pwd: int):
     except Exception as e:
         raise Exception('DB 확인 에러!')
 
+
+def isLogin():
+    return session.get('uid')
 
 
 def getNickname(uid: str):
@@ -134,11 +137,11 @@ def memberJoinRequest():
     except Exception as e:
         return {'result': False}, 400
 
-    try:
-        if isExistUser(request_uid, request_nickname):
-            return {'result': False}, 200
-    except Exception as e:
-        return {'result': False}, 500
+    if isExistUser(request_uid, request_nickname):
+        return {'result': False}, 200
+
+    if isLogin():
+        return {'result': False}, 400
 
     try:
         INSERT_USER = """
@@ -180,10 +183,14 @@ def memberLoginRequest():
     except Exception as e:
         return {'result': False}, 400
 
+    # 존재하는 않는 유저
+    if not isExistUser(request_uid):
+        return {'result': False}, 200
+
+    if isLogin():
+        return {'result': False}, 400
+
     try:
-        # 존재하는 않는 유저
-        if not isExistUser(request_uid):
-            return  {'result': False}, 200
 
         # 비밀번호가 일치하는지
         if isCollectPWD(request_uid, request_pwd):
@@ -211,6 +218,9 @@ def memberLoginRequest():
 ##############
 @app.route('/member/logout/request', methods=["POST"])
 def memberLogout():
+    if not isLogin():
+        return {'reuslt': False}, 400
+    
     try:
         # 세션 나가기
         session.pop("uid", None)
@@ -250,6 +260,9 @@ def articleHit():
     except Exception as e:
         return {'result': False}, 400
     
+    if not isExistUser(uid) or not isLogin():
+        return {'result': False}, 400
+
     try:
         # 추천했던 유저인지 확인
         READ_HIT_HISTORY = f"""
@@ -314,6 +327,9 @@ def commentCreateCall():
     except Exception as e:
         return {'result': False}, 400
 
+    if not isLogin() or not isExistUser(uid):
+        return {'result': False}, 400
+
     try:
         # 댓글 정보 추가
         COMMENT_INSERT = """
@@ -351,6 +367,9 @@ def articleCreate():
     if isNotAllowBoard(board):
         return errorPage(0)
 
+    if not isLogin():
+        return errorPage(4)
+
     # 글 작성 페이지
     return render_template('article_write.html', board=board, board_name=BOARD_DICT[board]), 200
 
@@ -371,7 +390,10 @@ def articleCreateCall():
     except Exception as e:
         return errorPage(2)
 
-    if not session.get('uid'):
+    if not isExistUser(uid):
+        return errorPage(2)
+
+    if not isLogin():
         return errorPage(4)
 
     try:
@@ -485,7 +507,10 @@ def acrticleUpdate():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not session.get("uid"):
+    if not isExistUser(request_uid):
+        return errorPage(2)
+
+    if not isLogin():
         return errorPage(3)
 
     try:
@@ -528,7 +553,10 @@ def acrticleUpdateCall():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not session.get("uid"):
+    if not isExistUser(request_uid):
+        return errorPage(2)
+
+    if not isLogin():
         return errorPage(3)
 
     try:
@@ -578,7 +606,10 @@ def articleDalete():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not session.get('uid'):
+    if not isExistUser(request_uid):
+        return errorPage(2)
+
+    if not isLogin():
         return errorPage(4)
 
     # 글 삭제
