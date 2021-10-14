@@ -16,7 +16,7 @@
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="article" style="border:1px solid black; padding: 10px">
-            <h3>{{ title }}</h3>
+            <h3>{{ article_title }}</h3>
             {% if board == 'anonymous' %}
             <div style="float:left;">익명 | {{ article_date }}</div>
             {% else %}

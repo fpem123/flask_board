@@ -35,6 +35,7 @@
                 }
             }).then(result => {
                 if (result['result']){
+                    alert("회원가입에 성공했습니다.");
                     window.location.reload(true);
                 }
                 else if (signal){
@@ -85,7 +86,6 @@
                 }
             }).then(result => {
                 if (result['result']){
-                    alert(nickname + "님 로그아웃 완료.");
                     window.location.reload(true);
                 }
                 else if (signal){
