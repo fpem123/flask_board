@@ -35,7 +35,6 @@
                 }
             }).then(result => {
                 if (result['result']){
-                    alert(result['nickname'] + "로그인 성공.");
                     window.location.reload(true);
                 }
                 else if (signal){
@@ -54,7 +53,7 @@
     maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
     <button onclick="return sendLogin()">로그인</button>
     <br>
-    <a href="{{ url_for('main') }}">회원가입</a>
+    <a href="{{ url_for('memberJoin') }}">회원가입</a>
     {% else %}
     <script>
         function sendLogout() {
