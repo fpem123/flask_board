@@ -24,7 +24,7 @@
                 <th style="width: 5%;">조회수</th>
                 <th style="width: 5%;">추천</th>
                 {% if articles %}
-                {% for aid, article_uid, title, date_time, view, hit, num_comment in articles %}
+                {% for aid, writer, title, date_time, view, hit, num_comment in articles %}
                 <tr align="center">
                     <td>{{ aid }}</td>
                     <td align="left"><a href="{{ url_for('acrticlePage', board=board, aid=aid) }}">{{ title }}
@@ -32,7 +32,7 @@
                     {% if board == 'anonymous' %}
                     <td>익명</td>
                     {% else %}
-                    <td>{{ article_uid }}</td>
+                    <td>{{ writer }}</td>
                     {% endif %}
                     <td>{{ date_time }}</td>
                     <td>{{ view }}</td>

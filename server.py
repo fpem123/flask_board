@@ -540,9 +540,11 @@ def acrticlePage():
 
         # 게시물 정보 반환
         ARTICLE_SELECT = f"""
-            SELECT  article.uid, article.date_time, title, content, view, hit
+            SELECT  distinct article.uid, nickname, article.date_time, title, content, view, hit
             FROM    article left join comment
                     on article.aid = comment.aid
+                    left join user
+                    on article.uid = user.uid
             WHERE   article.aid={aid};
         """
         cursor.execute(ARTICLE_SELECT)
@@ -550,8 +552,9 @@ def acrticlePage():
 
         # 댓글 정보 반환
         COMMENT_SELECT = f"""
-            SELECT  cid, uid, comment, date_time
-            FROM    comment
+            SELECT  cid, comment.uid, nickname, comment, date_time
+            FROM    comment left join user
+		            on comment.uid = user.uid
             WHERE   aid={aid}
             ORDER BY cid ASC;
         """
@@ -561,9 +564,10 @@ def acrticlePage():
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-        aid=aid, article_uid=article[0], article_date=article[1], article_title=article[2], 
-        article_content=article[3], article_view=article[4], article_hit=article[5], comments=comments), 200
+        aid=aid, article_uid=article[0], article_nickname=article[1], article_date=article[2], article_title=article[3], 
+        article_content=article[4], article_view=article[5], article_hit=article[6], comments=comments), 200
     except Exception as e:
+        print(e)
         return errorPage(1)
 
 
@@ -807,9 +811,11 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
-        SELECT  article.aid, article.uid, title, article.date_time, view, hit, count(cid)
+        SELECT  article.aid, user.nickname, title, article.date_time, view, hit, count(cid)
         FROM    article left join comment
                 on article.aid = comment.aid
+                left join user
+                on article.uid = user.uid
         WHERE   board='{board}'"""
 
     if option == 'title, content':
