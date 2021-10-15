@@ -16,6 +16,7 @@
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="article" style="border:1px solid black; padding: 10px">
+            {% set article_uid, article_nickname, article_date, article_title, article_cntent, article_view, article_hit = article %}
             <h3>{{ article_title }}</h3>
             {% if board == 'anonymous' %}
             <div style="float:left;">익명 | {{ article_date }}</div>
@@ -104,5 +105,12 @@
                 <a href="{{ url_for('articleCreate', board=board) }}">글쓰기</a>
             </div>
         </div>
+
+        <br>
+
+        <div class="articles" style="border:1px solid black; padding: 10px">
+            {% include 'frame_board.html' %}
+        </div>
+        
     </body>
 </html>

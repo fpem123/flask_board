@@ -607,6 +607,35 @@ def articleCreateCall():
     
 
 ##############
+## 글 목록 가져오기
+##############
+def getArticles(board, page, art_per_page, option, keyword):
+    try:
+        BOARD_COUNT = f"""
+            SELECT  count(aid)
+            FROM    article
+            WHERE   board='{board}';
+        """
+        cursor.execute(BOARD_COUNT)
+        a_cnt = cursor.fetchall()[0][0]         # 글의 수
+        p_cnt = math.ceil(a_cnt / art_per_page)  # 전체 페이지 개수
+
+        ARTICLE_SELECT = boardQueryBuilder(board, option, keyword)
+        cursor.execute(ARTICLE_SELECT)
+        articles = cursor.fetchall()
+
+        tmp = (page - 1) * art_per_page
+        articles = articles[tmp:min(tmp + art_per_page, a_cnt)]
+        start = (page // 10) * 10 + 1
+        end = min((page // 10 + 1) * 10, p_cnt) + 1
+
+        return articles, start, end
+
+    except Exception as e:
+        raise Exception('요청 처리 중 에러가 발생했습니다.')
+
+
+##############
 ## 글 페이지
 ##############
 @app.route('/board/view', methods=['GET'])
@@ -614,6 +643,10 @@ def acrticlePage():
     try:
         board = request.args.get('board', type=str)
         aid = request.args.get('aid', type=int)
+        page = request.args.get('page', type=int, default=1)          # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
         return errorPage(2)
 
@@ -652,13 +685,18 @@ def acrticlePage():
         """
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
+
+        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
+        isSearch = option != 'all' 
+        
         conn.commit()
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-        aid=aid, article_uid=article[0], article_nickname=article[1], article_date=article[2], article_title=article[3], 
-        article_content=article[4], article_view=article[5], article_hit=article[6], comments=comments), 200
+        aid=aid, article=article, comments=comments, articles=articles, 
+        page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
+        print(e)
         return errorPage(1)
 
 
@@ -871,33 +909,16 @@ def board():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    isSearch = option != 'all'
-
     try:
-        BOARD_COUNT = f"""
-            SELECT  count(aid)
-            FROM    article
-            WHERE   board='{board}';
-        """
-        cursor.execute(BOARD_COUNT)
-        a_cnt = cursor.fetchall()[0][0]         # 글의 수
-        p_cnt = math.ceil(a_cnt / art_per_page)  # 전체 페이지 개수
-
-        ARTICLE_SELECT = boardQueryBuilder(board, option, keyword)
-        cursor.execute(ARTICLE_SELECT)
-        res = cursor.fetchall()
-
-        tmp = (page - 1) * art_per_page
-        res = res[tmp:min(tmp + art_per_page, a_cnt)]
-        start = (page // 10) * 10 + 1
-        end = min((page // 10 + 1) * 10, p_cnt) + 1
-        conn.commit()
+        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
+        isSearch = option != 'all' 
 
         # 게시판 페이지, db에서 가져온 정보
         return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
-        articles=res, page=page, start=start, end=end, isSearch=isSearch), 200
+        aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch,
+        option=option, keyword=keyword), 200
     except Exception as e:
-        res = False
+        return errorPage(1)
 
 
 
