@@ -30,9 +30,7 @@
                 placeholder="제목을 입력하세요." style="width:300px; height:20px" onkeydown="return onKeydownEnter()">
                 <br><br>
                 <label>
-                    <textarea name="content" style="width:80%; resize: none;" rows="30">
-                        {{ content }}
-                    </textarea>
+                    <textarea name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);">{{ content }}</textarea>
                 </label>
                 <br><br>
                 <input type="submit" value="완료" style="width:80px; height:40px">

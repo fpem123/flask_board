@@ -1,22 +1,17 @@
 <div class="member">
     {% if not session['uid'] %}
-    <script>
-        
-    </script>
-    <input type="text" id="uid" placeholder="ID" 
+    <input type="text" id="request_uid" placeholder="ID" 
     maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-    <input type="password" id="pwd" placeholder="PASSWORD" 
+    <input type="password" id="request_pwd" placeholder="PASSWORD" 
     maxlength='10' style="width:200px; height:20px;">
     <button onclick="return sendLoginUser()">로그인</button>
     <br>
     <a href="{{ url_for('memberJoin') }}">회원가입</a>
     {% else %}
-    <script>
-        
-    </script>
     <input type="hidden" id="uid" value="{{ session.get('uid') }}">
     <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
     <p>{{ session.get('nickname') }}님 환영합니다.</p>
+    <script>setUID();</script>
     <button onclick="return sendLogoutUser()"
     style="width:80px; height:40px; border:1px solid black; padding: 10px">로그아웃</button>
     <a href="{{ url_for('memberUpdate') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">정보변경</a>

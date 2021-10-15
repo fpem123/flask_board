@@ -15,13 +15,13 @@
 
         <div class="member-join">
             {% if not session.get("uid") %}
-            <input type="text" id="uid" placeholder="ID" 
+            <input type="text" id="new_uid" placeholder="ID" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
-            <input type="password" id="pwd" placeholder="PASSWORD" 
+            <input type="password" id="new_pwd" placeholder="PASSWORD" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
-            <input type="text" id="nickname" placeholder="닉네임" 
+            <input type="text" id="new_nickname" placeholder="닉네임" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
             <button onclick="return sendInsertUser()" type="submit" style="width:80px; height:40px">회원가입</button>

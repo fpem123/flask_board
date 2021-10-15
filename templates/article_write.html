@@ -28,7 +28,7 @@
                 placeholder="제목을 입력하세요." style="width:300px; height:20px" onkeydown="return onKeydownEnter()">
                 <br><br>
                 <label>
-                    <textarea name="content" style="width:80%; resize: none;" rows="30"></textarea>
+                    <textarea name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);"></textarea>
                 </label>
                 <br><br>
                 <input type="submit" value="글쓰기" style="width:80px; height:40px">

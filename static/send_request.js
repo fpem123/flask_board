@@ -1,27 +1,54 @@
+let UID = undefined;
+
+// 유저 아이디 반환
+function setUID(){
+    UID =  document.getElementById( 'uid' ).value;
+}
+
+function isUIDEmpty(){
+    console.log(UID);
+    if (UID == undefined){
+        return true;
+    }
+    else
+        return false;
+}
+
 // 엔터키 전송 방지
 function onKeydownEnter(){
     if(event.keyCode==13) 
+        return false
+}
 
-    return false
+// textarea tap키 처리
+function onKeydownTap(textarea){
+    if (event.keyCode==9) {
+        textarea.focus();
+        space = "    ";
+        textarea.selection = document.selection.createRange();
+        textarea.selection.text = space;
+        event.returnValue = false;
+        return false;
+    }
 }
 
 // 추천 리퀘스트
 function sendHit(){
-    let aid = document.getElementById( 'aid' ).value;
-    let uid = document.getElementById( 'uid' ).value;
-
-    if (uid === ''){
-        alert("추천은 로그인한 유저만 가능합니다.");
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
+        console.log(UID);
 
         return;
     }
+
+    let aid = document.getElementById( 'aid' ).value;
 
     const formData = new FormData();
     const url = '/article/hit';
     let signal = true;
 
     formData.append('aid', aid);
-    formData.append('uid', uid);
+    formData.append('uid', UID);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -48,8 +75,13 @@ function sendHit(){
 
 // 댓글 작성 리퀘스트
 function sendInsertComment() {
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
+
+        return;
+    }
+
     let aid = document.getElementById( 'aid' ).value;
-    let uid = document.getElementById( 'uid' ).value;
     let comment = document.getElementById( 'comment' ).value;
 
     const formData = new FormData();
@@ -57,7 +89,7 @@ function sendInsertComment() {
     let signal = true;
 
     formData.append('aid', aid);
-    formData.append('uid', uid);
+    formData.append('uid', UID);
     formData.append('comment', comment);
 
     fetch (url, { method: 'POST', body: formData })
@@ -84,20 +116,19 @@ function sendInsertComment() {
 }
 
 // 댓글 삭제 리퀘스트
-function sendDeleteComment(cid){
-    let uid = document.getElementById( 'uid' ).value;
+function sendDeleteComment(button){
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
 
-    if (uid === ''){
-        alert("삭제 권한이 없습니다.");
-
-        return
+        return;
     }
+    let cid = button.value;
 
     const formData = new FormData();
     const url = '/comment/delete';
     let signal = true;
 
-    formData.append('uid', uid);
+    formData.append('uid', UID);
     formData.append('cid', cid);
 
     fetch (url, { method: 'POST', body: formData })
@@ -128,17 +159,23 @@ function sendDeleteComment(cid){
 
 // 회원 가입 리퀘스트
 function sendInsertUser() {
-    let uid = document.getElementById( 'uid' ).value;
-    let pwd = document.getElementById( 'pwd' ).value;
-    let nickname = document.getElementById( 'nickname' ).value;
+    if (!isUIDEmpty()){
+        alert("이미 로그인 된 상태입니다.");
+
+        return;
+    }
+
+    let new_uid = document.getElementById( 'new_uid' ).value;
+    let new_pwd = document.getElementById( 'new_pwd' ).value;
+    let new_nickname = document.getElementById( 'new_nickname' ).value;
 
     const formData = new FormData();
     const url = '/member/join/request';
     let signal = true;
 
-    formData.append('uid', uid);
-    formData.append('pwd', pwd);
-    formData.append('nickname', nickname);
+    formData.append('uid', new_uid);
+    formData.append('pwd', new_pwd);
+    formData.append('nickname', new_nickname);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -167,8 +204,14 @@ function sendInsertUser() {
 
 // 로그인 리퀘스트
 function sendLoginUser() {
-    let uid = document.getElementById( 'uid' ).value;
-    let pwd = document.getElementById( 'pwd' ).value;
+    if (!isUIDEmpty()){
+        alert("이미 로그인 된 상태입니다.");
+
+        return;
+    }
+
+    let uid = document.getElementById( 'request_uid' ).value;
+    let pwd = document.getElementById( 'request_pwd' ).value;
 
     const formData = new FormData();
     const url = '/member/login/request';
@@ -204,14 +247,16 @@ function sendLoginUser() {
 
 // 로그아웃 리퀘스트
 function sendLogoutUser() {
-    let uid = document.getElementById( 'uid' ).value;
-    let nickname = document.getElementById( 'nickname' ).value;
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
 
+        return;
+    }
     const formData = new FormData();
     const url = '/member/logout/request';
     let signal = true;
 
-    formData.append('uid', uid);
+    formData.append('uid', UID);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -239,8 +284,12 @@ function sendLogoutUser() {
 
 // 회원 정보 수정 리퀘스트
 function sendUpdateUser() {
-    let uid = document.getElementById( 'uid' ).value;
-    let pwd = document.getElementById( 'pwd' ).value;
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
+
+        return;
+    }
+    let old_pwd = document.getElementById( 'old_pwd' ).value;
     let new_pwd = document.getElementById( 'new_pwd' ).value;
     let new_nickname = document.getElementById( 'new_nickname' ).value;
 
@@ -248,10 +297,7 @@ function sendUpdateUser() {
     const url = '/member/update/request';
     let signal = true;
 
-    formData.append('uid', uid);
-    formData.append('pwd', pwd);
-
-    if (pwd === '') {
+    if (old_pwd === '') {
         alert('비밀번호를 입력하세요.');
         return ;
     }
@@ -260,6 +306,9 @@ function sendUpdateUser() {
         return ;
     }
     
+    formData.append('uid', UID);
+    formData.append('pwd', old_pwd);
+
     if (new_pwd !== ''){
         formData.append('new_pwd', new_pwd);
     }
@@ -294,7 +343,12 @@ function sendUpdateUser() {
 
 // 회원 탈퇴 리퀘스트
 function sendDeleteUser() {
-    let uid = document.getElementById( 'uid' ).value;
+    if (isUIDEmpty()){
+        alert("로그인이 필요한 작업입니다.");
+
+        return;
+    }
+
     let pwd = document.getElementById( 'pwd' ).value;
     let confirm = document.getElementById( 'confirm' ).value;
 
@@ -307,7 +361,7 @@ function sendDeleteUser() {
     const url = '/member/delete/request';
     let signal = true;
 
-    formData.append('uid', uid);
+    formData.append('uid', UID);
     formData.append('pwd', pwd);
 
     fetch (url, { method: 'POST', body: formData })
