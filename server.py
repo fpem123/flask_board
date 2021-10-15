@@ -98,6 +98,10 @@ def isCollectPWD(uid: str, pwd: int):
         raise False
 
 
+def isSessionUser(uid: str):
+    return session.get('uid') == uid
+
+
 def isLogin():
     return session.get('uid')
 
@@ -272,11 +276,14 @@ def memberUpdateRequest():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
-    if not isExistUser(request_uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
+
+    if not isSessionUser(request_uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     if isExistUser(nickname=request_new_nickname):
         return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
@@ -336,11 +343,14 @@ def memberDeleteeRequest():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
+    if not isLogin():
+        return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
+
     if not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
-    if not isLogin():
-        return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
+    if not isSessionUser(request_uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
     
     # 비밀번호 확인
     if isCollectPWD(request_uid, request_pwd):
@@ -375,11 +385,14 @@ def articleHit():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
-    if not isExistUser(uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'),400
+
+    if not isSessionUser(uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+
+    if not isExistUser(uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
         # 추천했던 유저인지 확인
@@ -443,12 +456,15 @@ def commentCreateCall():
         comment = request.form['comment']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
- 
-    if not isExistUser(request_uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-    
+     
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+
+    if not isSessionUser(request_uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
         # 댓글 정보 추가
@@ -484,11 +500,14 @@ def commentDeleteCall():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
-    if not isExistUser(request_uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-    
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+
+    if not isSessionUser(request_uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
         # 댓글 작성자 가져오기
@@ -555,11 +574,14 @@ def articleCreateCall():
     except Exception as e:
         return errorPage(2)
 
-    if not isExistUser(uid):
-        return errorPage(2)
-
     if not isLogin():
         return errorPage(4)
+    
+    if not isSessionUser(uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+
+    if not isExistUser(uid):
+        return errorPage(2)
 
     try:
         ARTICLE_INSERT = """
@@ -675,11 +697,14 @@ def acrticleUpdate():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isExistUser(request_uid):
-        return errorPage(2)
-
     if not isLogin():
         return errorPage(3)
+
+    if not isSessionUser(request_uid):
+        return errorPage()
+
+    if not isExistUser(request_uid):
+        return errorPage(2)
 
     try:
         # 게시물 정보 획득 획득
@@ -719,12 +744,15 @@ def acrticleUpdateCall():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isExistUser(request_uid):
-        return errorPage(2)
-
     if not isLogin():
         return errorPage(3)
 
+    if not isSessionUser(request_uid):
+        return errorPage(5)
+
+    if not isExistUser(request_uid):
+        return errorPage(2)
+    
     try:
         # 회원은 아이디만으로도 글을 수정할 수 있다.
         SELECT_ARTICLE_WRITER = f"""
@@ -771,11 +799,14 @@ def articleDalete():
     if isNotAllowBoard(board):
         return errorPage(0)
 
-    if not isExistUser(request_uid):
-        return errorPage(2)
-
     if not isLogin():
         return errorPage(4)
+
+    if not isSessionUser(request_uid):
+        return errorPage(5)
+
+    if not isExistUser(request_uid):
+        return errorPage(2)
 
     # 글 삭제
     try:
@@ -931,7 +962,9 @@ def errorPage(signal: int = -1) -> str:
 
             3 = 아이디가 다름
 
-            3 = 비회원 불가 작업
+            4 = 비회원 불가 작업
+
+            5 = 세션 정보 불일치
 
             other = 잘못된 페이지
 
@@ -948,6 +981,8 @@ def errorPage(signal: int = -1) -> str:
         return render_template('error_page.html', errMsg="작성자와 다른 유저입니다.")
     elif signal == 4:
         return render_template('error_page.html', errMsg="비회원은 할 수 없는 작업입니다.")
+    elif signal == 5:
+        return render_template('error_page.html', errMsg="세션과 정보가 동일하지 않습니다.")
     else:
         return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 

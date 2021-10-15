@@ -65,6 +65,7 @@ function sendHit(){
         }
     }).then(result => {
         if (result['result'])
+            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
             window.location.reload(true);
         else if (signal){
             signal = false;
@@ -107,6 +108,7 @@ function sendInsertComment() {
         }
     }).then(result => {
         if (result['result'])
+            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
             window.location.reload(true);
         else if (signal){
             signal = false;
@@ -146,6 +148,7 @@ function sendDeleteComment(button){
         }
     }).then(result => {
         if (result['result'])
+        // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
             window.location.reload(true);
         else if (signal){
             signal = false;
