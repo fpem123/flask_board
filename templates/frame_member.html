@@ -85,6 +85,6 @@
     <p>{{ session.get('nickname') }}님 환영합니다.</p>
     <button onclick="return sendLogout()"
     style="width:80px; height:40px; border:1px solid black; padding: 10px">로그아웃</button>
-    <a href="{{ url_for('memberSecessione') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
+    <a href="{{ url_for('memberUpdate') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">정보변경</a>
     {% endif %}
 </div>

@@ -46,21 +46,27 @@ def isCollectArticlePWD(pwd: str, aid: int):
         raise Exception('DB 확인 에러!')
 
 
-def isExistUser(uid: str, nickname: str = None):
+def isExistUser(uid: str=None, nickname: str=None):
     """
     ### 존재하는 회원 id인지 확인
     회원 전용
     """
     try:
-        # uid에 해당하는 유저가 있는지
+        # uid 또는 nickname에 해당하는 유저가 있는지
         SELECT_USER = f"""
             SELECT  *
             FROM    user
-            WHERE   uid = '{uid}'
-        """
-        if not nickname is None:
+            WHERE   """
+
+        if not uid is None and not nickname is None:
+            # uid과 nickname에 해당하는 유저가 있는지
+            SELECT_USER += f"uid = '{uid}' or nickname = '{nickname}'"
+        elif not uid is None:
             # uid에 해당하는 유저가 있는지
-            SELECT_USER += f" or nickname = '{nickname}'"
+            SELECT_USER += f"uid = '{uid}'"
+        elif not nickname is None:
+            # nickname에 해당하는 유저가 있는지
+            SELECT_USER += f"nickname = '{nickname}'"
         cursor.execute(SELECT_USER)
         return cursor.fetchall()
     except Exception as e:
@@ -83,7 +89,7 @@ def isCollectPWD(uid: str, pwd: int):
 
         return pwd == cursor.fetchall()[0][0]
     except Exception as e:
-        raise Exception('DB 확인 에러!')
+        raise False
 
 
 def isLogin():
@@ -241,11 +247,69 @@ def memberUpdate():
 
 
 ##############
+## 회원 정보 수정 요청
+##############
+@app.route('/member/update/request', methods=["POST"])
+def memberUpdateRequest():
+    try:
+        request_uid = request.form['uid']
+        request_pwd = request.form['pwd']
+        request_new_pwd = request.form.get('new_pwd', default=False)
+        request_new_nickname = request.form.get('new_nickname', default=False)
+    except Exception as e:
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+
+    if not isExistUser(request_uid):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
+
+    if not isLogin():
+        return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
+
+    if isExistUser(nickname=request_new_nickname):
+        return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
+
+    # 비밀번호 확인
+    if not isCollectPWD(request_uid, request_pwd):
+        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
+
+    print(request_new_pwd, request_new_nickname)
+
+    try:
+        if request_new_pwd and request_new_nickname:
+            set_query = f"pwd='{request_new_pwd}', nickname='{request_new_nickname}'"
+        elif request_new_pwd:
+            set_query = f"pwd='{request_new_pwd}'"
+        elif request_new_nickname:
+            set_query = f"nickname='{request_new_nickname}'"
+        else:
+            return makeReturnDict(False, '변경할 값을 전달받지 못했습니다.'), 400
+
+        # 유저 정보 업데이트
+        UPDATE_USER = f"""
+            UPDATE  user
+            SET     {set_query}
+            WHERE   uid='{request_uid}'
+        """
+        cursor.execute(UPDATE_USER)
+        res = cursor.fetchall()
+        conn.commit()
+
+        if request_new_nickname:
+            session['nickname'] = getNickname(request_uid)
+
+        return makeReturnDict(True, "정보수정 완료"), 200
+    except Exception as e:
+        print(e)
+        return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
+
+
+##############
 ## 회원 탈퇴 페이지
 ##############
 @app.route('/member/secession')
 def memberSecessione():
     return render_template('member_secession.html'), 200
+
 
 ##############
 ## 회원 탈퇴 요청
@@ -264,19 +328,12 @@ def memberSecessioneRequest():
 
     if not isLogin():
         return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
+    
+    # 비밀번호 확인
+    if isCollectPWD(request_uid, request_pwd):
+        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
-        SELECT_USER_PWD = f"""
-            SELECT  pwd
-            FROM    user
-            WHERE   uid='{request_uid}'
-        """
-        cursor.execute(SELECT_USER_PWD)
-        pwd = cursor.fetchall()[0][0]
-
-        if pwd != request_pwd:
-            return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
-
         DELETE_USER = f"""
             DELETE  
             FROM    user
@@ -638,11 +695,9 @@ def acrticleUpdate():
 def acrticleUpdateCall():
     # 글 수정
     try:
-        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         board = request.args.get('board', type=str)
+
         request_uid = request.form['uid']
-        #pwd = request.form['pwd']
-        #npwd = request.form['npwd']
         aid = request.form['aid']
         title = request.form['title']
         content = request.form['content']
@@ -698,7 +753,6 @@ def articleDalete():
         
         request_uid = request.form['uid']     # 삭제 요청자
         aid = request.form['aid']
-        #pwd = request.form['pwd']
     except Exception as e:
         return errorPage(2)
 
@@ -722,7 +776,6 @@ def articleDalete():
         writer = cursor.fetchall()[0][0]
 
         if writer != request_uid:
-            # TO-DO : json을 보내도록 수정
             return errorPage(2)
 
         ARTIECLE_DELTE = f"""
