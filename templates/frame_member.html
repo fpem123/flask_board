@@ -1,89 +1,23 @@
 <div class="member">
     {% if not session['uid'] %}
     <script>
-        function sendLogin() {
-            let uid = document.getElementById( 'uid' ).value;
-            let pwd = document.getElementById( 'pwd' ).value;
-
-            const formData = new FormData();
-            const url = '/member/login/request';
-            let signal = true;
-
-            formData.append('uid', uid);
-            formData.append('pwd', pwd);
-
-            fetch (url, { method: 'POST', body: formData })
-            .then(response=>{
-                if ([200, 400, 500].includes(response.status))
-                    return response.json()
-                else {
-                    signal = false;
-                    alert("에러가 발생했습니다.");
-                }
-            }).catch(err => {
-                if (signal){
-                    signal = false;
-                    alert("에러가 발생했습니다.");
-                }
-            }).then(result => {
-                if (result['result']){
-                    alert(result['msg']);
-                    window.location.reload(true);
-                }
-                else if (signal){
-                    signal = false;
-                    alert(result["msg"]);
-                }
-            });
-        };
+        
     </script>
     <input type="text" id="uid" placeholder="ID" 
-    maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+    maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
     <input type="password" id="pwd" placeholder="PASSWORD" 
-    maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-    <button onclick="return sendLogin()">로그인</button>
+    maxlength='10' style="width:200px; height:20px;">
+    <button onclick="return sendLoginUser()">로그인</button>
     <br>
     <a href="{{ url_for('memberJoin') }}">회원가입</a>
     {% else %}
     <script>
-        function sendLogout() {
-            let uid = document.getElementById( 'uid' ).value;
-            let nickname = document.getElementById( 'nickname' ).value;
-
-            const formData = new FormData();
-            const url = '/member/logout/request';
-            let signal = true;
-
-            formData.append('uid', uid);
-
-            fetch (url, { method: 'POST', body: formData })
-            .then(response=>{
-                if ([200, 400, 500].includes(response.status))
-                    return response.json()
-                else {
-                    signal = false;
-                    alert("에러가 발생했습니다.");
-                }
-            }).catch(err => {
-                if (signal){
-                    signal = false;
-                    alert("에러가 발생했습니다.");
-                }
-            }).then(result => {
-                if (result['result']){
-                    window.location.reload(true);
-                }
-                else if (signal){
-                    signal = false;
-                    alert(result['msg']);
-                }
-            });
-        };
+        
     </script>
     <input type="hidden" id="uid" value="{{ session.get('uid') }}">
     <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
     <p>{{ session.get('nickname') }}님 환영합니다.</p>
-    <button onclick="return sendLogout()"
+    <button onclick="return sendLogoutUser()"
     style="width:80px; height:40px; border:1px solid black; padding: 10px">로그아웃</button>
     <a href="{{ url_for('memberUpdate') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">정보변경</a>
     {% endif %}

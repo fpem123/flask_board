@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
     <head>
-        <title>My board main</title>
+        {% include 'frame_head.html' %}
     </head>
 
     <body>
@@ -15,46 +15,6 @@
 
         <div class="member-join">
             {% if not session.get("uid") %}
-            <script>
-                function sendInfo() {
-                    let uid = document.getElementById( 'uid' ).value;
-                    let pwd = document.getElementById( 'pwd' ).value;
-                    let nickname = document.getElementById( 'nickname' ).value;
-
-                    const formData = new FormData();
-                    const url = '/member/join/request';
-                    let signal = true;
-
-                    formData.append('uid', uid);
-                    formData.append('pwd', pwd);
-                    formData.append('nickname', nickname);
-
-                    fetch (url, { method: 'POST', body: formData })
-                    .then(response=>{
-                        if ([200, 400, 500].includes(response.status))
-                            return response.json()
-                        else {
-                            signal = false;
-                            alert("에러가 발생했습니다.");
-                        }
-                    }).catch(err => {
-                        if (signal){
-                            signal = false;
-                            alert("에러가 발생했습니다.");
-                        }
-                    }).then(result => {
-                        if (result['result']){
-                            alert(result['msg']);
-                            location.href="/";
-                        }
-                        else if (signal){
-                            signal = false;
-                            alert(result['msg']);
-                        }
-                    });
-                };
-            </script>
-
             <input type="text" id="uid" placeholder="ID" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
@@ -64,7 +24,7 @@
             <input type="text" id="nickname" placeholder="닉네임" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
-            <button onclick="return sendInfo()" type="submit" style="width:80px; height:40px">회원가입</button>
+            <button onclick="return sendInsertUser()" type="submit" style="width:80px; height:40px">회원가입</button>
             {% else %}
             <p>로그인 상태에선 불가능한 작업입니다.</p>
             {% endif %}

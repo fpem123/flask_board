@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
     <head>
-        <title>My board main</title>
+        {% include 'frame_head.html' %}
     </head>
 
     <body>
@@ -32,47 +32,6 @@
             <br>
 
             <div class="btns" align="center">
-                <script>
-                    function sendHit(){
-                        let aid = document.getElementById( 'aid' ).value;
-                        let uid = document.getElementById( 'uid' ).value;
-
-                        if (uid === ''){
-                            alert("추천은 로그인한 유저만 가능합니다.");
-
-                            return
-                        }
-
-                        const formData = new FormData();
-                        const url = '/article/hit';
-                        let signal = true;
-
-                        formData.append('aid', aid);
-                        formData.append('uid', uid);
-
-                        fetch (url, { method: 'POST', body: formData })
-                        .then(response=>{
-                            if ([200, 400, 500].includes(response.status))
-                                return response.json()
-                            else{
-                                signal = false;
-                                alert("추천 실패");
-                            }
-                        }).catch(err => {
-                            if (signal){
-                                signal = false;
-                                alert("추천 실패");
-                            }
-                        }).then(result => {
-                            if (result['result'])
-                                window.location.reload(true);
-                            else if (signal){
-                                signal = false;
-                                alert(result['msg']);
-                            }
-                        });
-                    }
-                </script>
                 <button onclick="return sendHit()">추천하기 ({{ article_hit }})</button>
             </div>
 
@@ -81,49 +40,6 @@
             <h5>댓글 {{ comments | length }}개</h5>
             <div class="comments" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
                 {% if comments %}
-                <script>
-                    function sendDeleteComment(cid){
-                        let uid = document.getElementById( 'uid' ).value;
-
-                        if (uid === ''){
-                            alert("삭제 권한이 없습니다.");
-
-                            return
-                        }
-
-                        const formData = new FormData();
-                        const url = '/comment/delete';
-                        let signal = true;
-
-                        formData.append('uid', uid);
-                        formData.append('cid', cid);
-
-                        fetch (url, { method: 'POST', body: formData })
-                        .then(response=>{
-                            if (response.status === 200)
-                                return response.json()
-                            else{
-                                signal = false;
-                                alert("삭제 실패");
-                            }
-                        }).catch(err => {
-                            if (signal){
-                                signal = false;
-                                alert("삭제 실패");
-                            }
-                        }).then(result => {
-                            if (result['result'])
-                                window.location.reload(true);
-                            else if (signal){
-                                signal = false;
-                                alert("삭제 실패");
-                            }
-                        }).catch(err => {
-                            if (signal)
-                                alert("삭제 실패");
-                        });
-                    }
-                </script>
                 <table style="width: 90%;">
                     {% for cid, comment_uid, comment_nickname, comment, cdate_time in comments %}
                     <tr align="center">
@@ -156,47 +72,12 @@
             <div class="write-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
                 {% if session['uid'] %}
                 <script>
-                    function sendComment() {
-                        let aid = document.getElementById( 'aid' ).value;
-                        let uid = document.getElementById( 'uid' ).value;
-                        let comment = document.getElementById( 'comment' ).value;
-
-                        const formData = new FormData();
-                        const url = '/comment/write';
-                        let signal = true;
-
-                        formData.append('aid', aid);
-                        formData.append('uid', uid);
-                        formData.append('comment', comment);
-
-                        fetch (url, { method: 'POST', body: formData })
-                        .then(response=>{
-                            if ([200, 400, 500].includes(response.status))
-                                return response.json()
-                            else{
-                                signal = false;
-                                alert("댓글 등록 실패");
-                            }
-                        }).catch(err => {
-                            if (signal){
-                                signal = false;
-                                alert("댓글 등록 실패");
-                            }
-                        }).then(result => {
-                            if (result['result'])
-                                window.location.reload(true);
-                            else if (signal){
-                                signal = false;
-                                alert(result['msg']);
-                            }
-                        });
-                    };
                 </script>
                 <p>
                     <label>{{ session.get('nickname') }}</label><br><br>
-                    <input onkeydown="if(event.keyCode==13) return sendComment()" type="text" id="comment" style="width:80%; height: 50px; resize: none;"></textarea>
+                    <input onkeydown="if(event.keyCode==13) return sendInsertComment()" type="text" id="comment" style="width:80%; height: 50px; resize: none;"></textarea>
                     
-                    <button onclick="return sendComment()" type="submit" style="width:80px; height:40px">댓글 달기</button>
+                    <button onclick="return sendInsertComment()" type="submit" style="width:80px; height:40px">댓글 달기</button>
                 </p>
                 {% else %}
                 <p align='center'>로그인 한 유저만 댓글을 작성할 수 있습니다.</p>

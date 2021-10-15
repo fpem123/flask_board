@@ -6,7 +6,7 @@ import math
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "1q2w3e4r!"
+app.secret_key = b"1q2w3e4r!"
 app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 
 BOARD_DICT = {'etc':'기타', 
@@ -308,16 +308,16 @@ def memberUpdateRequest():
 ##############
 ## 회원 탈퇴 페이지
 ##############
-@app.route('/member/secession')
-def memberSecessione():
-    return render_template('member_secession.html'), 200
+@app.route('/member/delete')
+def memberDelete():
+    return render_template('member_delete.html'), 200
 
 
 ##############
 ## 회원 탈퇴 요청
 ##############
-@app.route('/member/secession/request', methods=["POST"])
-def memberSecessioneRequest():
+@app.route('/member/delete/request', methods=["POST"])
+def memberDeleteeRequest():
     try:
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']

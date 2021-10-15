@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
     <head>
-        <title>My board main</title>
+        {% include 'frame_head.html' %}
     </head>
 
     <body>
@@ -18,77 +18,21 @@
 
         <div class="member-update">
             {% if session.get("uid") %}
-            <script>
-                function sendMemberUpdate() {
-                    let uid = document.getElementById( 'uid' ).value;
-                    let pwd = document.getElementById( 'pwd' ).value;
-                    let new_pwd = document.getElementById( 'new_pwd' ).value;
-                    let new_nickname = document.getElementById( 'new_nickname' ).value;
-
-                    const formData = new FormData();
-                    const url = '/member/update/request';
-                    let signal = true;
-
-                    formData.append('uid', uid);
-                    formData.append('pwd', pwd);
-
-                    if (pwd === '') {
-                        alert('비밀번호를 입력하세요.');
-                        return ;
-                    }
-                    else if (new_pwd === '' && new_nickname ===''){
-                        alert('변경할 값을 적어도 1개 입력하세요.');
-                        return ;
-                    }
-                    
-                    if (new_pwd !== ''){
-                        formData.append('new_pwd', new_pwd);
-                    }
-                    if (new_nickname !== ''){
-                        formData.append('new_nickname', new_nickname);
-                    }
-
-                    
-                    fetch (url, { method: 'POST', body: formData })
-                    .then(response=>{
-                        if ([200, 400, 500].includes(response.status))
-                            return response.json()
-                        else{
-                            signal = false;
-                            alert("변경 실패");
-                        }
-                    }).catch(err => {
-                        if (signal){
-                            signal = false;
-                            alert("변경 실패");
-                        }
-                    }).then(result => {
-                        if (result['result']){
-                            alert(result['msg']);
-                            location.href="/";
-                        }
-                        else if (signal){
-                            alert(result['msg']);
-                        }
-                    });
-                }
-            </script>
-
             <p>아이디 변경은 불가능합니다.</p>
             <p>이전 비밀번호는 필수로 입력해야하며, 비밀번호와 닉네임 중 변경을 원하시는 항목만 작성하시면 됩니다.</p>
             <label>이전 비밀번호 : </label><input type="password" id="pwd" placeholder="PASSWORD" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
             <br><br>
             <label>변경 비밀번호 : </label><input type="password" id="new_pwd" placeholder="PASSWORD" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
             <br><br>
             <label>변경할 닉네임 : </label><input type="text" id="new_nickname" placeholder="닉네임" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
             <br><br>
-            <button onclick="return sendMemberUpdate()" type="submit" style="width:80px; height:40px">정보 변경</button>
+            <button onclick="return sendUpdateUser()" type="submit" style="width:80px; height:40px">정보 변경</button>
             <br>
             <p>회원탈퇴페이지는 아래 버튼을 클릭하세요.</p>
-            <a href="{{ url_for('memberSecessione') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
+            <a href="{{ url_for('memberDelete') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
             {% else %}
             <p>비회원은 할 수 없는 작업입니다.</p>
 
