@@ -2,12 +2,16 @@ from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
 from datetime import timedelta
+
+import hashlib
 import math
 import sqlite3
+
 
 app = Flask(__name__)
 app.secret_key = b"1q2w3e4r!"
 app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
+
 
 BOARD_DICT = {'etc':'기타', 
     'game' : '게임',
@@ -117,6 +121,10 @@ def getNickname(uid: str):
         raise Exception('DB 확인 에러!')
 
 
+def getSHA256(item: str):
+    return hashlib.sha256(item.encode()).hexdigest()
+
+
 def makeReturnDict(result: bool, msg: str) -> dict:
     return {"result": result, "msg": msg}
 
@@ -152,6 +160,8 @@ def memberJoinRequest():
 
     if isLogin():
         return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
+
+    request_pwd = getSHA256(request_pwd)
 
     try:
         INSERT_USER = """
@@ -200,6 +210,7 @@ def memberLoginRequest():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
 
     try:
+        request_pwd = getSHA256(request_pwd)
 
         # 비밀번호가 일치하는지
         if isCollectPWD(request_uid, request_pwd):
@@ -270,16 +281,18 @@ def memberUpdateRequest():
     if isExistUser(nickname=request_new_nickname):
         return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
 
+    request_pwd = getSHA256(request_pwd)
+
     # 비밀번호 확인
     if not isCollectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
-    print(request_new_pwd, request_new_nickname)
-
     try:
         if request_new_pwd and request_new_nickname:
+            request_new_pwd = getSHA256(request_new_pwd)
             set_query = f"pwd='{request_new_pwd}', nickname='{request_new_nickname}'"
         elif request_new_pwd:
+            request_new_pwd = getSHA256(request_new_pwd)
             set_query = f"pwd='{request_new_pwd}'"
         elif request_new_nickname:
             set_query = f"nickname='{request_new_nickname}'"
@@ -301,7 +314,6 @@ def memberUpdateRequest():
 
         return makeReturnDict(True, "정보수정 완료"), 200
     except Exception as e:
-        print(e)
         return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
 
@@ -322,7 +334,6 @@ def memberDeleteeRequest():
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
     except Exception as e:
-        print(e)
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
     if not isExistUser(request_uid):
@@ -626,7 +637,6 @@ def acrticlePage():
         aid=aid, article_uid=article[0], article_nickname=article[1], article_date=article[2], article_title=article[3], 
         article_content=article[4], article_view=article[5], article_hit=article[6], comments=comments), 200
     except Exception as e:
-        print(e)
         return errorPage(1)
 
 
@@ -792,7 +802,6 @@ def articleDalete():
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
-        print(e)
         return errorPage(1)
 
 
@@ -866,7 +875,7 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
     query = f"""
-        SELECT  article.aid, user.nickname, title, article.date_time, view, hit, count(cid)
+        SELECT  article.aid, nickname, title, article.date_time, view, hit, count(cid)
         FROM    article left join comment
                 on article.aid = comment.aid
                 left join user
@@ -885,9 +894,9 @@ def boardQueryBuilder(board, option, keyword)->str:
         query += f""" and
         content like '%{keyword}%' ESCAPE '$'
         """
-    elif option == 'uid':
+    elif option == 'user':
         query += f""" and
-        article.uid like '%{keyword}%' ESCAPE '$'
+        nickname like '%{keyword}%' ESCAPE '$'
         """
     
     query += """
