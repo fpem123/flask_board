@@ -1,4 +1,5 @@
 let UID = undefined;
+const ALLOW_RESPONSE_STATUS = [200, 400, 500];
 
 // 유저 아이디 반환
 function setUID(){
@@ -52,7 +53,7 @@ function sendHit(){
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else{
             signal = false;
@@ -95,7 +96,7 @@ function sendInsertComment() {
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else{
             signal = false;
@@ -135,7 +136,7 @@ function sendDeleteComment(button){
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if (response.status === 200)
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else{
             signal = false;
@@ -147,16 +148,15 @@ function sendDeleteComment(button){
             alert("삭제 실패");
         }
     }).then(result => {
-        if (result['result'])
-        // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
+        if (result['result']){
+            alert(result['msg']);
+            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
             window.location.reload(true);
+        }
         else if (signal){
             signal = false;
-            alert("삭제 실패");
+            alert(result['msg']);
         }
-    }).catch(err => {
-        if (signal)
-            alert("삭제 실패");
     });
 }
 
@@ -182,7 +182,7 @@ function sendInsertUser() {
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else {
             signal = false;
@@ -225,7 +225,7 @@ function sendLoginUser() {
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else {
             signal = false;
@@ -263,7 +263,7 @@ function sendLogoutUser() {
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else {
             signal = false;
@@ -322,7 +322,7 @@ function sendUpdateUser() {
     
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else{
             signal = false;
@@ -369,7 +369,7 @@ function sendDeleteUser() {
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
-        if ([200, 400, 500].includes(response.status))
+        if (ALLOW_RESPONSE_STATUS.includes(response.status))
             return response.json()
         else{
             signal = false;
