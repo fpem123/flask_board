@@ -1,11 +1,13 @@
 from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
+from datetime import timedelta
 import math
 import sqlite3
 
 app = Flask(__name__)
 app.secret_key = "1q2w3e4r!"
+app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 
 BOARD_DICT = {'etc':'기타', 
     'game' : '게임',
