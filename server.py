@@ -1,9 +1,11 @@
 from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
+from werkzeug.utils import secure_filename
 from datetime import timedelta
 
 import sqlite3
+import pathlib
 import hashlib
 import math
 import re
@@ -11,7 +13,7 @@ import re
 
 app = Flask(__name__)
 app.secret_key = b"1q2w3e4r!"
-app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
+#app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 
 
 BOARD_DICT = {'etc':'기타', 
@@ -45,9 +47,9 @@ def isCorrectArticlePWD(pwd: str, aid: int):
     try:
         # 게시물 비밀번호 획득
         SELECT_PWD = f"""
-            SELECT  pwd
+            SELECT  password
             FROM    article
-            WHERE   aid = {aid}
+            WHERE   article_id = {aid}
         """
         cursor.execute(SELECT_PWD)
 
@@ -70,10 +72,10 @@ def isExistUser(uid: str=None, nickname: str=None):
 
         if not uid is None and not nickname is None:
             # uid과 nickname에 해당하는 유저가 있는지
-            SELECT_USER += f"uid = '{uid}' or nickname = '{nickname}'"
+            SELECT_USER += f"user_id = '{uid}' or nickname = '{nickname}'"
         elif not uid is None:
             # uid에 해당하는 유저가 있는지
-            SELECT_USER += f"uid = '{uid}'"
+            SELECT_USER += f"user_id = '{uid}'"
         elif not nickname is None:
             # nickname에 해당하는 유저가 있는지
             SELECT_USER += f"nickname = '{nickname}'"
@@ -91,9 +93,9 @@ def isCorrectPWD(uid: str, pwd: int):
     try:
         # 유저 비밀번호 획득
         SELECT_PWD = f"""
-            SELECT  pwd
+            SELECT  password
             FROM    user
-            WHERE   uid = '{uid}'
+            WHERE   user_id = '{uid}'
         """
         cursor.execute(SELECT_PWD)
 
@@ -187,7 +189,7 @@ def getNickname(uid: str) -> bool:
         SELECT_NICKNAME = f"""
             SELECT  nickname
             FROM    user
-            WHERE   uid = '{uid}'
+            WHERE   user_id = '{uid}'
         """
         cursor.execute(SELECT_NICKNAME)
 
@@ -253,8 +255,8 @@ def memberJoinRequest():
     try:
         INSERT_USER = """
             INSERT INTO user (
-                uid,
-                pwd,
+                user_id,
+                password,
                 nickname
             ) VALUES (
                 ?,
@@ -267,6 +269,7 @@ def memberJoinRequest():
         res = cursor.fetchall()
         return makeReturnDict(True, '회원가입 성공'), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
@@ -304,7 +307,7 @@ def memberLoginRequest():
             SELECT_USER_NICKNAME = f"""
                 SELECT  nickname
                 FROM    user
-                WHERE   uid = '{request_uid}';
+                WHERE   user_id = '{request_uid}';
             """
             cursor.execute(SELECT_USER_NICKNAME)
             res = cursor.fetchall()[0][0]
@@ -388,10 +391,10 @@ def memberUpdateRequest():
     try:
         if request_new_pwd and request_new_nickname:
             request_new_pwd = getSHA256(request_new_pwd)
-            set_query = f"pwd='{request_new_pwd}', nickname='{request_new_nickname}'"
+            set_query = f"password='{request_new_pwd}', nickname='{request_new_nickname}'"
         elif request_new_pwd:
             request_new_pwd = getSHA256(request_new_pwd)
-            set_query = f"pwd='{request_new_pwd}'"
+            set_query = f"password='{request_new_pwd}'"
         elif request_new_nickname:
             set_query = f"nickname='{request_new_nickname}'"
         else:
@@ -401,7 +404,7 @@ def memberUpdateRequest():
         UPDATE_USER = f"""
             UPDATE  user
             SET     {set_query}
-            WHERE   uid='{request_uid}'
+            WHERE   user_id='{request_uid}'
         """
         cursor.execute(UPDATE_USER)
         res = cursor.fetchall()
@@ -412,6 +415,7 @@ def memberUpdateRequest():
 
         return makeReturnDict(True, "정보수정 완료"), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
 
@@ -451,7 +455,7 @@ def memberDeleteeRequest():
         DELETE_USER = f"""
             DELETE  
             FROM    user
-            WHERE   uid='{request_uid}'
+            WHERE   user_id='{request_uid}'
         """
         cursor.execute(DELETE_USER)
         res = cursor.fetchall()
@@ -461,6 +465,7 @@ def memberDeleteeRequest():
 
         return makeReturnDict(True, "탈퇴 성공"), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
 
@@ -490,7 +495,7 @@ def articleHit():
         READ_HIT_HISTORY = f"""
             SELECT  *
             FROM    hit_history
-            WHERE   aid={aid} and uid='{uid}';
+            WHERE   article_id={aid} and user_id='{uid}';
         """
         cursor.execute(READ_HIT_HISTORY)
         res = cursor.fetchall()
@@ -501,8 +506,8 @@ def articleHit():
         # 추천 기록 추가
         INSERT_HIT_USER = """
             INSERT INTO hit_history (
-                aid,
-                uid
+                article_id,
+                user_id
             ) VALUES (
                 ?,
                 ?
@@ -515,23 +520,24 @@ def articleHit():
         ARTICLE_HIT_UP = f"""
             UPDATE  article
             SET     hit = hit + 1
-            WHERE   aid={aid};
+            WHERE   article_id={aid};
         """
         cursor.execute(ARTICLE_HIT_UP)
         res = cursor.fetchall()
-        conn.commit()
 
         # 추천수 반환
         READ_ARTICLE_HIT = f"""
             SELECT  hit
             FROM    article
-            WHERE   aid={aid};
+            WHERE   article_id={aid};
         """
         cursor.execute(READ_ARTICLE_HIT)
         res = cursor.fetchall()[0][0]
+        conn.commit()
 
         return makeReturnDict(True, f'{res}'), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
@@ -561,8 +567,8 @@ def commentCreateCall():
         # 댓글 정보 추가
         INSERT_COMMENT = """
             INSERT INTO comment (
-                aid,
-                uid,
+                article_id,
+                user_id,
                 comment
             ) VALUES (
                 ?,
@@ -576,6 +582,7 @@ def commentCreateCall():
 
         return makeReturnDict(True, '댓글작성 성공.'), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
 
@@ -603,9 +610,9 @@ def commentDeleteCall():
     try:
         # 댓글 작성자 가져오기
         SELECT_COMMENT_WRITER = f"""
-            SELECT  uid
+            SELECT  user_id
             FROM    comment
-            WHERE   cid={cid}
+            WHERE   comment_id={cid}
         """
         cursor.execute(SELECT_COMMENT_WRITER)
         writer = cursor.fetchall()[0][0]
@@ -617,7 +624,7 @@ def commentDeleteCall():
         DELETE_COMMENT = f"""
             DELETE   
             FROM    comment
-            WHERE   cid={cid}
+            WHERE   comment_id={cid}
         """
         cursor.execute(DELETE_COMMENT)
         res = cursor.fetchall()
@@ -625,12 +632,12 @@ def commentDeleteCall():
 
         return makeReturnDict(True, '댓글삭제 성공.'), 200
     except Exception as e:
+        conn.rollback()
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
 ## 글 작성 페이지
-## return : 글 작성 페이지
 ##############
 @app.route('/board/write')
 def articleCreate():
@@ -651,17 +658,17 @@ def articleCreate():
 
 ##############
 ## 글 작성 요청
-## return : 결과 json
 ##############
 @app.route('/board/write_submit',  methods=['POST'])
 def articleCreateCall():
     try:
+        # must
         uid = request.form['uid']
         board = request.form['board']
         title = request.form['title']
         content = request.form['content']
-        #pwd = request.form['pwd']   # 비회원 게시판일 때만 사용하도록
-        # media_files = request.form['media_files']
+        # maybe
+        media_file = request.files.get('media_file', default=None)
     except Exception as e:
         return errorPage(2)
 
@@ -677,7 +684,7 @@ def articleCreateCall():
     try:
         ARTICLE_INSERT = """
             INSERT INTO article (
-                uid,
+                user_id,
                 board,
                 title,
                 content
@@ -689,11 +696,32 @@ def articleCreateCall():
             )
         """
         cursor.execute(ARTICLE_INSERT, (uid, board, title, content))
-        res = cursor.fetchall()
+        article_id = cursor.lastrowid
+
+        if media_file:
+            media_file_name = secure_filename(media_file.filename)
+            extension = pathlib.Path(media_file_name).suffix
+
+            INSERT_MEDIA_FILE = """
+                INSERT INTO media_files (
+                    article_id,
+                    file_name,
+                    file_type
+                ) VALUES (
+                    ?,
+                    ?,
+                    ?
+                )
+            """
+            cursor.execute(INSERT_MEDIA_FILE, (article_id, media_file_name, extension))
+            media_id = cursor.lastrowid
+            media_file.save(f"static/{board}-{media_id}{extension}")
+
         conn.commit()
 
         return redirect(url_for('board', board=board))
     except Exception as e:
+        conn.rollback()
         return errorPage(1)
     
 
@@ -703,7 +731,7 @@ def articleCreateCall():
 def getArticles(board, page, art_per_page, option, keyword):
     try:
         BOARD_COUNT = f"""
-            SELECT  count(aid)
+            SELECT  count(article_id)
             FROM    article
             WHERE   board='{board}';
         """
@@ -724,6 +752,16 @@ def getArticles(board, page, art_per_page, option, keyword):
 
     except Exception as e:
         raise Exception('요청 처리 중 에러가 발생했습니다.')
+
+
+##############
+## Media 정보 제작
+##############
+def buildMediaInfo(board, medias):
+    for idx, media in enumerate(medias):
+        medias[idx] = (f"{board}-{media[0]}{media[1]}", media[2])    # [저장된 이름, 원본이름]
+
+    return medias
 
 
 ##############
@@ -749,45 +787,53 @@ def acrticlePage():
         VIEW_UP = f"""
             UPDATE  article
             SET     view = view + 1
-            WHERE   aid={aid};
+            WHERE   article_id={aid};
         """
         cursor.execute(VIEW_UP)
-        conn.commit()
 
         # 게시물 정보 반환
         ARTICLE_SELECT = f"""
-            SELECT  distinct article.uid, nickname, article.date_time, title, content, view, hit
+            SELECT  distinct article.user_id, nickname, article_time, title, content, view, hit
             FROM    article left join comment
-                    on article.aid = comment.aid
+                    on article.article_id = comment.article_id
                     left join user
-                    on article.uid = user.uid
-            WHERE   article.aid={aid};
+                    on article.user_id = user.user_id
+            WHERE   article.article_id = {aid};
         """
         cursor.execute(ARTICLE_SELECT)
         article = cursor.fetchall()[0]
 
+        # 미디어 파일이 있는지 체크
+        SELECT_MEDIA = f"""
+        SELECT  file_id, file_type, file_name
+        FROM    media_files
+        WHERE   article_id = {aid}
+        """
+        cursor.execute(SELECT_MEDIA)
+        medias = buildMediaInfo(board, cursor.fetchall())
+
         # 댓글 정보 반환
         COMMENT_SELECT = f"""
-            SELECT  cid, comment.uid, nickname, comment, date_time
+            SELECT  comment_id, comment.user_id, nickname, comment, comment_time
             FROM    comment left join user
-		            on comment.uid = user.uid
-            WHERE   aid={aid}
-            ORDER BY cid ASC;
+		            on comment.user_id = user.user_id
+            WHERE   article_id={aid}
+            ORDER BY comment_id ASC;
         """
         cursor.execute(COMMENT_SELECT)
         comments = cursor.fetchall()
 
         articles, start, end = getArticles(board, page, art_per_page, option, keyword)
-        isSearch = option != 'all' 
+        isSearch = option != 'all'
         
         conn.commit()
-
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-        aid=aid, article=article, comments=comments, articles=articles, 
+        aid=aid, article=article[:7], comments=comments, articles=articles, medias=medias,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
         print(e)
+        conn.rollback()
         return errorPage(1)
 
 
@@ -837,14 +883,14 @@ def acrticleUpdate():
     try:
         # 게시물 정보 획득 획득
         SELECT_ARTICLE_INFO = f"""
-            SELECT  title, content, uid
+            SELECT  title, content, media_id, user_id
             FROM    article
-            WHERE   aid = {aid};
+            WHERE   article_id = {aid};
         """
         cursor.execute(SELECT_ARTICLE_INFO)
         res = cursor.fetchall()[0]
 
-        if res[2] != request_uid:
+        if res[3] != request_uid:
             return errorPage(3)
 
         return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
@@ -854,7 +900,7 @@ def acrticleUpdate():
 
 
 ##############
-## 글 수정
+## 글 수정 요청
 ##############
 @app.route('/board/update_submit', methods=['POST'])
 def acrticleUpdateCall():
@@ -884,9 +930,9 @@ def acrticleUpdateCall():
     try:
         # 회원은 아이디만으로도 글을 수정할 수 있다.
         SELECT_ARTICLE_WRITER = f"""
-            SELECT  uid
+            SELECT  user_id
             FROM    article
-            WHERE   aid = {aid};
+            WHERE   article_id = {aid};
         """
         cursor.execute(SELECT_ARTICLE_WRITER)
         writer = cursor.fetchall()[0][0]
@@ -899,7 +945,7 @@ def acrticleUpdateCall():
             UPDATE article
             SET title = '{title}',
                 content = '{content}'
-            WHERE aid = '{aid}'
+            WHERE article_id = '{aid}'
             """
 
         cursor.execute(UPDATE_ARTICLE)
@@ -908,6 +954,7 @@ def acrticleUpdateCall():
 
         return redirect(url_for('board', board=board))
     except Exception as e:
+        conn.rollback()
         return errorPage(1)
 
 
@@ -939,9 +986,9 @@ def articleDalete():
     # 글 삭제
     try:
         GET_ARTICLE_WRITER = f"""
-            SELECT  uid
+            SELECT  user_id
             FROM    article
-            WHERE   aid = {aid};
+            WHERE   article_id = {aid};
         """
         cursor.execute(GET_ARTICLE_WRITER)
         writer = cursor.fetchall()[0][0]
@@ -952,7 +999,7 @@ def articleDalete():
         ARTIECLE_DELTE = f"""
             DELETE
             FROM article
-            WHERE aid = {aid};
+            WHERE article_id = {aid};
         """
 
         cursor.execute(ARTIECLE_DELTE)
@@ -961,6 +1008,7 @@ def articleDalete():
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
+        conn.rollback()
         return errorPage(1)
 
 
@@ -1015,38 +1063,40 @@ def board():
 ## 게시판 페이지에 사용할 SQL 쿼리
 ##############
 def boardQueryBuilder(board, option, keyword)->str:
-    query = f"""
-        SELECT  article.aid, nickname, title, article.date_time, view, hit, count(cid)
-        FROM    article left join comment
-                on article.aid = comment.aid
-                left join user
-                on article.uid = user.uid
-        WHERE   board='{board}'"""
+    try:
+        query = f"""
+            SELECT  article.article_id, nickname, title, article_time, view, hit, count(comment_id)
+            FROM    article left join comment
+                    on article.article_id = comment.article_id
+                    left join user
+                    on article.user_id = user.user_id
+            WHERE   board='{board}'"""
 
-    if option == 'title, content':
-        query += f""" and (
-        title like '%{keyword}%' ESCAPE '$' or
-        content like '%{keyword}%' ESCAPE '$') """
-    elif option == 'title':
-        query += f""" and
-        title like '%{keyword}%' ESCAPE '$'
+        if option == 'title, content':
+            query += f""" and (
+            title like '%{keyword}%' ESCAPE '$' or
+            content like '%{keyword}%' ESCAPE '$') """
+        elif option == 'title':
+            query += f""" and
+            title like '%{keyword}%' ESCAPE '$'
+            """
+        elif option == 'content':
+            query += f""" and
+            content like '%{keyword}%' ESCAPE '$'
+            """
+        elif option == 'user':
+            query += f""" and
+            nickname like '%{keyword}%' ESCAPE '$'
+            """
+        
+        query += """
+        GROUP BY article.article_id
+        ORDER BY article.article_id DESC;
         """
-    elif option == 'content':
-        query += f""" and
-        content like '%{keyword}%' ESCAPE '$'
-        """
-    elif option == 'user':
-        query += f""" and
-        nickname like '%{keyword}%' ESCAPE '$'
-        """
-    
-    query += """
-    GROUP BY article.aid
-    ORDER BY article.aid DESC;
-    """
 
-    return query
-
+        return query
+    except Exception as e:
+        raise Exception("DB 확인 중 에러가 발생했습니다.")
 
 ##############
 ## 메인 페이지

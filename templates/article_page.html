@@ -16,7 +16,8 @@
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="article" style="border:1px solid black; padding: 10px">
-            {% set article_uid, article_nickname, article_date, article_title, article_cntent, article_view, article_hit = article %}
+            {% set article_uid, article_nickname, article_date, article_title, 
+                article_content, article_view, article_hit = article %}
             <h3>{{ article_title }}</h3>
             {% if board == 'anonymous' %}
             <div style="float:left;">익명 | {{ article_date }}</div>
@@ -27,6 +28,12 @@
             <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
             <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
+                {% for media in medias %}
+                <a href="{{ url_for('static', filename=media[0]) }}" download="{{ media[1] }}">
+                    <img src="{{ url_for('static', filename=media[0]) }}" alt="{{ media[1] }}" 
+                    style="width: 80%; max-width: 640px;">
+                </a>
+                {% endfor %}
                 <pre>{{ article_content }}</pre>
             </div>
             

@@ -7,7 +7,6 @@ function setUID(){
 }
 
 function isUIDEmpty(){
-    console.log(UID);
     if (UID == undefined){
         return true;
     }
@@ -37,8 +36,6 @@ function onKeydownTap(textarea){
 function sendHit(){
     if (isUIDEmpty()){
         alert("로그인이 필요한 작업입니다.");
-        console.log(UID);
-
         return;
     }
 
