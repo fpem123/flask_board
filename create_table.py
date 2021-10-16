@@ -8,7 +8,7 @@ conn = sqlite3.connect("test.db")
 #   nickname : 유저 닉네임
 CREATE_USER_TABLE = """
     create table if not exists user(
-        uid char(10) not null primary key,
+        uid char(16) not null primary key,
         pwd char(64) not null,
         nickname char(10) UNIQUE not null
     );

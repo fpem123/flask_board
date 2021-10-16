@@ -3,9 +3,10 @@ from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
 from datetime import timedelta
 
+import sqlite3
 import hashlib
 import math
-import sqlite3
+import re
 
 
 app = Flask(__name__)
@@ -33,7 +34,7 @@ def isNotAllowBoard(board):
     return board not in BOARD_DICT
 
 
-def isCollectArticlePWD(pwd: str, aid: int):
+def isCorrectArticlePWD(pwd: str, aid: int):
     """
     ### 글의 비밀번호와 입력된 비밀번호가 같은지 확인
     비회원 게시판 전용
@@ -79,7 +80,7 @@ def isExistUser(uid: str=None, nickname: str=None):
         return False
 
 
-def isCollectPWD(uid: str, pwd: int):
+def isCorrectPWD(uid: str, pwd: int):
     """
     ### 회원 비밀번호와 입력된 비밀번호가 같은지 확인
     회원 전용
@@ -99,11 +100,78 @@ def isCollectPWD(uid: str, pwd: int):
 
 
 def isSessionUser(uid: str):
+    """
+    ### 요청한 유저가 세션 유저와 동일한 유저인지
+    회원 전용
+    """
     return session.get('uid') == uid
 
 
 def isLogin():
+    """
+    ### 로그인 된 상태인지
+    회원 전용
+    """
     return session.get('uid')
+
+
+def isCorrectPWDForm(pwd: str):
+    """
+    ### 올바른 비밀번호 형식인지 확인
+
+    * 5 글자 이상, 16 글자 이하
+    * 영어와 숫자, 일부 특수문자만 가능
+    * 허용된 특수문자 = ['!', '@', '#', '$', '%', '^', '&']
+    * 공백 불가
+    """
+    # 길이 검사
+    if len(pwd) < 5 or len(pwd) > 16:
+        return False
+    
+    # 영어, 숫자, 특문, 공백 검사
+    if not re.match('^[\w!@#$%^&*]+$', pwd):
+        return False
+    
+    return True
+
+
+def isCorrectUidForm(uid: str):
+    """
+    ### 올바른 아이디 형식인지 확인
+    
+    * 5 글자 이상, 16 글자 이하
+    * 영어와 숫자만 가능
+    * 특수문자 불가능
+    * 공백 불가
+    """
+    # 길이 검사
+    if len(uid) < 5 or len(uid) > 16:
+        return False
+    
+    # 영어, 숫자, 특문, 공백 검사
+    if not uid.isalnum:
+        return False
+
+    return True
+
+
+def isCorrectNicknameForm(nickname):
+    """
+    ### 올바른 닉네임 형식인지 확인
+    * 2 글자 이상, 10 글자 이하
+    * 영어와 숫자만 가능
+    * 공백 불가
+    * ', " 사용 볼가
+    """
+    # 길이 검사
+    if len(nickname) < 5 or len(nickname) > 16:
+        return False
+    
+    # 공백, 특수문자 검사
+    if re.findall('[\s\'\"]+', nickname):
+        return False
+    
+    return True
 
 
 def getNickname(uid: str):
@@ -126,10 +194,16 @@ def getNickname(uid: str):
 
 
 def getSHA256(item: str):
+    """
+    ### SHA256 암호화
+    """
     return hashlib.sha256(item.encode()).hexdigest()
 
 
 def makeReturnDict(result: bool, msg: str) -> dict:
+    """
+    ### json 통신을 위한 dict 만듬
+    """
     return {"result": result, "msg": msg}
 
 
@@ -164,6 +238,15 @@ def memberJoinRequest():
 
     if isLogin():
         return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
+
+    if not isCorrectUidForm(request_uid):
+        return makeReturnDict(False, '올바르지 않은 아이디 형식입니다.'), 400
+    
+    if not isCorrectPWDForm(request_pwd):
+        return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.'), 400
+
+    if not isCorrectNicknameForm(request_nickname):
+        return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.'), 400
 
     request_pwd = getSHA256(request_pwd)
 
@@ -213,11 +296,11 @@ def memberLoginRequest():
     if isLogin():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
 
-    try:
-        request_pwd = getSHA256(request_pwd)
+    request_pwd = getSHA256(request_pwd)
 
+    try:
         # 비밀번호가 일치하는지
-        if isCollectPWD(request_uid, request_pwd):
+        if isCorrectPWD(request_uid, request_pwd):
             SELECT_USER_NICKNAME = f"""
                 SELECT  nickname
                 FROM    user
@@ -288,10 +371,18 @@ def memberUpdateRequest():
     if isExistUser(nickname=request_new_nickname):
         return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
 
+    if request_new_pwd:
+        if not isCorrectPWDForm(request_new_pwd):
+            return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.'), 400
+
+    if request_new_nickname:
+        if not isCorrectNicknameForm(request_new_nickname):
+            return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.'), 400
+
     request_pwd = getSHA256(request_pwd)
 
     # 비밀번호 확인
-    if not isCollectPWD(request_uid, request_pwd):
+    if not isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
@@ -353,7 +444,7 @@ def memberDeleteeRequest():
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
     
     # 비밀번호 확인
-    if isCollectPWD(request_uid, request_pwd):
+    if isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
@@ -700,7 +791,6 @@ def acrticlePage():
         return errorPage(1)
 
 
-
 ##############
 ## 유저 체크 페이지
 ## 비회원 게시판 전용 비밀번호 검문 페이지
@@ -874,7 +964,6 @@ def articleDalete():
         return errorPage(1)
 
 
-
 ##############
 ## 글 삭제 완료 페이지
 ##############
@@ -965,7 +1054,6 @@ def boardQueryBuilder(board, option, keyword)->str:
 @app.route('/')
 def main():
     return render_template('main.html', boards=BOARD_DICT), 200
-
 
 
 @app.errorhandler(404)

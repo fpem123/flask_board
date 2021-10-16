@@ -1,9 +1,9 @@
 <div class="member">
     {% if not session['uid'] %}
     <input type="text" id="request_uid" placeholder="ID" 
-    maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+    maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
     <input type="password" id="request_pwd" placeholder="PASSWORD" 
-    maxlength='10' style="width:200px; height:20px;">
+    maxlength='16' style="width:200px; height:20px;">
     <button onclick="return sendLoginUser()">로그인</button>
     <br>
     <a href="{{ url_for('memberJoin') }}">회원가입</a>

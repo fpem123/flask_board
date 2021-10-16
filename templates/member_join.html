@@ -16,10 +16,10 @@
         <div class="member-join">
             {% if not session.get("uid") %}
             <input type="text" id="new_uid" placeholder="ID" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
             <input type="password" id="new_pwd" placeholder="PASSWORD" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+            maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
             <br><br>
             <input type="text" id="new_nickname" placeholder="닉네임" 
             maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
