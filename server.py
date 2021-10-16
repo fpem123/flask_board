@@ -1,7 +1,6 @@
 from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
-from werkzeug.utils import secure_filename
 from datetime import timedelta
 
 import sqlite3
@@ -742,7 +741,7 @@ def articleCreateCall():
         article_id = cursor.lastrowid
 
         if media_file:
-            media_file_name = secure_filename(media_file.filename)
+            media_file_name = pathlib.Path(media_file.filename).name
             extension = pathlib.Path(media_file_name).suffix
 
             INSERT_MEDIA_FILE = """
