@@ -15,11 +15,17 @@
 
         <h3>정보수정</h3>
 
-
         <div class="member-update">
             {% if session.get("uid") %}
-            <p>아이디 변경은 불가능합니다.</p>
-            <p>이전 비밀번호는 필수로 입력해야하며, 비밀번호와 닉네임 중 변경을 원하시는 항목만 작성하시면 됩니다.</p>
+            <p>
+                <h4>규 칙</h4>
+                <label>아이디 변경은 불가능합니다.</label><br>
+                <label>이전 비밀번호는 필수로 입력해야하며, 비밀번호와 닉네임 중 변경을 원하시는 항목만 작성하시면 됩니다.</label><br>
+                <label>비밀번호는 5 ~ 16 글자여야 하며 영문과 숫자, !, @, #, $, %, ^, & 만 가능합니다.</label><br>
+                <label>닉네임은 2 ~ 10 글자여야 하며 공백과 ', " 는 사용 불가능합니다.</label><br>
+            </p>
+            <br>
+
             <label>이전 비밀번호 : </label><input type="password" id="old_pwd" placeholder="PASSWORD" 
             maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
             <br><br>

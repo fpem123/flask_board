@@ -30,7 +30,10 @@ conn.commit()
 ## 허용되지 않은 게시판인지 확인
 ## return : boolean
 ##############
-def isNotAllowBoard(board):
+def isNotAllowBoard(board: str) -> bool:
+    """
+    ### 허용된 게시판인지 확인
+    """
     return board not in BOARD_DICT
 
 
@@ -50,7 +53,7 @@ def isCorrectArticlePWD(pwd: str, aid: int):
 
         return pwd == cursor.fetchall()[0][0]
     except Exception as e:
-        raise Exception('DB 확인 에러!')
+        return False
 
 
 def isExistUser(uid: str=None, nickname: str=None):
@@ -99,7 +102,7 @@ def isCorrectPWD(uid: str, pwd: int):
         raise False
 
 
-def isSessionUser(uid: str):
+def isSessionUser(uid: str) -> bool:
     """
     ### 요청한 유저가 세션 유저와 동일한 유저인지
     회원 전용
@@ -107,7 +110,7 @@ def isSessionUser(uid: str):
     return session.get('uid') == uid
 
 
-def isLogin():
+def isLogin() -> bool:
     """
     ### 로그인 된 상태인지
     회원 전용
@@ -115,7 +118,7 @@ def isLogin():
     return session.get('uid')
 
 
-def isCorrectPWDForm(pwd: str):
+def isCorrectPWDForm(pwd: str) -> bool:
     """
     ### 올바른 비밀번호 형식인지 확인
 
@@ -135,7 +138,7 @@ def isCorrectPWDForm(pwd: str):
     return True
 
 
-def isCorrectUidForm(uid: str):
+def isCorrectUidForm(uid: str) -> bool:
     """
     ### 올바른 아이디 형식인지 확인
     
@@ -155,7 +158,7 @@ def isCorrectUidForm(uid: str):
     return True
 
 
-def isCorrectNicknameForm(nickname):
+def isCorrectNicknameForm(nickname) -> bool:
     """
     ### 올바른 닉네임 형식인지 확인
     * 2 글자 이상, 10 글자 이하
@@ -164,7 +167,7 @@ def isCorrectNicknameForm(nickname):
     * ', " 사용 볼가
     """
     # 길이 검사
-    if len(nickname) < 5 or len(nickname) > 16:
+    if len(nickname) < 2 or len(nickname) > 16:
         return False
     
     # 공백, 특수문자 검사
@@ -174,7 +177,7 @@ def isCorrectNicknameForm(nickname):
     return True
 
 
-def getNickname(uid: str):
+def getNickname(uid: str) -> bool:
     """
     ### 회원의 닉네임을 가져옴
     회원 전용
@@ -193,24 +196,21 @@ def getNickname(uid: str):
         raise Exception('DB 확인 에러!')
 
 
-def getSHA256(item: str):
+def getSHA256(item: str) -> str:
     """
     ### SHA256 암호화
     """
     return hashlib.sha256(item.encode()).hexdigest()
 
 
-def makeReturnDict(result: bool, msg: str) -> dict:
+def makeReturnDict(result: bool, msg: str, data=None) -> dict:
     """
     ### json 통신을 위한 dict 만듬
     """
-    return {"result": result, "msg": msg}
-
-
-@app.route('/clear')
-def masterClear():
-    session.clear()
-    return 'Clear'
+    if data:
+        return {"result": result, "msg": msg, "data": data}
+    else:
+        return {"result": result, "msg": msg}
 
 
 ##############
