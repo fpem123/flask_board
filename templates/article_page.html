@@ -29,10 +29,8 @@
             <br><br>
             <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
                 {% for media in medias %}
-                <a href="{{ url_for('static', filename=media[0]) }}" download="{{ media[1] }}">
-                    <img src="{{ url_for('static', filename=media[0]) }}" alt="{{ media[1] }}" 
-                    style="width: 80%; max-width: 640px;">
-                </a>
+                <img src="{{ url_for('static', filename=media[0]) }}" alt="{{ media[1] }}" 
+                style="height: auto; max-width: 100%;">
                 {% endfor %}
                 <pre>{{ article_content }}</pre>
             </div>
@@ -44,6 +42,18 @@
             </div>
 
             <br>
+
+            {% if medias %}
+            <div class="media_list" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
+                <label>첨부 사진 {{ medias | length }}개</label><br>
+                {% for media in medias %}
+                <a href="{{ url_for('static', filename=media[0]) }}" download="{{ media[1] }}">{{ media[0] }}</a>
+                &ensp;&ensp;
+                {% endfor %}
+            </div>
+
+            <br>
+            {% endif %}
 
             <h5>댓글 {{ comments | length }}개</h5>
             <div class="comments" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
