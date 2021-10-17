@@ -14,6 +14,18 @@ function isUIDEmpty(){
         return false;
 }
 
+
+function setCkeditor(){
+    ClassicEditor
+    .create( document.querySelector( '#editor' ), {
+        language: { ui: 'ko', content: 'ko'}
+    })
+    .catch( error => {
+        console.error(error);
+    });
+}
+
+
 // 엔터키 전송 방지
 function onKeydownEnter(){
     if(event.keyCode==13) 

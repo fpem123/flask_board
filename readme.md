@@ -2,9 +2,12 @@
 
 ## 사용법
 
+* 사용한 오픈소스 : [CKEditor5](https://ckeditor.com/ckeditor-5/download/)
+
 * requirements : Flask, sqlite3
 
 * create_table.py 먼저 실행하고 server.py 실행하기
+
 
 ---
 
@@ -42,6 +45,8 @@
 
 * 글에 수정시 미디어 파일 바꿀 수 있게
 
+* 글 꾸미기 기능 -> ckeditor5 사용
+
 ---
 
 ## TO-DO
@@ -56,4 +61,3 @@
 
 * 비회원 게시판
 
-* 글 꾸미기 기능

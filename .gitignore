@@ -1,5 +1,7 @@
 test.db
 test.py
 
+static/ckeditor5
+
 *.gif
 *.png
