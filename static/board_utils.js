@@ -15,14 +15,26 @@ function isUIDEmpty(){
 }
 
 
-function setCkeditor(){
+function setCkeditor(board){
     ClassicEditor
     .create( document.querySelector( '#editor' ), {
-        language: { ui: 'ko', content: 'ko'}
+        language: { ui: 'ko', content: 'ko'},
+        ckfinder : {uploadUrl: `/board/${board}/image-upload`}
     })
     .catch( error => {
         console.error(error);
     });
+}
+
+function viewFlaskContent(content){
+    content = content.replaceAll("&lt;", "<");
+    content = content.replaceAll("&gt;", ">");
+    content = content.replaceAll("&amp;lt;", "<");
+    content = content.replaceAll("&amp;gt;", ">");
+    content = content.replaceAll("&amp;nbsp;", " ");
+    content = content.replaceAll("&#34;", '"');
+
+    document.getElementById('content').innerHTML = content;
 }
 
 

@@ -74,19 +74,15 @@ CREATE_ARTICLE_HIT_HISTORY_TABLE = """
 """
 
 #   file_id : pk, 파일 id
-#   article_id : fk, 파일을 사용한 게시물 id
 #   file_name : 업로드 당시 서버가 받았던 파일 이름
 #   file_type : 파일 타입
 #   upload_time : 파일이 업로드된 시간
-CREATE_MEDIA_FILE_TABLE = """
-    create table if not exists media_files(
+CREATE_IMAGE_FILE_TABLE = """
+    create table if not exists image_files(
         file_id integer not null primary key autoincrement,
-        article_id int not null,
         file_name char(50),
         file_type char(10) not null,
-        upload_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
-        CONSTRAINT article_fk FOREIGN KEY(article_id) REFERENCES article(article_id)
-         ON UPDATE CASCADE ON DELETE CASCADE 
+        upload_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null
     );
 """
 
@@ -94,7 +90,7 @@ conn.execute(CREATE_USER_TABLE)
 conn.execute(CREATE_ARTICLE_TABLE)
 conn.execute(CREATE_COMMENT_TABLE)
 conn.execute(CREATE_ARTICLE_HIT_HISTORY_TABLE)
-conn.execute(CREATE_MEDIA_FILE_TABLE)
+conn.execute(CREATE_IMAGE_FILE_TABLE)
 
 #### TO-DO 비 회원 게시판 전용 테이블 ####
 

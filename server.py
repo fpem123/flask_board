@@ -9,6 +9,8 @@ import hashlib
 import math
 import re
 
+from flask.sessions import NullSession
+
 
 app = Flask(__name__)
 app.secret_key = b"1q2w3e4r!"
@@ -94,7 +96,6 @@ def isExistUser(uid: str=None, nickname: str=None):
             return False
 
     except Exception as e:
-        print(e)
         cursor.close()
 
         return False
@@ -697,6 +698,49 @@ def articleCreate():
 
 
 ##############
+## 이미지 업로드 처리
+##############
+@app.route('/board/<board>/image-upload',  methods=['POST'])
+def imageUploadCall(board):
+    try:
+        image = request.files['upload']
+    except Exception as e:
+        return {"uploaded": False, "url": False}, 400
+
+    if isNotAllowBoard(board):
+        return {"uploaded": False, "url": False}, 400
+
+    try:
+        cursor = conn.cursor()
+
+        image_file_name = pathlib.Path(image.filename).name
+        extension = pathlib.Path(image_file_name).suffix
+
+        INSERT_IMAGE_FILE = """
+            INSERT INTO image_files (
+                file_name,
+                file_type
+            ) VALUES (
+                ?,
+                ?
+            )
+        """
+        cursor.execute(INSERT_IMAGE_FILE, (image_file_name, extension))
+        image_id = cursor.lastrowid
+        SAVE_PATH = f"static/image/{board}/{board}-{image_id}{extension}"
+        image.save(SAVE_PATH)
+
+        cursor.close()
+        conn.commit()
+
+        return {"uploaded": True, "url": "/" + SAVE_PATH}, 200
+    except Exception as e:
+        cursor.close()
+        conn.rollback()
+        return {"uploaded": False, "url": False}, 400
+
+
+##############
 ## 글 작성 요청
 ##############
 @app.route('/board/write_submit',  methods=['POST'])
@@ -707,8 +751,6 @@ def articleCreateCall():
         board = request.form['board']
         title = request.form['title']
         content = request.form['content']
-        # maybe
-        media_file = request.files.get('media_file', default=None)
     except Exception as e:
         return errorPage(2)
 
@@ -738,26 +780,6 @@ def articleCreateCall():
             )
         """
         cursor.execute(INSERT_ARTICLE, (uid, board, title, content))
-        article_id = cursor.lastrowid
-
-        if media_file:
-            media_file_name = pathlib.Path(media_file.filename).name
-            extension = pathlib.Path(media_file_name).suffix
-
-            INSERT_MEDIA_FILE = """
-                INSERT INTO media_files (
-                    article_id,
-                    file_name,
-                    file_type
-                ) VALUES (
-                    ?,
-                    ?,
-                    ?
-                )
-            """
-            cursor.execute(INSERT_MEDIA_FILE, (article_id, media_file_name, extension))
-            media_id = cursor.lastrowid
-            media_file.save(f"static/{board}-{media_id}{extension}")
 
         cursor.close()
         conn.commit()
@@ -850,15 +872,6 @@ def acrticlePage():
         cursor.execute(SELECT_ARTICLE)
         article = cursor.fetchall()[0]
 
-        # 미디어 파일이 있는지 체크
-        SELECT_MEDIAS = f"""
-        SELECT  file_id, file_type, file_name
-        FROM    media_files
-        WHERE   article_id = {aid}
-        """
-        cursor.execute(SELECT_MEDIAS)
-        medias = buildMediaInfo(board, cursor.fetchall())
-
         # 댓글 정보 반환
         SELECT_COMMENTS = f"""
             SELECT  comment_id, comment.user_id, nickname, comment, comment_time
@@ -869,7 +882,6 @@ def acrticlePage():
         """
         cursor.execute(SELECT_COMMENTS)
         comments = cursor.fetchall()
-
         articles, start, end = getArticles(cursor, board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
         
@@ -878,7 +890,7 @@ def acrticlePage():
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
-        aid=aid, article=article, comments=comments, articles=articles, medias=medias,
+        aid=aid, article=article, comments=comments, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
         cursor.close()
@@ -950,7 +962,6 @@ def acrticleUpdate():
         return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
         aid=aid, title=title, content=content), 200
     except Exception as e:
-        print(e)
         cursor.close()
 
         return errorPage(1)

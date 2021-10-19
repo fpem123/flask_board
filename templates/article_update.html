@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        {% include 'frame_ckeditor5.html' %}
     </head>
 
     <body>
@@ -16,7 +17,6 @@
         <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
 
         <div class="write" style="border:1px solid black; padding: 10px">
-            <script src="https://cdn.ckeditor.com/ckeditor5/30.0.0/classic/ckeditor.js"></script>
             {% if session.get('uid') %}
             <form action="{{ url_for('acrticleUpdateCall', board=board) }}" method="POST">
                 <input type="hidden" name="aid" value='{{ aid }}'>
@@ -25,13 +25,8 @@
                 <input type="text" name="title" value="{{ title }}"
                 placeholder="제목을 입력하세요." style="width:300px; height:20px" onkeydown="return onKeydownEnter()">
                 <br><br>
-                <label>
-                    <textarea name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);">{{ content }}</textarea>
-                </label>
-                <br><br>
-                <label>파일 첨부</label>
-                <br><br>
-                <input type="file" name="media_file">
+                <textarea id="editor" name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);">{{ content }}</textarea>
+                <script>setCkeditor( "{{board}}" )</script>
                 <br><br>
                 <input type="submit" value="완료" style="width:80px; height:40px">
             </form>

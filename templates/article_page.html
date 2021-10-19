@@ -27,13 +27,9 @@
             <div style="float:right;">조회수 {{ article_view }} | 추천 {{ article_hit }}</div>
             <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
-            <div class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
-                {% for media in medias %}
-                <img src="{{ url_for('static', filename=media[0]) }}" alt="{{ media[1] }}" 
-                style="height: auto; max-width: 100%;">
-                {% endfor %}
-                <pre>{{ article_content }}</pre>
+            <div id="content" class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
             </div>
+            <script>viewFlaskContent("{{ article_content }}")</script>
             
             <br>
 
