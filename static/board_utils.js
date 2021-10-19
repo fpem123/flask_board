@@ -27,10 +27,11 @@ function setCkeditor(board){
 }
 
 
-function setCkeditorRead(){
+function setCkeditorReadOnly(){
     ClassicEditor
     .create( document.querySelector( '#content' ), {
         language: { ui: 'ko', content: 'ko'},
+        toolbar: []
     })
     .catch( error => {
         console.error(error);
@@ -40,19 +41,7 @@ function setCkeditorRead(){
     })
     .catch( error => {
         console.error(error);
-    });
-}
-
-
-function viewFlaskContent(content){
-    content = content.replaceAll("&lt;", "<");
-    content = content.replaceAll("&gt;", ">");
-    content = content.replaceAll("&amp;lt;", "<");
-    content = content.replaceAll("&amp;gt;", ">");
-    content = content.replaceAll("&amp;nbsp;", " ");
-    content = content.replaceAll("&#34;", '"');
-
-    document.getElementById('content').innerHTML = content;
+    })
 }
 
 
