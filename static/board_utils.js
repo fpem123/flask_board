@@ -93,15 +93,67 @@ function sendHit(){
             alert("추천 실패");
         }
     }).then(result => {
-        if (result['result'])
-            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
-            window.location.reload(true);
+        if (result['result']){
+            hits = document.getElementsByName( "hit" );
+            for (let hit of hits){
+                console.log(hit);
+                hit.innerText = result['data'];
+            }
+        }
         else if (signal){
             signal = false;
             alert(result['msg']);
         }
     });
 }
+
+
+// 댓글 보여주기
+function commentBuilder(comments) {
+    document.getElementById( "num-comments" ).innerText = comments.length;
+    table = document.getElementById( "comments" );
+
+    while (table.hasChildNodes()){
+        table.removeChild(table.lastChild);
+    }
+
+    for (let comment of comments) {
+        const row = table.insertRow();
+        const comment_nickname_cell = row.insertCell(0);
+        const comment_content_cell = row.insertCell(1);
+        const comment_date_cell = row.insertCell(2);
+        const comment_btn_cell = row.insertCell(3);
+        const comment_uid = comment[1];
+        
+        row.align = "center";
+
+        comment_nickname_cell.style.width = "10%";
+        comment_nickname_cell.innerText = comment[2];
+
+        comment_content_cell.align = "left";
+        comment_content_cell.style.width = "65%";
+        comment_content_cell.innerText = comment[3];
+
+        comment_date_cell.align = "right";
+        comment_date_cell.style.width = "20%";
+        comment_date_cell.innerText = comment[4]
+
+        comment_btn_cell.style.width = "5%";
+        comment_btn_cell.align = "right";
+
+        if (comment_uid === UID){
+            const del_btn = document.createElement('button');
+            del_btn.value = comment[0];
+            del_btn.innerText = 'X';
+            del_btn.setAttribute("onClick", "return sendDeleteComment(this)");
+            comment_btn_cell.appendChild(del_btn);
+        }
+        else {
+            comment_btn_cell.innerText = '&nbsp;';
+        }
+    }
+}
+
 
 // 댓글 작성 리퀘스트
 function sendInsertComment() {
@@ -112,7 +164,7 @@ function sendInsertComment() {
     }
 
     let aid = document.getElementById( 'aid' ).value;
-    let comment = document.getElementById( 'comment' ).value;
+    let comment = document.getElementById( 'input-comment' ).value;
 
     const formData = new FormData();
     const url = '/comment/write';
@@ -136,9 +188,10 @@ function sendInsertComment() {
             alert("댓글 등록 실패");
         }
     }).then(result => {
-        if (result['result'])
-            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
-            window.location.reload(true);
+        if (result['result']){
+            commentBuilder(result['data']);
+            document.getElementById( 'input-comment' ).value = "";
+        }
         else if (signal){
             signal = false;
             alert(result['msg']);
@@ -154,6 +207,7 @@ function sendDeleteComment(button){
         return;
     }
     let cid = button.value;
+    let aid = document.getElementById( 'aid' ).value;
 
     const formData = new FormData();
     const url = '/comment/delete';
@@ -161,6 +215,7 @@ function sendDeleteComment(button){
 
     formData.append('uid', UID);
     formData.append('cid', cid);
+    formData.append('aid', aid);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -178,8 +233,7 @@ function sendDeleteComment(button){
     }).then(result => {
         if (result['result']){
             alert(result['msg']);
-            // TO-DO : 새로고침이 아닌 실시간으로 바뀌게
-            window.location.reload(true);
+            commentBuilder(result['data']);
         }
         else if (signal){
             signal = false;

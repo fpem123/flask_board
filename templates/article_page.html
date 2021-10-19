@@ -25,7 +25,7 @@
             {% else %}
             <div style="float:left;">{{ article_nickname }} | {{ article_date }}</div>
             {% endif %}
-            <div style="float:right;">조회수 {{ article_view }} | 추천 {{ article_hit }}</div>
+            <div style="float:right;">조회수 {{ article_view }} | 추천 <label name="hit">{{ article_hit }}</label></div>
             <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
             <textarea id="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;" rows="30" onkeydown="return onKeydownTap(this);">
@@ -36,27 +36,15 @@
             <br>
 
             <div class="btns" align="center">
-                <button onclick="return sendHit()">추천하기 ({{ article_hit }})</button>
+                <button onclick="return sendHit()">추천하기 (<label name="hit">{{ article_hit }}</label>)</button>
             </div>
 
             <br>
 
-            {% if medias %}
-            <div class="media_list" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
-                <label>첨부 사진 {{ medias | length }}개</label><br>
-                {% for media in medias %}
-                <a href="{{ url_for('static', filename=media[0]) }}" download="{{ media[1] }}">{{ media[0] }}</a>
-                &ensp;&ensp;
-                {% endfor %}
-            </div>
-
-            <br>
-            {% endif %}
-
-            <h5>댓글 {{ comments | length }}개</h5>
-            <div class="comments" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
+            <h5>댓글 <label id="num-comments">{{ comments | length }}</label>개</h5>
+            <div class="view-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
                 {% if comments %}
-                <table style="width: 90%;">
+                <table id="comments" style="width: 90%;">
                     {% for cid, comment_uid, comment_nickname, comment, cdate_time in comments %}
                     <tr align="center">
                         {% if board == 'anonymous' %}
@@ -81,7 +69,11 @@
                     {% endfor %}
                 </table>
                 {% else %}
-                    <p align='center'>아직 등록된 댓글이 없습니다.</p>
+                <table id="comments" style="width: 90%;">
+                    <tr align='center'>
+                        <td align='center'><p>아직 등록된 댓글이 없습니다.</p></td>
+                    </tr>
+                </table>
                 {% endif %}
             </div>
 
@@ -89,11 +81,9 @@
 
             <div class="write-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
                 {% if session['uid'] %}
-                <script>
-                </script>
                 <p>
                     <label>{{ session.get('nickname') }}</label><br><br>
-                    <input onkeydown="if(event.keyCode==13) return sendInsertComment()" type="text" id="comment" style="width:80%; height: 50px; resize: none;"></textarea>
+                    <input onkeydown="if(event.keyCode==13) return sendInsertComment()" type="text" id="input-comment" style="width:80%; height: 50px; resize: none;"></textarea>
                     
                     <button onclick="return sendInsertComment()" type="submit" style="width:80px; height:40px">댓글 달기</button>
                 </p>

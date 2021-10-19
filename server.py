@@ -2,15 +2,12 @@ from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
 from datetime import timedelta
-from bs4 import BeautifulSoup as bs     # HTML tag 화이트리스트 검사용
 
 import sqlite3
 import pathlib
 import hashlib
 import math
 import re
-
-from flask.sessions import NullSession
 
 
 app = Flask(__name__)
@@ -576,6 +573,24 @@ def articleHit():
 
 
 ##############
+## aid에 해당하는 댓글 정보 반환
+##############
+def selectComment(cursor, aid):
+    # 댓글 정보 반환
+    SELECT_COMMENTS = f"""
+        SELECT  comment_id, comment.user_id, nickname, comment, comment_time
+        FROM    comment left join user
+                on comment.user_id = user.user_id
+        WHERE   article_id={aid}
+        ORDER BY comment_id ASC;
+    """
+    cursor.execute(SELECT_COMMENTS)
+    comments = cursor.fetchall()
+
+    return comments
+
+
+##############
 ## 댓글 작성 요청
 ##############
 @app.route('/comment/write', methods=['POST'])
@@ -613,10 +628,13 @@ def commentCreateCall():
             )
         """
         cursor.execute(INSERT_COMMENT, (aid, request_uid, comment))
+
+        comments = selectComment(cursor, aid)
+
         cursor.close()
         conn.commit()
 
-        return makeReturnDict(True, '댓글작성 성공.'), 200
+        return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
         cursor.close()
         conn.rollback()
@@ -630,8 +648,8 @@ def commentCreateCall():
 @app.route('/comment/delete', methods=['POST'])
 def commentDeleteCall():
     try:
-        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         cid = request.form['cid']
+        aid = request.form['aid']
         request_uid = request.form['uid']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -667,10 +685,13 @@ def commentDeleteCall():
             WHERE   comment_id={cid}
         """
         cursor.execute(DELETE_COMMENT)
+
+        comments = selectComment(cursor, aid)
+
         cursor.close()
         conn.commit()
 
-        return makeReturnDict(True, '댓글삭제 성공.'), 200
+        return makeReturnDict(True, '댓글삭제 성공.', comments), 200
     except Exception as e:
         cursor.close()
         conn.rollback()
@@ -823,16 +844,6 @@ def getArticles(cursor, board, page, art_per_page, option, keyword):
 
 
 ##############
-## Media 정보 제작
-##############
-def buildMediaInfo(board, medias):
-    for idx, media in enumerate(medias):
-        medias[idx] = (f"{board}-{media[0]}{media[1]}", media[2])    # [저장된 이름, 원본이름]
-
-    return medias
-
-
-##############
 ## 글 페이지
 ##############
 @app.route('/board/view', methods=['GET'])
@@ -874,15 +885,8 @@ def acrticlePage():
         article = cursor.fetchall()[0]
 
         # 댓글 정보 반환
-        SELECT_COMMENTS = f"""
-            SELECT  comment_id, comment.user_id, nickname, comment, comment_time
-            FROM    comment left join user
-		            on comment.user_id = user.user_id
-            WHERE   article_id={aid}
-            ORDER BY comment_id ASC;
-        """
-        cursor.execute(SELECT_COMMENTS)
-        comments = cursor.fetchall()
+        comments = selectComment(cursor, aid)
+
         articles, start, end = getArticles(cursor, board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
         
