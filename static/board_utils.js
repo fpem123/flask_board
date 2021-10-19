@@ -26,6 +26,24 @@ function setCkeditor(board){
     });
 }
 
+
+function setCkeditorRead(){
+    ClassicEditor
+    .create( document.querySelector( '#content' ), {
+        language: { ui: 'ko', content: 'ko'},
+    })
+    .catch( error => {
+        console.error(error);
+    })
+    .then(editor => {
+        editor.isReadOnly = true;
+    })
+    .catch( error => {
+        console.error(error);
+    });
+}
+
+
 function viewFlaskContent(content){
     content = content.replaceAll("&lt;", "<");
     content = content.replaceAll("&gt;", ">");

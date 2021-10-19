@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        {% include 'frame_ckeditor5.html' %}
     </head>
 
     <body>
@@ -27,9 +28,10 @@
             <div style="float:right;">조회수 {{ article_view }} | 추천 {{ article_hit }}</div>
             <input type="hidden" id="aid" value='{{ aid }}'>
             <br><br>
-            <div id="content" class="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;">
-            </div>
-            <script>viewFlaskContent("{{ article_content }}")</script>
+            <textarea id="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;" rows="30" onkeydown="return onKeydownTap(this);">
+                {{ article_content }}
+            </textarea>
+            <script>setCkeditorRead()</script>
             
             <br>
 

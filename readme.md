@@ -4,7 +4,7 @@
 
 * 사용한 오픈소스 : [CKEditor5](https://ckeditor.com/ckeditor-5/download/)
 
-* requirements : Flask, sqlite3
+* requirements : Flask, sqlite3, beautifulsoup4
 
 * create_table.py 먼저 실행하고 server.py 실행하기
 
@@ -20,6 +20,8 @@
 * 글 쓰기, 보기, 수정, 삭제, 추천
 
 * 글 꾸미기 및 미디어 파일 첨부 -> ckeditor5 로 구현
+
+* 게시물 페이지에선 ckeditor5을 읽기 전용으로 만들어 XSS 공격 방어
 
 * 익명 게시판
 
@@ -39,11 +41,9 @@
 
 ## WORKING
 
-* 중복 html코드들 frame화
+* 중복 html코드들 frame화 -> 일부 기능만 화이트리스트에 넣고 나머지는 불가능하게
 
 * 리펙토링
-
-* ckeditor5 사용으로 인한 XSS 공격 방어
 
 * 웹에서 서버로 정보를 보낼 때 암호화 해서 보내도록
 
@@ -52,6 +52,10 @@
 ## TO-DO
 
 * 추천, 댓글 작성시 조회수가 올라가는 문제 -> JS로 data를 보낸 뒤 성공했을 때 새로고침 말고 바로 바뀌게 해야할듯
+
+* CSS로 꾸미기
+
+* 호스팅
 
 ---
 

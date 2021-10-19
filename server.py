@@ -2,6 +2,7 @@ from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
 from datetime import timedelta
+from bs4 import BeautifulSoup as bs     # HTML tag 화이트리스트 검사용
 
 import sqlite3
 import pathlib
