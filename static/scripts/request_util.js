@@ -14,37 +14,6 @@ function isUIDEmpty(){
         return false;
 }
 
-
-function setCkeditor(board){
-    ClassicEditor
-    .create( document.querySelector( '#editor' ), {
-        language: { ui: 'ko', content: 'ko'},
-        ckfinder : {uploadUrl: `/board/${board}/image-upload`}
-    })
-    .catch( error => {
-        console.error(error);
-    });
-}
-
-
-function setCkeditorReadOnly(){
-    ClassicEditor
-    .create( document.querySelector( '#content' ), {
-        language: { ui: 'ko', content: 'ko'},
-        toolbar: []
-    })
-    .catch( error => {
-        console.error(error);
-    })
-    .then(editor => {
-        editor.isReadOnly = true;
-    })
-    .catch( error => {
-        console.error(error);
-    })
-}
-
-
 // 엔터키 전송 방지
 function onKeydownEnter(){
     if(event.keyCode==13) 
@@ -117,31 +86,32 @@ function commentBuilder(comments) {
         table.removeChild(table.lastChild);
     }
 
+    console.log(comments)
+
     for (let comment of comments) {
         const row = table.insertRow();
         const comment_nickname_cell = row.insertCell(0);
         const comment_content_cell = row.insertCell(1);
         const comment_date_cell = row.insertCell(2);
         const comment_btn_cell = row.insertCell(3);
-        const comment_uid = comment[1];
         
         row.align = "center";
 
         comment_nickname_cell.style.width = "10%";
-        comment_nickname_cell.innerText = comment[2];
+        comment_nickname_cell.innerText = comment[1];
 
         comment_content_cell.align = "left";
         comment_content_cell.style.width = "65%";
-        comment_content_cell.innerText = comment[3];
+        comment_content_cell.innerText = comment[2];
 
         comment_date_cell.align = "right";
         comment_date_cell.style.width = "20%";
-        comment_date_cell.innerText = comment[4]
+        comment_date_cell.innerText = comment[3]
 
         comment_btn_cell.style.width = "5%";
         comment_btn_cell.align = "right";
 
-        if (comment_uid === UID){
+        if (comment[4]){
             const del_btn = document.createElement('button');
             del_btn.value = comment[0];
             del_btn.innerText = 'X';
@@ -156,7 +126,7 @@ function commentBuilder(comments) {
 
 
 // 댓글 작성 리퀘스트
-function sendInsertComment() {
+function sendInsertComment(board) {
     if (isUIDEmpty()){
         alert("로그인이 필요한 작업입니다.");
 
@@ -173,6 +143,7 @@ function sendInsertComment() {
     formData.append('aid', aid);
     formData.append('uid', UID);
     formData.append('comment', comment);
+    formData.append('board', board);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -200,7 +171,7 @@ function sendInsertComment() {
 }
 
 // 댓글 삭제 리퀘스트
-function sendDeleteComment(button){
+function sendDeleteComment(button, board){
     if (isUIDEmpty()){
         alert("로그인이 필요한 작업입니다.");
 
@@ -216,6 +187,7 @@ function sendDeleteComment(button){
     formData.append('uid', UID);
     formData.append('cid', cid);
     formData.append('aid', aid);
+    formData.append('board', board);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
