@@ -575,19 +575,47 @@ def articleHit():
 ##############
 ## aid에 해당하는 댓글 정보 반환
 ##############
-def selectComment(cursor, aid):
-    # 댓글 정보 반환
-    SELECT_COMMENTS = f"""
-        SELECT  comment_id, comment.user_id, nickname, comment, comment_time
-        FROM    comment left join user
-                on comment.user_id = user.user_id
-        WHERE   article_id={aid}
-        ORDER BY comment_id ASC;
-    """
-    cursor.execute(SELECT_COMMENTS)
-    comments = cursor.fetchall()
+def selectComment(cursor, aid, uid, board):
+    try:
+        SELECT_ARTICLE_WRITER = f"""
+            SELECT  user_id
+            FROM    article
+            WHERE   article_id={aid}
+        """
+        cursor.execute(SELECT_ARTICLE_WRITER)
+        writer = cursor.fetchall()[0][0]
 
-    return comments
+        # 댓글 정보 반환
+        SELECT_COMMENTS = f"""
+            SELECT  comment_id, nickname, comment, comment_time, user.user_id
+            FROM    comment left join user
+                    on comment.user_id = user.user_id
+            WHERE   article_id={aid}
+            ORDER BY comment_id ASC;
+        """
+        cursor.execute(SELECT_COMMENTS)
+        comments = cursor.fetchall()
+
+        if board == 'anonymous':
+            for idx, comment in enumerate(comments):
+                comment = list(comment)
+                if writer == comment[4]:
+                    comment[1] = "작성자"
+                else:
+                    comment[1] = "익명"
+                comments[idx] = tuple(comment)
+        
+        for idx, comment in enumerate(comments):
+            comment = list(comment)
+            if uid == comment[4]:
+                comment[4] = True
+            else:
+                comment[4] = False
+            comments[idx] = tuple(comment)
+
+        return comments
+    except Exception as e:
+        raise e
 
 
 ##############
@@ -596,11 +624,12 @@ def selectComment(cursor, aid):
 @app.route('/comment/write', methods=['POST'])
 def commentCreateCall():
     try:
-        # TO-DO : 전부 SQL 인젝션, 스크립트 공격 방어해야함
         aid = request.form['aid']
         request_uid = request.form['uid']
         comment = request.form['comment']
+        board = request.form['board']
     except Exception as e:
+        print(e)
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
      
     if not isLogin():
@@ -629,7 +658,7 @@ def commentCreateCall():
         """
         cursor.execute(INSERT_COMMENT, (aid, request_uid, comment))
 
-        comments = selectComment(cursor, aid)
+        comments = selectComment(cursor, aid, request_uid, board)
 
         cursor.close()
         conn.commit()
@@ -651,6 +680,7 @@ def commentDeleteCall():
         cid = request.form['cid']
         aid = request.form['aid']
         request_uid = request.form['uid']
+        board = request.form['board']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -686,7 +716,7 @@ def commentDeleteCall():
         """
         cursor.execute(DELETE_COMMENT)
 
-        comments = selectComment(cursor, aid)
+        comments = selectComment(cursor, aid, request_uid, board)
 
         cursor.close()
         conn.commit()
@@ -885,7 +915,7 @@ def acrticlePage():
         article = cursor.fetchall()[0]
 
         # 댓글 정보 반환
-        comments = selectComment(cursor, aid)
+        comments = selectComment(cursor, aid, session.get('uid'), board)
 
         articles, start, end = getArticles(cursor, board, page, art_per_page, option, keyword)
         isSearch = option != 'all'

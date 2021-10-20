@@ -4,7 +4,7 @@
 
 * 사용한 오픈소스 : [CKEditor5](https://ckeditor.com/ckeditor-5/download/)
 
-* requirements : Flask, sqlite3, beautifulsoup4
+* requirements : Flask, sqlite3
 
 * create_table.py 먼저 실행하고 server.py 실행하기
 
@@ -35,17 +35,17 @@
 
 * 비밀번호 저장시 암호화
 
-* html script들 모아서 하나의 javascript 로 만들기
-
 ---
 
 ## WORKING
 
-* 중복 html코드들 frame화 -> 일부 기능만 화이트리스트에 넣고 나머지는 불가능하게
+* 중복 html코드들 frame화
 
 * 리펙토링
 
 * 웹에서 서버로 정보를 보낼 때 암호화 해서 보내도록
+
+* 입력 길이 검사
 
 ---
 
