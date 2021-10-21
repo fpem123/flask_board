@@ -86,8 +86,6 @@ function commentBuilder(comments) {
         table.removeChild(table.lastChild);
     }
 
-    console.log(comments)
-
     for (let comment of comments) {
         const row = table.insertRow();
         const comment_nickname_cell = row.insertCell(0);

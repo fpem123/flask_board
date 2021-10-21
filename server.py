@@ -798,7 +798,6 @@ def imageUploadCall(board):
 @app.route('/board/write_submit',  methods=['POST'])
 def articleCreateCall():
     try:
-        # must
         uid = request.form['uid']
         board = request.form['board']
         title = request.form['title']

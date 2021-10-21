@@ -1,8 +1,13 @@
+let ckEditor;
+
 function setCkeditor(board){
     ClassicEditor
     .create( document.querySelector( '#editor' ), {
         language: { ui: 'ko', content: 'ko'},
         ckfinder : {uploadUrl: `/board/${board}/image-upload`}
+    })
+    .then(editor => {
+        ckEditor = editor;
     })
     .catch( error => {
         console.error(error);
@@ -16,13 +21,12 @@ function setCkeditorReadOnly(){
         language: { ui: 'ko', content: 'ko'},
         toolbar: []
     })
-    .catch( error => {
-        console.error(error);
-    })
     .then(editor => {
+        ckEditor = editor;
         editor.isReadOnly = true;
     })
     .catch( error => {
         console.error(error);
     })
 }
+

@@ -18,7 +18,8 @@
 
         <div class="write" style="border:1px solid black; padding: 10px">
             {% if session.get('uid') %}
-            <form action="{{ url_for('acrticleUpdateCall', board=board) }}" method="POST">
+            <form action="{{ url_for('acrticleUpdateCall', board=board) }}" method="POST"
+            onsubmit="return article_check(this)">
                 <input type="hidden" name="aid" value='{{ aid }}'>
                 <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                 <br>
