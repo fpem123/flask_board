@@ -22,19 +22,21 @@
             
             <br>
 
-            <label>아 이 디 : </label>
-            <input type="text" id="new_uid" placeholder="ID" 
-            maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-            <br><br>
-            <label>비밀번호 : </label>
-            <input type="password" id="new_pwd" placeholder="PASSWORD" 
-            maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-            <br><br>
-            <label>닉 네 임 : </label>
-            <input type="text" id="new_nickname" placeholder="닉네임" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-            <br><br>
-            <button onclick="return sendInsertUser()" type="submit" style="width:80px; height:40px">회원가입</button>
+            <form method="POST" onsubmit="return sendInsertUser(this)">
+                <label>아 이 디 : </label>
+                <input type="text" name="new_uid" placeholder="ID" 
+                maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                <br><br>
+                <label>비밀번호 : </label>
+                <input type="password" name="new_pwd" placeholder="PASSWORD" 
+                maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                <br><br>
+                <label>닉 네 임 : </label>
+                <input type="text" name="new_nickname" placeholder="닉네임" 
+                maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                <br><br>
+                <button type="submit" style="width:80px; height:40px">회원가입</button>
+            </form>
             {% else %}
             <p>로그인 상태에선 불가능한 작업입니다.</p>
             {% endif %}

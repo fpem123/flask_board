@@ -255,9 +255,9 @@ def memberJoin():
 @app.route('/member/join/request', methods=['POST'])
 def memberJoinRequest():
     try:
-        request_uid = request.form['uid']
-        request_pwd = request.form['pwd']
-        request_nickname = request.form['nickname']
+        request_uid = request.form['new_uid']
+        request_pwd = request.form['new_pwd']
+        request_nickname = request.form['new_nickname']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -321,8 +321,8 @@ def memberLogin():
 @app.route('/member/login/request', methods=['POST'])
 def memberLoginRequest():
     try:
-        request_uid = request.form['uid']
-        request_pwd = request.form['pwd']
+        request_uid = request.form['request_uid']
+        request_pwd = request.form['request_pwd']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -378,7 +378,7 @@ def memberUpdate():
 def memberUpdateRequest():
     try:
         request_uid = request.form['uid']
-        request_pwd = request.form['pwd']
+        request_pwd = request.form['old_pwd']
         request_new_pwd = request.form.get('new_pwd', default=False)
         request_new_nickname = request.form.get('new_nickname', default=False)
     except Exception as e:
@@ -630,9 +630,8 @@ def selectComment(cursor, aid, uid, board):
 @app.route('/comment/write', methods=['POST'])
 def commentCreateCall():
     try:
-        print(request.form)
-        aid = request.form['aid']
         request_uid = request.form['uid']
+        aid = request.form['aid']
         comment = request.form['input_comment']
         board = request.form['board']
     except Exception as e:
@@ -686,7 +685,6 @@ def commentCreateCall():
 @app.route('/comment/delete', methods=['POST'])
 def commentDeleteCall():
     try:
-        print(request.form)
         cid = request.form['cid']
         aid = request.form['aid']
         request_uid = request.form['uid']

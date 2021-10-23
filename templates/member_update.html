@@ -27,16 +27,19 @@
             
             <br>
 
-            <label>이전 비밀번호 : </label><input type="password" id="old_pwd" placeholder="PASSWORD" 
-            maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-            <br><br>
-            <label>변경 비밀번호 : </label><input type="password" id="new_pwd" placeholder="PASSWORD" 
-            maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-            <br><br>
-            <label>변경할 닉네임 : </label><input type="text" id="new_nickname" placeholder="닉네임" 
-            maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-            <br><br>
-            <button onclick="return sendUpdateUser()" type="submit" style="width:80px; height:40px">정보 변경</button>
+            <form method="POST" onsubmit="return sendUpdateUser(this)">
+                <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                <label>이전 비밀번호 : </label><input type="password" name="old_pwd" placeholder="PASSWORD" 
+                maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+                <br><br>
+                <label>변경 비밀번호 : </label><input type="password" name="new_pwd" placeholder="PASSWORD" 
+                maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+                <br><br>
+                <label>변경할 닉네임 : </label><input type="text" name="new_nickname" placeholder="닉네임" 
+                maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+                <br><br>
+                <button type="submit" style="width:80px; height:40px">정보 변경</button>
+            </form>
             <br>
             <p>회원탈퇴페이지는 아래 버튼을 클릭하세요.</p>
             <a href="{{ url_for('memberDelete') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
