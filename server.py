@@ -884,6 +884,12 @@ def getArticles(cursor, board, page, art_per_page, option, keyword):
         start = (page // 10) * 10 + 1
         end = min((page // 10 + 1) * 10, p_cnt) + 1
 
+        for idx, article in enumerate(articles):
+            if not article[1]:
+                tmp = list(article)
+                tmp[1] = "(탈퇴한 유저)"
+                articles[idx] = tuple(tmp)
+
         return articles, start, end
 
     except Exception as e:
@@ -930,6 +936,11 @@ def acrticlePage():
         """
         cursor.execute(SELECT_ARTICLE)
         article = cursor.fetchall()[0]
+
+        if not article[1]:
+            tmp = list(article)
+            tmp[1] = "(탈퇴한 유저)"
+            article = tuple(tmp)
 
         # 댓글 정보 반환
         comments = selectComment(cursor, aid, session.get('uid'), board)
