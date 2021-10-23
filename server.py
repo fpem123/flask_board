@@ -686,6 +686,7 @@ def commentCreateCall():
 @app.route('/comment/delete', methods=['POST'])
 def commentDeleteCall():
     try:
+        print(request.form)
         cid = request.form['cid']
         aid = request.form['aid']
         request_uid = request.form['uid']

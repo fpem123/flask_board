@@ -80,6 +80,9 @@ function sendHit(){
 function commentBuilder(comments) {
     document.getElementById( "num-comments" ).innerText = comments.length;
     let table = document.getElementById( "comments" );
+    let uid =  document.getElementById( 'uid' ).value;
+    let aid =  document.getElementById( 'aid' ).value;
+    let board =  document.getElementById( 'board' ).value;
 
     while (table.hasChildNodes())
         table.removeChild(table.lastChild);
@@ -108,11 +111,16 @@ function commentBuilder(comments) {
         comment_btn_cell.align = "right";
 
         if (comment[4]){
-            const del_btn = document.createElement('button');
-            del_btn.value = comment[0];
-            del_btn.innerText = 'X';
-            del_btn.setAttribute("onClick", "return sendDeleteComment(this)");
-            comment_btn_cell.appendChild(del_btn);
+            const del_form = document.createElement('form');
+            del_form.setAttribute("onsubmit", "return sendDeleteComment(this)");
+            del_form.innerHTML = `
+            <input type="hidden" name="uid" value=${uid}>
+            <input type="hidden" name="aid" value=${aid}>
+            <input type="hidden" name="board" value=${board}>
+            <input type="hidden" name="cid" value=${comment[0]}>
+            <button type="submit">X</button>
+            `
+            comment_btn_cell.appendChild(del_form);
         }
         else
             comment_btn_cell.innerText = '&nbsp;';
@@ -122,7 +130,7 @@ function commentBuilder(comments) {
 
 // 댓글 작성 리퀘스트
 function sendInsertComment(form) {
-    if (isUIDEmpty()){
+    if (form.uid === undefined){
         alert("로그인이 필요한 작업입니다.");
 
         return;
@@ -180,49 +188,51 @@ function sendInsertComment(form) {
 }
 
 // 댓글 삭제 리퀘스트
-function sendDeleteComment(button, board){
-    if (isUIDEmpty()){
+function sendDeleteComment(form){
+    if (form.uid === undefined){
         alert("로그인이 필요한 작업입니다.");
 
         return;
     }
-    let cid = button.value;
-    let aid = document.getElementById( 'aid' ).value;
 
-    const formData = new FormData();
-    const url = '/comment/delete';
-    let signal = true;
+    try{
+        const formData = new FormData(form);
+        const url = '/comment/delete';
+        let signal = true;
 
-    formData.append('uid', UID);
-    formData.append('cid', cid);
-    formData.append('aid', aid);
-    formData.append('board', board);
-
-    fetch (url, { method: 'POST', body: formData })
-    .then(response=>{
-        if (ALLOW_RESPONSE_STATUS.includes(response.status))
-            return response.json()
-        else{
-            signal = false;
-            alert("삭제 실패");
-        }
-    })
-    .then(result => {
-        if (result['result']){
-            alert(result['msg']);
-            commentBuilder(result['data']);
-        }
-        else if (signal){
-            signal = false;
-            alert(result['msg']);
-        }
-    })
-    .catch(err => {
-        if (signal){
-            signal = false;
-            alert("삭제 실패");
-        }
-    });
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (ALLOW_RESPONSE_STATUS.includes(response.status))
+                return response.json()
+            else{
+                signal = false;
+                alert("삭제 실패");
+            }
+        })
+        .then(result => {
+            if (result['result']){
+                alert(result['msg']);
+                commentBuilder(result['data']);
+            }
+            else if (signal){
+                signal = false;
+                alert(result['msg']);
+            }
+        })
+        .catch(err => {
+            console.log(err);
+            if (signal){
+                signal = false;
+                alert("삭제 실패");
+            }
+        });
+        return false;
+    }
+    catch(err){
+        console.log(err)
+        alert("에러가 발생했습니다.");
+        return false;
+    }
 }
 
 // 회원 가입 리퀘스트
