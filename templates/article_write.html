@@ -14,8 +14,7 @@
 
         <br>
 
-        <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
-
+        {% include 'frame_board_sign.html' %}
         
         <div class="write" style="border:1px solid black; padding: 10px">
             <form id="write-form" action="{{ url_for('articleCreateCall') }}" method="POST"
@@ -23,7 +22,7 @@
                 <input type="hidden" name="board" value='{{ board }}'>
                 <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                 <br>
-                <input type="text" name="title" 
+                <input type="text" id="title" name="title" 
                 placeholder="제목을 입력하세요." style="width:300px; height:20px" onkeydown="return onKeydownEnter()">
                 <br><br>
                 <textarea id="editor" name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);"></textarea>

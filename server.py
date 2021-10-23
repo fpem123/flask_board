@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import session, request
-from flask import render_template, redirect, url_for, escape, flash
+from flask import render_template, redirect, url_for, escape
 from datetime import timedelta
 
 import sqlite3
@@ -235,7 +235,7 @@ def makeReturnDict(result: bool, msg: str, data=None) -> dict:
     """
     ### json 통신을 위한 dict 만듬
     """
-    if data:
+    if not data is None:
         return {"result": result, "msg": msg, "data": data}
     else:
         return {"result": result, "msg": msg}
@@ -261,20 +261,23 @@ def memberJoinRequest():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
-    if isExistUser(request_uid, request_nickname):
-        return makeReturnDict(False, '이미 존재하는 아이디 또는 닉네임입니다.'), 200
+    if isExistUser(uid=request_uid):
+        return makeReturnDict(False, '이미 존재하는 아이디입니다.', 0), 200
+
+    if isExistUser(nickname=request_nickname):
+        return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 200
 
     if isLogin():
         return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
 
     if not isCorrectUidForm(request_uid):
-        return makeReturnDict(False, '올바르지 않은 아이디 형식입니다.'), 400
+        return makeReturnDict(False, '올바르지 않은 아이디 형식입니다.', 0), 400
     
     if not isCorrectPWDForm(request_pwd):
-        return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.'), 400
+        return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.', 1), 400
 
     if not isCorrectNicknameForm(request_nickname):
-        return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.'), 400
+        return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
 
     request_pwd = getSHA256(request_pwd)
 
@@ -325,7 +328,7 @@ def memberLoginRequest():
 
     # 존재하는 않는 유저
     if not isExistUser(request_uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 200
+        return makeReturnDict(False, '존재하지 않는 유저입니다.', 0), 200
 
     if isLogin():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
@@ -340,7 +343,7 @@ def memberLoginRequest():
 
         return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 200
     else:
-        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 200
+        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 1), 200
 
 
 ##############
@@ -381,7 +384,7 @@ def memberUpdateRequest():
         request_new_nickname = request.form.get('new_nickname', default=False)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
-
+        
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
 
@@ -392,21 +395,21 @@ def memberUpdateRequest():
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     if isExistUser(nickname=request_new_nickname):
-        return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
+        return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 400
 
     if request_new_pwd:
         if not isCorrectPWDForm(request_new_pwd):
-            return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.'), 400
+            return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.', 1), 400
 
     if request_new_nickname:
         if not isCorrectNicknameForm(request_new_nickname):
-            return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.'), 400
+            return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
 
     request_pwd = getSHA256(request_pwd)
 
     # 비밀번호 확인
     if not isCorrectPWD(request_uid, request_pwd):
-        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
+        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 0), 400
 
     try:
         cursor = conn.cursor()
@@ -420,7 +423,7 @@ def memberUpdateRequest():
         elif request_new_nickname:
             set_query = f"nickname='{request_new_nickname}'"
         else:
-            return makeReturnDict(False, '변경할 값을 전달받지 못했습니다.'), 400
+            return makeReturnDict(False, '변경할 값을 전달받지 못했습니다.'), 500
 
         # 유저 정보 업데이트
         UPDATE_USER = f"""
@@ -459,8 +462,12 @@ def memberDeleteeRequest():
     try:
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
+        request_confirm = request.form['confirm']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+
+    if request_confirm != '탈퇴합니다':
+        return makeReturnDict(False, '확인 메시지가 잘 못 되었습니다.'), 400
 
     if not isLogin():
         return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
@@ -629,9 +636,11 @@ def commentCreateCall():
         comment = request.form['comment']
         board = request.form['board']
     except Exception as e:
-        print(e)
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
-     
+    
+    if len(comment) == 0:
+        return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
+
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
 
@@ -805,11 +814,19 @@ def articleCreateCall():
     except Exception as e:
         return errorPage(2)
 
+    if len(title) == 0:
+        # TO-DO : Flash 메시지 추가
+        return errorPage()
+
+    if len(content) == 0:
+        # TO-DO : Flash 메시지 추가
+        return errorPage()
+
     if not isLogin():
         return errorPage(4)
     
     if not isSessionUser(uid):
-        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+        return errorPage(5)
 
     if not isExistUser(uid):
         return errorPage(2)
@@ -1016,6 +1033,12 @@ def acrticleUpdateCall():
         content = request.form['content']
     except:
         return errorPage(2)
+
+    if len(title) == 0:
+        return "TO-DO : Flash 메시지 추가"
+    
+    if len(content) == 0:
+        return "TO-DO : Flash 메시지 추가"
 
     if isNotAllowBoard(board):
         return errorPage(0)

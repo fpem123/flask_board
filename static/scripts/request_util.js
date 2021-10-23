@@ -7,9 +7,8 @@ function setUID(){
 }
 
 function isUIDEmpty(){
-    if (UID == undefined){
+    if (UID == undefined)
         return true;
-    }
     else
         return false;
 }
@@ -56,35 +55,34 @@ function sendHit(){
             signal = false;
             alert("추천 실패");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("추천 실패");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
-            hits = document.getElementsByName( "hit" );
-            for (let hit of hits){
-                console.log(hit);
+            const hits = document.getElementsByName( "hit" );
+            for (let hit of hits)
                 hit.innerText = result['data'];
-            }
         }
         else if (signal){
             signal = false;
             alert(result['msg']);
         }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("추천 실패");
+        }
     });
 }
 
 
-// 댓글 보여주기
+// 댓글 상태 업데이트
 function commentBuilder(comments) {
     document.getElementById( "num-comments" ).innerText = comments.length;
-    table = document.getElementById( "comments" );
+    let table = document.getElementById( "comments" );
 
-    while (table.hasChildNodes()){
+    while (table.hasChildNodes())
         table.removeChild(table.lastChild);
-    }
 
     for (let comment of comments) {
         const row = table.insertRow();
@@ -116,9 +114,8 @@ function commentBuilder(comments) {
             del_btn.setAttribute("onClick", "return sendDeleteComment(this)");
             comment_btn_cell.appendChild(del_btn);
         }
-        else {
+        else
             comment_btn_cell.innerText = '&nbsp;';
-        }
     }
 }
 
@@ -132,7 +129,16 @@ function sendInsertComment(board) {
     }
 
     let aid = document.getElementById( 'aid' ).value;
-    let comment = document.getElementById( 'input-comment' ).value;
+    let comment_element = document.getElementById( 'input-comment' );
+    let comment = comment_element.value;
+
+    if (comment.length === 0)
+    {
+        alert("댓글을 작성해 주세요");
+        comment_element.focus();
+
+        return false;
+    }
 
     const formData = new FormData();
     const url = '/comment/write';
@@ -151,12 +157,8 @@ function sendInsertComment(board) {
             signal = false;
             alert("댓글 등록 실패");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("댓글 등록 실패");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             commentBuilder(result['data']);
             document.getElementById( 'input-comment' ).value = "";
@@ -164,6 +166,13 @@ function sendInsertComment(board) {
         else if (signal){
             signal = false;
             alert(result['msg']);
+            comment_element.focus();
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("댓글 등록 실패");
         }
     });
 }
@@ -195,12 +204,8 @@ function sendDeleteComment(button, board){
             signal = false;
             alert("삭제 실패");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("삭제 실패");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             alert(result['msg']);
             commentBuilder(result['data']);
@@ -208,6 +213,12 @@ function sendDeleteComment(button, board){
         else if (signal){
             signal = false;
             alert(result['msg']);
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("삭제 실패");
         }
     });
 }
@@ -220,9 +231,28 @@ function sendInsertUser() {
         return;
     }
 
-    let new_uid = document.getElementById( 'new_uid' ).value;
-    let new_pwd = document.getElementById( 'new_pwd' ).value;
-    let new_nickname = document.getElementById( 'new_nickname' ).value;
+    let new_uid_element = document.getElementById( 'new_uid' )
+    let new_uid = new_uid_element.value;
+    let new_pwd_element = document.getElementById( 'new_pwd' );
+    let new_pwd = new_pwd_element.value;
+    let new_nickname_element = document.getElementById( 'new_nickname' );
+    let new_nickname = new_nickname_element.value;
+
+    if (new_uid.length === 0){
+        alert("아이디를 입력해 주세요");
+        new_uid_element.focus();
+        return;
+    }
+    else if (new_pwd.length === 0){
+        alert("비밀번호를 입력해 주세요");
+        new_pwd_element.focus();
+        return;
+    }
+    else if (new_nickname.length === 0){
+        alert("닉네임을 입력해 주세요");
+        new_nickname_element.focus();
+        return;
+    }
 
     const formData = new FormData();
     const url = '/member/join/request';
@@ -240,12 +270,8 @@ function sendInsertUser() {
             signal = false;
             alert("에러가 발생했습니다.");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("에러가 발생했습니다.");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             alert(result['msg']);
             location.href="/";
@@ -253,9 +279,27 @@ function sendInsertUser() {
         else if (signal){
             signal = false;
             alert(result['msg']);
+
+            switch(result['data']){
+                case 0:
+                    new_uid_element.focus();
+                    break;
+                case 1:
+                    new_pwd_element.focus();
+                    break;
+                case 2:
+                    new_nickname_element.focus();
+                    break;
+            }
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("에러가 발생했습니다.");
         }
     });
-};
+}
 
 // 로그인 리퀘스트
 function sendLoginUser() {
@@ -265,8 +309,21 @@ function sendLoginUser() {
         return;
     }
 
-    let uid = document.getElementById( 'request_uid' ).value;
-    let pwd = document.getElementById( 'request_pwd' ).value;
+    let uid_element = document.getElementById( 'request_uid' );
+    let uid = uid_element.value;
+    let pwd_element = document.getElementById( 'request_pwd' );
+    let pwd = pwd_element.value;
+    
+    if (uid.length === 0){
+        alert("아이디를 입력해 주세요");
+        uid_element.focus();
+        return;
+    }
+    else if (pwd.length === 0){
+        alert("비밀번호를 입력해 주세요");
+        pwd_element.focus();
+        return;
+    }
 
     const formData = new FormData();
     const url = '/member/login/request';
@@ -283,12 +340,8 @@ function sendLoginUser() {
             signal = false;
             alert("에러가 발생했습니다.");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("에러가 발생했습니다.");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             alert(result['msg']);
             window.location.reload(true);
@@ -296,6 +349,21 @@ function sendLoginUser() {
         else if (signal){
             signal = false;
             alert(result["msg"]);
+            
+            switch(result["data"]){
+                case 0:
+                    uid_element.focus();
+                    break;
+                case 1:
+                    pwd_element.focus();
+                    break;
+            }
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("에러가 발생했습니다.");
         }
     });
 };
@@ -321,21 +389,22 @@ function sendLogoutUser() {
             signal = false;
             alert("에러가 발생했습니다.");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("에러가 발생했습니다.");
-        }
-    }).then(result => {
-        if (result['result']){
+    })
+    .then(result => {
+        if (result['result'])
             window.location.reload(true);
-        }
         else if (signal){
             signal = false;
             alert(result['msg']);
         }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("에러가 발생했습니다.");
+        }
     });
-};
+}
 
 // 회원 정보 수정 리퀘스트
 function sendUpdateUser() {
@@ -344,9 +413,12 @@ function sendUpdateUser() {
 
         return;
     }
-    let old_pwd = document.getElementById( 'old_pwd' ).value;
-    let new_pwd = document.getElementById( 'new_pwd' ).value;
-    let new_nickname = document.getElementById( 'new_nickname' ).value;
+    let old_pwd_element = document.getElementById( 'old_pwd' );
+    let old_pwd = old_pwd_element.value;
+    let new_pwd_element = document.getElementById( 'new_pwd' );
+    let new_pwd = new_pwd_element.value;
+    let new_nickname_element = document.getElementById( 'new_nickname' );
+    let new_nickname = new_nickname_element.value;
 
     const formData = new FormData();
     const url = '/member/update/request';
@@ -354,22 +426,22 @@ function sendUpdateUser() {
 
     if (old_pwd === '') {
         alert('비밀번호를 입력하세요.');
+        old_pwd_element.focus();
         return ;
     }
     else if (new_pwd === '' && new_nickname ===''){
         alert('변경할 값을 적어도 1개 입력하세요.');
+        new_pwd_element.focus();
         return ;
     }
     
     formData.append('uid', UID);
     formData.append('pwd', old_pwd);
 
-    if (new_pwd !== ''){
+    if (new_pwd !== '')
         formData.append('new_pwd', new_pwd);
-    }
-    if (new_nickname !== ''){
+    if (new_nickname !== '')
         formData.append('new_nickname', new_nickname);
-    }
 
     
     fetch (url, { method: 'POST', body: formData })
@@ -380,18 +452,32 @@ function sendUpdateUser() {
             signal = false;
             alert("변경 실패");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("변경 실패");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             alert(result['msg']);
             location.href="/";
         }
         else if (signal){
             alert(result['msg']);
+            
+            switch(result['data']) {
+                case 0:
+                    old_pwd_element.focus();
+                    break;
+                case 1:
+                    new_pwd_element.focus();
+                    break;
+                case 2:
+                    new_nickname_element.focus();
+                    break;
+            }
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("변경 실패");
         }
     });
 }
@@ -404,12 +490,20 @@ function sendDeleteUser() {
         return;
     }
 
-    let pwd = document.getElementById( 'pwd' ).value;
-    let confirm = document.getElementById( 'confirm' ).value;
+    let pwd_element = document.getElementById( 'pwd' );
+    let pwd = pwd_element.value;
+    let confirm_element = document.getElementById( 'confirm' );
+    let confirm = confirm_element.value;
 
-    if (confirm !== '탈퇴합니다'){
+    if (pwd.length === 0){
+        alert("비밀번호를 입력하세요.");
+        pwd_element.focus()
+        return;
+    }
+    else if (confirm !== '탈퇴합니다'){
         alert("탈퇴를 원한다면 탈퇴합니다를 입력해주세요.");
-        return
+        confirm_element.focus();
+        return;
     }
 
     const formData = new FormData();
@@ -418,6 +512,7 @@ function sendDeleteUser() {
 
     formData.append('uid', UID);
     formData.append('pwd', pwd);
+    formData.append('confirm', confirm);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -427,18 +522,21 @@ function sendDeleteUser() {
             signal = false;
             alert("탈퇴 실패");
         }
-    }).catch(err => {
-        if (signal){
-            signal = false;
-            alert("탈퇴 실패");
-        }
-    }).then(result => {
+    })
+    .then(result => {
         if (result['result']){
             alert(result['msg']);
             location.href="/";
         }
         else if (signal){
             alert(result['msg']);
+            pwd_element.focus();
+        }
+    })
+    .catch(err => {
+        if (signal){
+            signal = false;
+            alert("탈퇴 실패");
         }
     });
 }

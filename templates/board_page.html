@@ -13,8 +13,8 @@
 
         <br>
 
-        <h3><a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ board_name }} 게시판</a></h3>
-
+        {% include 'frame_board_sign.html' %}
+        
         <div class="articles" style="border:1px solid black; padding: 10px">
             {% include 'frame_board.html' %}
         </div>

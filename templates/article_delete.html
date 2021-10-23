@@ -15,8 +15,8 @@
 
         <br>
 
-        <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
-
+        {% include 'frame_board_sign.html' %}
+        
         <div class="delete">
             <label>삭제되었습니다.</label>
         </div>

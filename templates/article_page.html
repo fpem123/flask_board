@@ -14,7 +14,7 @@
 
         <br>
 
-        <h3><a href="{{ url_for('board', board=board) }}">{{ board_name }} 게시판</a></h3>
+        {% include 'frame_board_sign.html' %}
 
         <div class="article" style="border:1px solid black; padding: 10px">
             {% set article_uid, article_nickname, article_date, article_title, 
