@@ -103,7 +103,7 @@ function commentBuilder(comments, uid, aid, board) {
             comment_btn_cell.appendChild(del_form);
         }
         else
-            comment_btn_cell.innerText = '&nbsp;';
+            comment_btn_cell.innerHTML = '&nbsp;';
     }
 }
 
