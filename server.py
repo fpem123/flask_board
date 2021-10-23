@@ -602,6 +602,18 @@ def selectComment(cursor, aid, uid, board):
         cursor.execute(SELECT_COMMENTS)
         comments = cursor.fetchall()
 
+        for idx, comment in enumerate(comments):
+            comment = list(comment)
+            if uid == comment[4]:
+                comment[4] = True
+            else:
+                comment[4] = False
+
+            if not comment[1]:
+                comment[1] = "(탈퇴한 유저)"
+
+            comments[idx] = tuple(comment)
+
         if board == 'anonymous':
             for idx, comment in enumerate(comments):
                 comment = list(comment)
@@ -610,14 +622,6 @@ def selectComment(cursor, aid, uid, board):
                 else:
                     comment[1] = "익명"
                 comments[idx] = tuple(comment)
-        
-        for idx, comment in enumerate(comments):
-            comment = list(comment)
-            if uid == comment[4]:
-                comment[4] = True
-            else:
-                comment[4] = False
-            comments[idx] = tuple(comment)
 
         return comments
     except Exception as e:

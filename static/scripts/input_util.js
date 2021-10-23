@@ -24,3 +24,21 @@ function article_check(form){
         return false;
     }
 }
+
+// 엔터키 전송 방지
+function onKeydownEnter(){
+    if(event.keyCode==13) 
+        return false
+}
+
+// textarea tap키 처리
+function onKeydownTap(textarea){
+    if (event.keyCode==9) {
+        textarea.focus();
+        space = "    ";
+        textarea.selection = document.selection.createRange();
+        textarea.selection.text = space;
+        event.returnValue = false;
+        return false;
+    }
+}
