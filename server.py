@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import session, request
-from flask import render_template, redirect, url_for, escape
+from flask import render_template, redirect, url_for, escape, flash
 from datetime import timedelta
 
 import sqlite3
@@ -368,7 +368,6 @@ def memberLogout():
 ##############
 @app.route('/member/update')
 def memberUpdate():
-    # TO-DO : 비밀번호 검문 필요
     return render_template('member_update.html'), 200
 
 
@@ -384,7 +383,7 @@ def memberUpdateRequest():
         request_new_nickname = request.form.get('new_nickname', default=False)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
-        
+
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
 
@@ -815,12 +814,10 @@ def articleCreateCall():
         return errorPage(2)
 
     if len(title) == 0:
-        # TO-DO : Flash 메시지 추가
-        return errorPage()
-
+        return errorPage(msg="제목을 전달받지 못했습니다.")
+    
     if len(content) == 0:
-        # TO-DO : Flash 메시지 추가
-        return errorPage()
+        return errorPage(msg="내용을 전달받지 못했습니다.")
 
     if not isLogin():
         return errorPage(4)
@@ -1035,10 +1032,10 @@ def acrticleUpdateCall():
         return errorPage(2)
 
     if len(title) == 0:
-        return "TO-DO : Flash 메시지 추가"
+        return errorPage(msg="제목을 전달받지 못했습니다.")
     
     if len(content) == 0:
-        return "TO-DO : Flash 메시지 추가"
+        return errorPage(msg="내용을 전달받지 못했습니다.")
 
     if isNotAllowBoard(board):
         return errorPage(0)
@@ -1244,7 +1241,7 @@ def main():
 
 
 @app.errorhandler(404)
-def errorPage(signal: int = -1) -> str:
+def errorPage(signal: int=-1, msg=None) -> str:
     """
         ### 에러 페이지 함수
         
@@ -1267,7 +1264,10 @@ def errorPage(signal: int = -1) -> str:
         ### Out
         * render_template('error_page.html', errMsg: 에러메시지)
     """
-    if signal == 0:
+    print(msg)
+    if not msg is None:
+        return render_template('error_page.html', errMsg=msg)
+    elif signal == 0:
         return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
     elif signal == 1:
         return render_template('error_page.html', errMsg="DB 확인 중 문제가 발생했습니다.")
