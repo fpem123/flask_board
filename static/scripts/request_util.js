@@ -121,60 +121,62 @@ function commentBuilder(comments) {
 
 
 // 댓글 작성 리퀘스트
-function sendInsertComment(board) {
+function sendInsertComment(form) {
     if (isUIDEmpty()){
         alert("로그인이 필요한 작업입니다.");
 
         return;
     }
 
-    let aid = document.getElementById( 'aid' ).value;
-    let comment_element = document.getElementById( 'input-comment' );
-    let comment = comment_element.value;
+    try{
+        let comment_element = form.input_comment;
 
-    if (comment.length === 0)
-    {
-        alert("댓글을 작성해 주세요");
-        comment_element.focus();
+        if (comment_element.value.length === 0)
+        {
+            alert("댓글을 작성해 주세요");
+            comment_element.focus();
+
+            return false;
+        }
+
+        const formData = new FormData(form);
+        const url = '/comment/write';
+        let signal = true;
+
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (ALLOW_RESPONSE_STATUS.includes(response.status))
+                return response.json()
+            else{
+                signal = false;
+                alert("댓글 등록 실패");
+            }
+        })
+        .then(result => {
+            if (result['result']){
+                commentBuilder(result['data']);
+                document.getElementById( 'input-comment' ).value = "";
+            }
+            else if (signal){
+                signal = false;
+                alert(result['msg']);
+                comment_element.focus();
+            }
+        })
+        .catch(err => {
+            if (signal){
+                signal = false;
+                alert("댓글 등록 실패");
+            }
+        });
 
         return false;
     }
-
-    const formData = new FormData();
-    const url = '/comment/write';
-    let signal = true;
-
-    formData.append('aid', aid);
-    formData.append('uid', UID);
-    formData.append('comment', comment);
-    formData.append('board', board);
-
-    fetch (url, { method: 'POST', body: formData })
-    .then(response=>{
-        if (ALLOW_RESPONSE_STATUS.includes(response.status))
-            return response.json()
-        else{
-            signal = false;
-            alert("댓글 등록 실패");
-        }
-    })
-    .then(result => {
-        if (result['result']){
-            commentBuilder(result['data']);
-            document.getElementById( 'input-comment' ).value = "";
-        }
-        else if (signal){
-            signal = false;
-            alert(result['msg']);
-            comment_element.focus();
-        }
-    })
-    .catch(err => {
-        if (signal){
-            signal = false;
-            alert("댓글 등록 실패");
-        }
-    });
+    catch(err){
+        console.log(err);
+        alert("에러가 발생했습니다.");
+        return false;
+    }
 }
 
 // 댓글 삭제 리퀘스트

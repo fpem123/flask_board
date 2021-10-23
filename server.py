@@ -630,9 +630,10 @@ def selectComment(cursor, aid, uid, board):
 @app.route('/comment/write', methods=['POST'])
 def commentCreateCall():
     try:
+        print(request.form)
         aid = request.form['aid']
         request_uid = request.form['uid']
-        comment = request.form['comment']
+        comment = request.form['input_comment']
         board = request.form['board']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -1264,7 +1265,6 @@ def errorPage(signal: int=-1, msg=None) -> str:
         ### Out
         * render_template('error_page.html', errMsg: 에러메시지)
     """
-    print(msg)
     if not msg is None:
         return render_template('error_page.html', errMsg=msg)
     elif signal == 0:

@@ -16,33 +16,36 @@
 
         {% include 'frame_board_sign.html' %}
 
-        <div class="article" style="border:1px solid black; padding: 10px">
-            {% set article_uid, article_nickname, article_date, article_title, 
-                article_content, article_view, article_hit = article %}
-            <h3>{{ article_title }}</h3>
-            {% if board == 'anonymous' %}
-            <div style="float:left;">익명 | {{ article_date }}</div>
-            {% else %}
-            <div style="float:left;">{{ article_nickname }} | {{ article_date }}</div>
-            {% endif %}
-            <div style="float:right;">조회수 {{ article_view }} | 추천 <label name="hit">{{ article_hit }}</label></div>
-            <input type="hidden" id="aid" value='{{ aid }}'>
-            <br><br>
-            <textarea id="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;" rows="30" onkeydown="return onKeydownTap(this);">
-                {{ article_content }}
-            </textarea>
-            <script>setCkeditorReadOnly()</script>
-            
-            <br>
+        <div class="wrapper" style="border:1px solid black; padding: 10px">
+            <div class="article">
+                {% set article_uid, article_nickname, article_date, article_title, 
+                    article_content, article_view, article_hit = article %}
+                <h3>{{ article_title }}</h3>
+                {% if board == 'anonymous' %}
+                <div style="float:left;">익명 | {{ article_date }}</div>
+                {% else %}
+                <div style="float:left;">{{ article_nickname }} | {{ article_date }}</div>
+                {% endif %}
+                <div style="float:right;">조회수 {{ article_view }} | 추천 <label name="hit">{{ article_hit }}</label></div>
+                <input type="hidden" id="aid" value='{{ aid }}'>
+                <br><br>
+                <textarea id="content" style="border:1px dashed gray; padding: 10px; min-height: 300px;" rows="30" onkeydown="return onKeydownTap(this);">
+                    {{ article_content }}
+                </textarea>
+                <script>setCkeditorReadOnly()</script>
+                
+                <br>
 
-            <div class="btns" align="center">
-                <button onclick="return sendHit()">추천하기 (<label name="hit">{{ article_hit }}</label>)</button>
+                <div class="btns" align="center">
+                    <button onclick="return sendHit()">추천하기 (<label name="hit">{{ article_hit }}</label>)</button>
+                </div>
             </div>
 
             <br>
-
-            <h5>댓글 <label id="num-comments">{{ comments | length }}</label>개</h5>
+            
             <div class="view-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
+                <h5>댓글 <label id="num-comments">{{ comments | length }}</label>개</h5>
+                
                 {% if comments %}
                 <table id="comments" style="width: 90%;">
                     {% for cid, comment_nickname, comment, cdate_time, comment_id_flag in comments %}
@@ -73,12 +76,16 @@
 
             <div class="write-comment" style="border:1px dashed gray; padding: 10px; min-height: 50px;">
                 {% if session['uid'] %}
-                <p>
+                <form method="POST" onsubmit="return sendInsertComment(this)" style="padding: 10px;">
                     <label>{{ session.get('nickname') }}</label><br><br>
-                    <input onkeydown="if(event.keyCode==13) return sendInsertComment('{{ board }}')" type="text" id="input-comment" style="width:80%; height: 50px; resize: none;"></textarea>
+                    <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                    <input type="hidden" name="aid" value={{ aid }}>
+                    <input type="hidden" name="board" value={{ board }}>
+                    <input onkeydown="if(event.keyCode==13) return sendInsertComment('{{ board }}')" type="text" 
+                    id="input-comment" name="input_comment" style="width:80%; height: 50px; resize: none;"></textarea>
                     
-                    <button onclick="return sendInsertComment('{{ board }}')" type="submit" style="width:80px; height:40px">댓글 달기</button>
-                </p>
+                    <button type="submit" style="width:80px; height:40px">댓글 달기</button>
+                </form>
                 {% else %}
                 <p align='center'>로그인 한 유저만 댓글을 작성할 수 있습니다.</p>
                 {% endif %}
