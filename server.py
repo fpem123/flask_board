@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import session, request
 from flask import render_template, redirect, url_for, escape, flash
-from datetime import timedelta
+from datetime import datetime
 
 import sqlite3
 import pathlib
@@ -224,7 +224,6 @@ def getNickname(uid: str) -> bool:
         raise Exception('DB 확인 에러!')
 
 
-
 def makeReturnDict(result: bool, msg: str, data=None) -> dict:
     """
     ### json 통신을 위한 dict 만듬
@@ -352,8 +351,8 @@ def memberLoginRequest():
         # 세션에 유저 추가
         session['uid'] = request_uid
         session['nickname'] = getNickname(request_uid)
-        session['last_comment_call'] = False    # 마지막 댓글 작성 시간
-        session['last_article_call'] = False    # 마지막 글 작성 시간
+        session['last_comment_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()   # 마지막 댓글 작성 시간
+        session['last_article_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()    # 마지막 글 작성 시간
 
         return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 200
     else:
@@ -683,6 +682,9 @@ def commentCreateCall():
     if not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
+    if datetime.now().timestamp() - session.get('last_comment_write') < 3:
+        return makeReturnDict(False, '도배 방지.'), 400
+
     try:
         cursor = conn.cursor()
 
@@ -704,6 +706,8 @@ def commentCreateCall():
 
         cursor.close()
         conn.commit()
+
+        session['last_comment_write'] = datetime.now().timestamp()
 
         return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
@@ -861,6 +865,9 @@ def articleCreateCall():
 
     if not isExistUser(uid):
         return errorPage(2)
+    
+    if datetime.now().timestamp() - session.get('last_article_write') < 20:
+        return errorPage(msg="도배 방지.")
 
     try:
         cursor = conn.cursor()
@@ -882,6 +889,8 @@ def articleCreateCall():
 
         cursor.close()
         conn.commit()
+
+        session['last_article_write'] = datetime.now().timestamp()
 
         return redirect(url_for('board', board=board))
     except Exception as e:
@@ -1311,6 +1320,8 @@ def errorPage(signal: int=-1, msg=None) -> str:
     """
     if not msg is None:
         return render_template('error_page.html', errMsg=msg)
+    elif signal == -1:
+        return render_template('error_page.html', errMsg="존재하지 않는 페이지입니다.")
     elif signal == 0:
         return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
     elif signal == 1:
