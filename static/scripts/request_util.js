@@ -251,6 +251,9 @@ function sendInsertUser(form) {
         const formData = new FormData(form);
         const url = '/member/join/request';
         let signal = true;
+        
+        formData.set('new_uid', btoa(new_uid_element.value));
+        formData.set('new_pwd', btoa(new_pwd_element.value));
 
         fetch (url, { method: 'POST', body: formData })
         .then(response=>{
@@ -327,6 +330,9 @@ function sendLoginUser(form) {
         const url = '/member/login/request';
         let signal = true;
 
+        formData.set('request_uid', btoa(uid_element.value));
+        formData.set('request_pwd', btoa(pwd_element.value));
+
         fetch (url, { method: 'POST', body: formData })
         .then(response=>{
             if (ALLOW_RESPONSE_STATUS.includes(response.status))
@@ -385,7 +391,7 @@ function sendLogoutUser(button) {
     const url = '/member/logout/request';
     let signal = true;
 
-    formData.append('uid', uid);
+    formData.append('uid', btoa(uid));
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -439,6 +445,10 @@ function sendUpdateUser(form) {
         const formData = new FormData(form);
         const url = '/member/update/request';
         let signal = true;
+        
+        formData.set('uid', btoa(form.uid.value));
+        formData.set('old_pwd', btoa(old_pwd_element.value));
+        formData.set('new_pwd', btoa(new_pwd_element.value));
         
         fetch (url, { method: 'POST', body: formData })
         .then(response=>{
@@ -512,6 +522,9 @@ function sendDeleteUser(form) {
         const formData = new FormData(form);
         const url = '/member/delete/request';
         let signal = true;
+
+        formData.set('uid', btoa(form.uid.value));
+        formData.set('pwd', btoa(pwd_element.value));
 
         fetch (url, { method: 'POST', body: formData })
         .then(response=>{

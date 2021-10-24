@@ -6,6 +6,7 @@ from datetime import timedelta
 import sqlite3
 import pathlib
 import hashlib
+import base64
 import math
 import re
 
@@ -116,7 +117,6 @@ def isCorrectPWD(uid: str, pwd: int) -> bool:
         cursor.execute(SELECT_USER_PWD)
         user_pwd = cursor.fetchall()[0][0]
         cursor.close()
-
         return pwd == user_pwd
     except Exception as e:
         cursor.close()
@@ -224,12 +224,6 @@ def getNickname(uid: str) -> bool:
         raise Exception('DB 확인 에러!')
 
 
-def getSHA256(item: str) -> str:
-    """
-    ### SHA256 암호화
-    """
-    return hashlib.sha256(item.encode()).hexdigest()
-
 
 def makeReturnDict(result: bool, msg: str, data=None) -> dict:
     """
@@ -239,6 +233,20 @@ def makeReturnDict(result: bool, msg: str, data=None) -> dict:
         return {"result": result, "msg": msg, "data": data}
     else:
         return {"result": result, "msg": msg}
+
+
+def encodeSHA256(item: str) -> str:
+    """
+    ### SHA256 암호화
+    """
+    return hashlib.sha256(item.encode()).hexdigest()
+
+
+def decodeBase64(data):
+    """
+    ### base64 디코딩
+    """
+    return base64.b64decode(data).decode("UTF-8")
 
 
 ##############
@@ -258,6 +266,9 @@ def memberJoinRequest():
         request_uid = request.form['new_uid']
         request_pwd = request.form['new_pwd']
         request_nickname = request.form['new_nickname']
+
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -279,9 +290,8 @@ def memberJoinRequest():
     if not isCorrectNicknameForm(request_nickname):
         return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
 
-    request_pwd = getSHA256(request_pwd)
-
     try:
+        request_pwd = encodeSHA256(request_pwd)
         cursor = conn.cursor()
 
         INSERT_USER = """
@@ -323,6 +333,10 @@ def memberLoginRequest():
     try:
         request_uid = request.form['request_uid']
         request_pwd = request.form['request_pwd']
+        
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
+        request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -333,13 +347,13 @@ def memberLoginRequest():
     if isLogin():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
 
-    request_pwd = getSHA256(request_pwd)
-
     # 비밀번호가 일치하는지
     if isCorrectPWD(request_uid, request_pwd):
         # 세션에 유저 추가
         session['uid'] = request_uid
         session['nickname'] = getNickname(request_uid)
+        session['last_comment_call'] = False    # 마지막 댓글 작성 시간
+        session['last_article_call'] = False    # 마지막 글 작성 시간
 
         return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 200
     else:
@@ -381,6 +395,11 @@ def memberUpdateRequest():
         request_pwd = request.form['old_pwd']
         request_new_pwd = request.form.get('new_pwd', default=False)
         request_new_nickname = request.form.get('new_nickname', default=False)
+
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
+        request_pwd = encodeSHA256(request_pwd)
+        request_new_pwd = decodeBase64(request_new_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -404,8 +423,6 @@ def memberUpdateRequest():
         if not isCorrectNicknameForm(request_new_nickname):
             return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
 
-    request_pwd = getSHA256(request_pwd)
-
     # 비밀번호 확인
     if not isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 0), 400
@@ -414,10 +431,10 @@ def memberUpdateRequest():
         cursor = conn.cursor()
 
         if request_new_pwd and request_new_nickname:
-            request_new_pwd = getSHA256(request_new_pwd)
+            request_new_pwd = encodeSHA256(request_new_pwd)
             set_query = f"password='{request_new_pwd}', nickname='{request_new_nickname}'"
         elif request_new_pwd:
-            request_new_pwd = getSHA256(request_new_pwd)
+            request_new_pwd = encodeSHA256(request_new_pwd)
             set_query = f"password='{request_new_pwd}'"
         elif request_new_nickname:
             set_query = f"nickname='{request_new_nickname}'"
@@ -462,6 +479,10 @@ def memberDeleteeRequest():
         request_uid = request.form['uid']
         request_pwd = request.form['pwd']
         request_confirm = request.form['confirm']
+
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
+        request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -478,7 +499,7 @@ def memberDeleteeRequest():
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
     
     # 비밀번호 확인
-    if isCorrectPWD(request_uid, request_pwd):
+    if not isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
