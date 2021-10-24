@@ -365,8 +365,17 @@ def memberLoginRequest():
 ##############
 @app.route('/member/logout/request', methods=["POST"])
 def memberLogout():
+    try:
+        request_uid = request.form['uid']
+        request_uid = decodeBase64(request_uid)
+    except Exception as e:
+        return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+
     if not isLogin():
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
+    
+    if not isSessionUser(request_uid):
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
     
     try:
         # 세션 나가기
@@ -407,7 +416,7 @@ def memberUpdateRequest():
         return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
 
     if not isSessionUser(request_uid):
-        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
 
     if not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
