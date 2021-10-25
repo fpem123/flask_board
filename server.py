@@ -10,8 +10,6 @@ import math
 import re
 import os
 
-from werkzeug.datastructures import MultiDict
-
 from board_class import BoardClass
 from sqlite_class import SquliteClass
 
@@ -135,14 +133,14 @@ def isCorrectNicknameForm(nickname) -> bool:
     * 2 글자 이상, 10 글자 이하
     * 영어와 숫자만 가능
     * 공백 불가
-    * ', " 사용 볼가
+    * 특수문자 사용 볼가
     """
     # 길이 검사
     if len(nickname) < 2 or len(nickname) > 16:
         return False
     
     # 공백, 특수문자 검사
-    if re.findall('[\s\'\"]+', nickname):
+    if re.findall('[\s\'\"%/#\\]+', nickname):
         return False
     
     return True
@@ -216,20 +214,15 @@ def memberJoinRequest():
 
     if isExistUser(uid=request_uid):
         return makeReturnDict(False, '이미 존재하는 아이디입니다.', 0), 200
-
-    if isExistUser(nickname=request_nickname):
+    elif isExistUser(nickname=request_nickname):
         return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 200
-
-    if isLogin():
+    elif isLogin():
         return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
-
-    if not isCorrectUidForm(request_uid):
+    elif not isCorrectUidForm(request_uid):
         return makeReturnDict(False, '올바르지 않은 아이디 형식입니다.', 0), 400
-    
-    if not isCorrectPWDForm(request_pwd):
+    elif not isCorrectPWDForm(request_pwd):
         return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.', 1), 400
-
-    if not isCorrectNicknameForm(request_nickname):
+    elif not isCorrectNicknameForm(request_nickname):
         return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
 
     try:
@@ -280,12 +273,10 @@ def memberLoginRequest():
     # 존재하는 않는 유저
     if not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.', 0), 200
-
-    if isLogin():
+    elif isLogin():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
-
     # 비밀번호가 일치하는지
-    if isCorrectPWD(request_uid, request_pwd):
+    elif isCorrectPWD(request_uid, request_pwd):
         # 세션에 유저 추가
         session['uid'] = request_uid
         session['nickname'] = getNickname(request_uid)
@@ -310,8 +301,7 @@ def memberLogout():
 
     if not isLogin():
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
-    
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
     
     try:
@@ -351,26 +341,19 @@ def memberUpdateRequest():
 
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다'), 400
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-
-    if isExistUser(nickname=request_new_nickname):
+    elif isExistUser(nickname=request_new_nickname):
         return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 400
-
-    if request_new_pwd:
+    elif request_new_pwd:
         if not isCorrectPWDForm(request_new_pwd):
             return makeReturnDict(False, '올바르지 않은 비밀번호 형식입니다.', 1), 400
-
-    if request_new_nickname:
+    elif request_new_nickname:
         if not isCorrectNicknameForm(request_new_nickname):
             return makeReturnDict(False, '올바르지 않은 닉네임 형식입니다.', 2), 400
-
-    # 비밀번호 확인
-    if not isCorrectPWD(request_uid, request_pwd):
+    elif not isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 0), 400
 
     try:
@@ -428,18 +411,13 @@ def memberDeleteeRequest():
 
     if request_confirm != '탈퇴합니다':
         return makeReturnDict(False, '확인 메시지가 잘 못 되었습니다.'), 400
-
-    if not isLogin():
+    elif not isLogin():
         return makeReturnDict(False, '로그인된 유저만 할 수 있는 작업입니다.'), 400
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
-    
-    # 비밀번호 확인
-    if not isCorrectPWD(request_uid, request_pwd):
+    elif not isCorrectPWD(request_uid, request_pwd):
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
@@ -470,11 +448,9 @@ def articleHit():
     
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'),400
-
-    if not isSessionUser(uid):
+    elif not isSessionUser(uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
-
-    if not isExistUser(uid):
+    elif not isExistUser(uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
@@ -586,17 +562,13 @@ def commentCreateCall():
     
     if len(comment) == 0:
         return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
-
-    if not isLogin():
+    elif not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-
-    if datetime.now().timestamp() - session.get('last_comment_write') < 3:
+    elif datetime.now().timestamp() - session.get('last_comment_write') < 3:
         return makeReturnDict(False, '도배 방지.'), 400
 
     try:
@@ -636,11 +608,9 @@ def commentDeleteCall():
 
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
@@ -899,14 +869,11 @@ def acrticleUpdate():
 
     if boardObj.isNotAllowBoard(board):
         return errorPage(0)
-
-    if not isLogin():
+    elif not isLogin():
         return errorPage(3)
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return errorPage()
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return errorPage(2)
 
     try:
@@ -944,21 +911,16 @@ def acrticleUpdateCall():
         return errorPage(2)
 
     if len(title) == 0:
-        return errorPage(msg="제목을 전달받지 못했습니다.")
-    
-    if len(content) == 0:
+        return errorPage(msg="제목을 전달받지 못했습니다.") 
+    elif len(content) == 0:
         return errorPage(msg="내용을 전달받지 못했습니다.")
-
-    if boardObj.isNotAllowBoard(board):
+    elif boardObj.isNotAllowBoard(board):
         return errorPage(0)
-
-    if not isLogin():
+    elif not isLogin():
         return errorPage(3)
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return errorPage(5)
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return errorPage(2)
     
     try:
@@ -1002,14 +964,11 @@ def articleDalete():
 
     if boardObj.isNotAllowBoard(board):
         return errorPage(0)
-
-    if not isLogin():
+    elif not isLogin():
         return errorPage(4)
-
-    if not isSessionUser(request_uid):
+    elif not isSessionUser(request_uid):
         return errorPage(5)
-
-    if not isExistUser(request_uid):
+    elif not isExistUser(request_uid):
         return errorPage(2)
 
     # 글 삭제
