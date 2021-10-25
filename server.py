@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import session, request
-from flask import render_template, redirect, url_for, escape, flash
+from flask import render_template, redirect, url_for, escape
 from datetime import datetime
 
 import sqlite3
@@ -10,31 +10,17 @@ import base64
 import math
 import re
 
+from board_class import BoardClass
+
 
 app = Flask(__name__)
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 
 
-BOARD_DICT = {'etc':'기타', 
-    'game' : '게임',
-    'anonymous' : '익명',
-    'no-member' : '비회원'
-    }
-
+boardClass = BoardClass()
 conn = sqlite3.connect("test.db", check_same_thread=False)
 conn.commit()
-
-
-##############
-## 허용되지 않은 게시판인지 확인
-## return : boolean
-##############
-def isNotAllowBoard(board: str) -> bool:
-    """
-    ### 허용된 게시판인지 확인
-    """
-    return board not in BOARD_DICT
 
 
 def isCorrectArticlePWD(pwd: str, aid: int):
@@ -785,14 +771,14 @@ def articleCreate():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
         return errorPage(4)
 
     # 글 작성 페이지
-    return render_template('article_write.html', board=board, board_name=BOARD_DICT[board]), 200
+    return render_template('article_write.html', board=board, board_name=boardClass.get_board_name(board)), 200
 
 
 ##############
@@ -805,7 +791,7 @@ def imageUploadCall(board):
     except Exception as e:
         return {"uploaded": False, "url": False}, 400
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return {"uploaded": False, "url": False}, 400
 
     try:
@@ -950,7 +936,7 @@ def acrticlePage():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     try:
@@ -991,7 +977,7 @@ def acrticlePage():
         conn.commit()
 
         # 글 보기
-        return render_template('article_page.html', board=board, board_name=BOARD_DICT[board],
+        return render_template('article_page.html', board=board, board_name=boardClass.get_board_name(board),
         aid=aid, article=article, comments=comments, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
@@ -1013,7 +999,7 @@ def anonymousCheck():
         aid = request.args.get('aid', type=int)
         check_type = request.args.get('check_type', type=str)
 
-        return render_template('anonymous_check.html', board=board, board_name=BOARD_DICT[board], 
+        return render_template('anonymous_check.html', board=board, board_name=boardClass.get_board_name(board), 
         uid=uid, aid=aid, check_type=check_type), 200
     except Exception as e:
         return errorPage(2)
@@ -1032,7 +1018,7 @@ def acrticleUpdate():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1061,7 +1047,7 @@ def acrticleUpdate():
 
         cursor.close()
 
-        return render_template('article_update.html', board=board, board_name=BOARD_DICT[board], 
+        return render_template('article_update.html', board=board, board_name=boardClass.get_board_name(board), 
         aid=aid, title=title, content=content), 200
     except Exception as e:
         cursor.close()
@@ -1091,7 +1077,7 @@ def acrticleUpdateCall():
     if len(content) == 0:
         return errorPage(msg="내용을 전달받지 못했습니다.")
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1151,7 +1137,7 @@ def articleDalete():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1206,11 +1192,11 @@ def articleDaleteDone():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     # 삭제 완료 페이지, 2 초후 게시판으로 이동함
-    return render_template(f'article_delete.html', board=board, board_name=BOARD_DICT[board]), 200
+    return render_template(f'article_delete.html', board=board, board_name=boardClass.get_board_name(board)), 200
 
 
 ##############
@@ -1227,7 +1213,7 @@ def board():
     except Exception as e:
         return errorPage(2)
 
-    if isNotAllowBoard(board):
+    if boardClass.isNotAllowBoard(board):
         return errorPage(0)
 
     try:
@@ -1237,7 +1223,7 @@ def board():
         cursor.close()
 
         # 게시판 페이지, db에서 가져온 정보
-        return render_template(f'board_page.html', board=board, board_name=BOARD_DICT[board], 
+        return render_template(f'board_page.html', board=board, board_name=boardClass.get_board_name(board), 
         aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch,
         option=option, keyword=keyword), 200
     except Exception as e:
@@ -1291,7 +1277,7 @@ def boardQueryBuilder(board, option, keyword)->str:
 ##############
 @app.route('/')
 def main():
-    return render_template('main.html', boards=BOARD_DICT), 200
+    return render_template('main.html', boards=boardClass.get_board_dict()), 200
 
 
 @app.errorhandler(404)
