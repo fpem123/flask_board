@@ -8,6 +8,8 @@
 
 * create_table.py 먼저 실행하고 server.py 실행하기
 
+* 프로토타입 : [OVEN](https://ovenapp.io/view/6xyc7AHTnkoAuw75yHj5af5yY7xJylTH/)
+
 
 ---
 
@@ -42,6 +44,8 @@
 * 중복 html코드들 frame화
 
 * 리펙토링
+
+* 어드민 페이지
 
 * CSS로 꾸미기
 
