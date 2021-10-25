@@ -18,6 +18,6 @@ class BoardClass():
 
     def isNotAllowBoard(self, board: str) -> bool:
         """
-        ### 허용된 게시판인지 확인
+        ### 허용되지 않은 게시판인지 확인
         """
         return board not in self.board_dict

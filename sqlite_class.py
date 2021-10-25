@@ -36,13 +36,14 @@ class SquliteClass():
             self.conn.rollback()
 
 
-    def selectQuery(self, query):
+    def selectQuery(self, query, data):
         """
         ### db에 데이터 추가
 
         * 입력
 
             query : 쿼리
+            data : 검색할 조건 데이터
             
         * 출력
 
@@ -50,7 +51,7 @@ class SquliteClass():
         """
         try:
             cursor = self.conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, data)
             result = cursor.fetchall()
             cursor.close()
             self.conn.commit()
@@ -60,14 +61,14 @@ class SquliteClass():
             cursor.close()
 
 
-    def updateQuery(self, query):
+    def updateQuery(self, query, data):
         """
         ### db에 데이터 추가
 
         * 입력
 
             query : 쿼리
-            data : 추가할 데이터
+            data : 수정할 데이터
             
         * 출력
 
@@ -75,24 +76,28 @@ class SquliteClass():
         """
         try:
             cursor = self.conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, data)
             result = cursor.fetchall()
             cursor.close()
             self.conn.commit()
 
             return True
         except Exception as e:
+            print(e)
+            print(query)
+            print(data)
             cursor.close()
             self.conn.rollback()
 
 
-    def deleteQuery(self, query):
+    def deleteQuery(self, query, data):
         """
         ### db에 데이터 추가
 
         * 입력
 
             query : 쿼리
+            data : 제거할 타겟 데이터
 
         * 출력
 
@@ -100,7 +105,7 @@ class SquliteClass():
         """
         try:
             cursor = self.conn.cursor()
-            cursor.execute(query)
+            cursor.execute(query, data)
             result = cursor.fetchall()
             cursor.close()
             self.conn.commit()

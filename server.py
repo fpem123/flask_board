@@ -28,21 +28,24 @@ def isExistUser(uid: str=None, nickname: str=None):
     """
     try:
         # uid 또는 nickname에 해당하는 유저가 있는지
-        SELECT_USER = f"""
+        SELECT_USER = """
             SELECT  *
             FROM    user
             WHERE   """
 
         if not uid is None and not nickname is None:
             # uid과 nickname에 해당하는 유저가 있는지
-            SELECT_USER += f"user_id = '{uid}' or nickname = '{nickname}'"
+            SELECT_USER += "user_id = ? or nickname = ?"
+            data = [uid, nickname]
         elif not uid is None:
             # uid에 해당하는 유저가 있는지
-            SELECT_USER += f"user_id = '{uid}'"
+            SELECT_USER += "user_id = ?"
+            data = [uid, ]
         elif not nickname is None:
             # nickname에 해당하는 유저가 있는지
-            SELECT_USER += f"nickname = '{nickname}'"
-        res = sqliteObj.selectQuery(SELECT_USER)
+            SELECT_USER += "nickname = ?"
+            data = [nickname, ]
+        res = sqliteObj.selectQuery(SELECT_USER, data)
 
         if res:
             return True
@@ -60,12 +63,12 @@ def isCorrectPWD(uid: str, pwd: int) -> bool:
     """
     try:
         # 유저 비밀번호 획득
-        SELECT_USER_PWD = f"""
+        SELECT_USER_PWD = """
             SELECT  password
             FROM    user
-            WHERE   user_id = '{uid}'
+            WHERE   user_id = ?
         """
-        user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD)[0][0]
+        user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD, [uid, ])[0][0]
         return pwd == user_pwd
     except Exception as e:
         raise False
@@ -140,7 +143,7 @@ def isCorrectNicknameForm(nickname) -> bool:
         return False
     
     # 공백, 특수문자 검사
-    if re.findall('[\s\'\"%/#\\]+', nickname):
+    if re.findall('[\s\'\"%]+', nickname):
         return False
     
     return True
@@ -153,12 +156,12 @@ def getNickname(uid: str) -> bool:
     """
     try:
         # 유저 비밀번호 획득
-        SELECT_USER_NICKNAME = f"""
+        SELECT_USER_NICKNAME = """
             SELECT  nickname
             FROM    user
-            WHERE   user_id = '{uid}'
+            WHERE   user_id = ?
         """
-        nickname = sqliteObj.selectQuery(SELECT_USER_NICKNAME)[0][0]
+        nickname = sqliteObj.selectQuery(SELECT_USER_NICKNAME, [uid, ])[0][0]
 
         return nickname
     except Exception as e:
@@ -359,12 +362,15 @@ def memberUpdateRequest():
     try:
         if request_new_pwd and request_new_nickname:
             request_new_pwd = encodeSHA256(request_new_pwd)
-            set_query = f"password='{request_new_pwd}', nickname='{request_new_nickname}'"
+            set_query = "password = ?, nickname = ?"
+            data = [request_new_pwd, request_new_nickname]
         elif request_new_pwd:
             request_new_pwd = encodeSHA256(request_new_pwd)
-            set_query = f"password='{request_new_pwd}'"
+            set_query = "password = ?"
+            data = [request_new_pwd, ]
         elif request_new_nickname:
-            set_query = f"nickname='{request_new_nickname}'"
+            set_query = "nickname = ?"
+            data = [request_new_nickname, ]
         else:
             return makeReturnDict(False, '변경할 값을 전달받지 못했습니다.'), 500
 
@@ -372,9 +378,11 @@ def memberUpdateRequest():
         UPDATE_USER = f"""
             UPDATE  user
             SET     {set_query}
-            WHERE   user_id='{request_uid}'
+            WHERE   user_id = ?
         """
-        sqliteObj.updateQuery(UPDATE_USER)
+        data.append(request_uid)
+        print(UPDATE_USER, data)
+        sqliteObj.updateQuery(UPDATE_USER, data)
 
         if request_new_nickname:
             session['nickname'] = getNickname(request_uid)
@@ -421,12 +429,12 @@ def memberDeleteeRequest():
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
-        DELETE_USER = f"""
+        DELETE_USER = """
             DELETE  
             FROM    user
-            WHERE   user_id='{request_uid}'
+            WHERE   user_id = ?
         """
-        sqliteObj.deleteQuery(DELETE_USER)
+        sqliteObj.deleteQuery(DELETE_USER, [request_uid, ])
         memberLogout()
 
         return makeReturnDict(True, "탈퇴 성공"), 200
@@ -455,12 +463,12 @@ def articleHit():
 
     try:
         # 추천했던 유저인지 확인
-        SELECT_HIT_HISTORY = f"""
+        SELECT_HIT_HISTORY = """
             SELECT  *
             FROM    hit_history
-            WHERE   article_id={aid} and user_id='{uid}';
+            WHERE   article_id = ? and user_id = ?;
         """
-        res = sqliteObj.selectQuery(SELECT_HIT_HISTORY)
+        res = sqliteObj.selectQuery(SELECT_HIT_HISTORY, [aid, uid])
 
         if res:
             return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 200
@@ -478,20 +486,20 @@ def articleHit():
         sqliteObj.insertQuery(INSERT_HIT_USER, (aid, uid))
 
         # 추천수 증가
-        UPDATE_ARTICLE_HIT = f"""
+        UPDATE_ARTICLE_HIT = """
             UPDATE  article
             SET     hit = hit + 1
-            WHERE   article_id={aid};
+            WHERE   article_id = ?;
         """
-        sqliteObj.updateQuery(UPDATE_ARTICLE_HIT)
+        sqliteObj.updateQuery(UPDATE_ARTICLE_HIT, (aid, ))
 
         # 추천수 반환
-        SELECT_ARTICLE_HIT = f"""
+        SELECT_ARTICLE_HIT = """
             SELECT  hit
             FROM    article
-            WHERE   article_id={aid};
+            WHERE   article_id = ?;
         """
-        hit = sqliteObj.selectQuery(SELECT_ARTICLE_HIT)[0][0]
+        hit = sqliteObj.selectQuery(SELECT_ARTICLE_HIT, (aid, ))[0][0]
 
         return makeReturnDict(True, '추천 성공', hit), 200
     except Exception as e:
@@ -504,7 +512,7 @@ def articleHit():
 ##############
 def selectComment(aid, uid, board):
     try:
-        SELECT_ARTICLE_WRITER = f"""
+        SELECT_ARTICLE_WRITER = """
             SELECT  user_id
             FROM    article
             WHERE   article_id={aid}
@@ -512,14 +520,14 @@ def selectComment(aid, uid, board):
         writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
 
         # 댓글 정보 반환
-        SELECT_COMMENTS = f"""
+        SELECT_COMMENTS = """
             SELECT  comment_id, nickname, comment, comment_time, user.user_id
             FROM    comment left join user
                     on comment.user_id = user.user_id
-            WHERE   article_id={aid}
+            WHERE   article_id = ?
             ORDER BY comment_id ASC;
         """
-        comments = sqliteObj.selectQuery(SELECT_COMMENTS)
+        comments = sqliteObj.selectQuery(SELECT_COMMENTS, (aid, ))
 
         for idx, comment in enumerate(comments):
             comment = list(comment)
@@ -562,6 +570,8 @@ def commentCreateCall():
     
     if len(comment) == 0:
         return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
+    elif boardObj.isNotAllowBoard(board):
+        return makeReturnDict(False, '존재하지 않는 게시판입니다.'), 400
     elif not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
     elif not isSessionUser(request_uid):
@@ -608,6 +618,8 @@ def commentDeleteCall():
 
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+    elif boardObj.isNotAllowBoard(board):
+        return makeReturnDict(False, '존재하지 않는 게시판입니다.'), 400
     elif not isSessionUser(request_uid):
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
     elif not isExistUser(request_uid):
@@ -615,23 +627,23 @@ def commentDeleteCall():
 
     try:
         # 댓글 작성자 가져오기
-        SELECT_COMMENT_WRITER = f"""
+        SELECT_COMMENT_WRITER = """
             SELECT  user_id
             FROM    comment
-            WHERE   comment_id={cid}
+            WHERE   comment_id = ?
         """
-        writer = sqliteObj.selectQuery(SELECT_COMMENT_WRITER)[0][0]
+        writer = sqliteObj.selectQuery(SELECT_COMMENT_WRITER, (cid, ))[0][0]
 
         if writer != request_uid:
             return makeReturnDict(False, '작성자와 일치하지 않습니다.'), 400
 
         # 댓글 삭제
-        DELETE_COMMENT = f"""
+        DELETE_COMMENT = """
             DELETE   
             FROM    comment
-            WHERE   comment_id={cid}
+            WHERE   comment_id = ?
         """
-        sqliteObj.deleteQuery(DELETE_COMMENT)
+        sqliteObj.deleteQuery(DELETE_COMMENT, (cid, ))
         comments = selectComment(aid, request_uid, board)
 
         return makeReturnDict(True, '댓글삭제 성공.', comments), 200
@@ -651,8 +663,7 @@ def articleCreate():
 
     if boardObj.isNotAllowBoard(board):
         return errorPage(0)
-
-    if not isLogin():
+    elif not isLogin():
         return errorPage(4)
 
     # 글 작성 페이지
@@ -716,6 +727,8 @@ def articleCreateCall():
         return errorPage(msg="제목을 전달받지 못했습니다.")
     elif len(content) == 0:
         return errorPage(msg="내용을 전달받지 못했습니다.")
+    elif boardObj.isNotAllowBoard(board):
+        return errorPage(0)
     elif not isLogin():
         return errorPage(4)
     elif not isSessionUser(uid):
@@ -755,13 +768,13 @@ def getArticles(board, page, art_per_page, option, keyword):
         SELECT_BOARD_COUNT = f"""
             SELECT  count(article_id)
             FROM    article
-            WHERE   board='{board}';
+            WHERE   board = ?;
         """
-        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_COUNT)[0][0]     # 글의 수
+        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_COUNT, [board, ])[0][0]     # 글의 수
         p_cnt = math.ceil(a_cnt / art_per_page)                     # 전체 페이지 개수
 
-        SELECT_ARTICLE = boardQueryBuilder(board, option, keyword)
-        articles = sqliteObj.selectQuery(SELECT_ARTICLE)
+        SELECT_ARTICLE, data = boardQueryBuilder(board, option, keyword)
+        articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
 
         tmp = (page - 1) * art_per_page
         articles = articles[tmp:min(tmp + art_per_page, a_cnt)]
@@ -800,23 +813,23 @@ def acrticlePage():
 
     try:
         # 조회수 증가
-        UPDATE_ARTICLE_VIEW = f"""
+        UPDATE_ARTICLE_VIEW = """
             UPDATE  article
             SET     view = view + 1
-            WHERE   article_id={aid};
+            WHERE   article_id = ?;
         """
-        sqliteObj.updateQuery(UPDATE_ARTICLE_VIEW)
+        sqliteObj.updateQuery(UPDATE_ARTICLE_VIEW, (aid, ))
 
         # 게시물 정보 반환
-        SELECT_ARTICLE= f"""
+        SELECT_ARTICLE= """
             SELECT  distinct article.user_id, nickname, article_time, title, content, view, hit
             FROM    article left join comment
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
-            WHERE   article.article_id = {aid};
+            WHERE   article.article_id = ?;
         """
-        article = sqliteObj.selectQuery(SELECT_ARTICLE)[0]
+        article = sqliteObj.selectQuery(SELECT_ARTICLE, (aid, ))[0]
 
         if not article[1]:
             tmp = list(article)
@@ -878,12 +891,12 @@ def acrticleUpdate():
 
     try:
         # 게시물 정보 획득 획득
-        SELECT_ARTICLE_INFO = f"""
+        SELECT_ARTICLE_INFO = """
             SELECT  title, content, user_id
             FROM    article
-            WHERE   article_id = {aid};
+            WHERE   article_id = ?;
         """
-        title, content, user_id = sqliteObj.selectQuery(SELECT_ARTICLE_INFO)[0]
+        title, content, user_id = sqliteObj.selectQuery(SELECT_ARTICLE_INFO, (aid, ))[0]
 
         if user_id != request_uid:
             return errorPage(3)
@@ -925,24 +938,24 @@ def acrticleUpdateCall():
     
     try:
         # 회원은 아이디만으로도 글을 수정할 수 있다.
-        SELECT_ARTICLE_WRITER = f"""
+        SELECT_ARTICLE_WRITER = """
             SELECT  user_id
             FROM    article
-            WHERE   article_id = {aid};
+            WHERE   article_id = ?;
         """
-        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
         if writer != request_uid:
             return errorPage(2)
 
         # 회원용 게시물 수정
-        UPDATE_ARTICLE = f"""
+        UPDATE_ARTICLE = """
             UPDATE article
-            SET title = '{title}',
-                content = '{content}'
-            WHERE article_id = '{aid}'
+            SET title = ?,
+                content = ?
+            WHERE article_id = ?
             """
-        sqliteObj.updateQuery(UPDATE_ARTICLE)
+        sqliteObj.updateQuery(UPDATE_ARTICLE, (title, content, aid))
 
         return redirect(url_for('board', board=board))
     except Exception as e:
@@ -973,12 +986,12 @@ def articleDalete():
 
     # 글 삭제
     try:
-        SELECT_ARTICLE_WRITER = f"""
+        SELECT_ARTICLE_WRITER = """
             SELECT  user_id
             FROM    article
-            WHERE   article_id = {aid};
+            WHERE   article_id = ?;
         """
-        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
         if writer != request_uid:
             return errorPage(2)
@@ -986,9 +999,9 @@ def articleDalete():
         DELETE_ARTIECLE = f"""
             DELETE
             FROM article
-            WHERE article_id = {aid};
+            WHERE article_id = ?;
         """
-        sqliteObj.deleteQuery(DELETE_ARTIECLE)
+        sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, ))
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
@@ -1045,39 +1058,43 @@ def board():
 ##############
 ## 게시판 페이지에 사용할 SQL 쿼리
 ##############
-def boardQueryBuilder(board, option, keyword)->str:
+def boardQueryBuilder(board, option, keyword) -> str:
     try:
-        query = f"""
+        query = """
             SELECT  article.article_id, nickname, title, article_time, view, hit, count(comment_id)
             FROM    article left join comment
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
-            WHERE   board='{board}'"""
+            WHERE   board=?"""
+        data = [board, ]
 
         if option == 'title, content':
-            query += f""" and (
-            title like '%{keyword}%' ESCAPE '$' or
-            content like '%{keyword}%' ESCAPE '$') """
+            query += """ and (
+            title like ? ESCAPE '$' or
+            content like ? ESCAPE '$') """
+            data.extend([keyword, keyword])
         elif option == 'title':
-            query += f""" and
-            title like '%{keyword}%' ESCAPE '$'
+            query += """ and
+            title like ? ESCAPE '$'
             """
+            data.append(keyword)
         elif option == 'content':
-            query += f""" and
-            content like '%{keyword}%' ESCAPE '$'
+            query += """ and
+            content like ? ESCAPE '$'
             """
+            data.append(keyword)
         elif option == 'user':
-            query += f""" and
-            nickname like '%{keyword}%' ESCAPE '$'
+            query += """ and
+            nickname like ? ESCAPE '$'
             """
+            data.append(keyword)
         
         query += """
         GROUP BY article.article_id
         ORDER BY article.article_id DESC;
         """
-
-        return query
+        return query, data
     except Exception as e:
         raise Exception("DB 확인 중 에러가 발생했습니다.")
 
