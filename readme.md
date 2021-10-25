@@ -43,14 +43,11 @@
 
 * 리펙토링
 
-* sql injection 방어
-
 * CSS로 꾸미기
 
 ---
 
 ## TO-DO
-
 
 * 호스팅
 

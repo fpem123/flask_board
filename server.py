@@ -515,9 +515,9 @@ def selectComment(aid, uid, board):
         SELECT_ARTICLE_WRITER = """
             SELECT  user_id
             FROM    article
-            WHERE   article_id={aid}
+            WHERE   article_id = ?
         """
-        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
         # 댓글 정보 반환
         SELECT_COMMENTS = """
@@ -846,6 +846,7 @@ def acrticlePage():
         aid=aid, article=article, comments=comments, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
+        print(e)
         return errorPage(1)
 
 
@@ -1068,6 +1069,7 @@ def boardQueryBuilder(board, option, keyword) -> str:
                     on article.user_id = user.user_id
             WHERE   board=?"""
         data = [board, ]
+        keyword = '%' + keyword + '%'
 
         if option == 'title, content':
             query += """ and (
