@@ -3,49 +3,24 @@ from flask import session, request
 from flask import render_template, redirect, url_for, escape
 from datetime import datetime
 
-import sqlite3
 import pathlib
 import hashlib
 import base64
 import math
 import re
+import os
+
+from werkzeug.datastructures import MultiDict
 
 from board_class import BoardClass
+from sqlite_class import SquliteClass
 
 
 app = Flask(__name__)
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
-
-
-boardClass = BoardClass()
-conn = sqlite3.connect("test.db", check_same_thread=False)
-conn.commit()
-
-
-def isCorrectArticlePWD(pwd: str, aid: int):
-    """
-    ### 글의 비밀번호와 입력된 비밀번호가 같은지 확인
-    비회원 게시판 전용
-    """
-    try:
-        cursor = conn.cursor()
-
-        # 게시물 비밀번호 획득
-        SELECT_PWD = f"""
-            SELECT  password
-            FROM    article
-            WHERE   article_id = {aid}
-        """
-        cursor.execute(SELECT_PWD)
-        article_pwd = cursor.fetchall()[0][0]
-        cursor.close()
-
-        return pwd == article_pwd
-    except Exception as e:
-        cursor.close()
-
-        return False
+boardObj = BoardClass()
+sqliteObj = SquliteClass("test.db")
 
 
 def isExistUser(uid: str=None, nickname: str=None):
@@ -54,8 +29,6 @@ def isExistUser(uid: str=None, nickname: str=None):
     회원 전용
     """
     try:
-        cursor = conn.cursor()
-
         # uid 또는 nickname에 해당하는 유저가 있는지
         SELECT_USER = f"""
             SELECT  *
@@ -71,9 +44,7 @@ def isExistUser(uid: str=None, nickname: str=None):
         elif not nickname is None:
             # nickname에 해당하는 유저가 있는지
             SELECT_USER += f"nickname = '{nickname}'"
-        cursor.execute(SELECT_USER)
-        res = cursor.fetchall()
-        cursor.close()
+        res = sqliteObj.selectQuery(SELECT_USER)
 
         if res:
             return True
@@ -81,8 +52,6 @@ def isExistUser(uid: str=None, nickname: str=None):
             return False
 
     except Exception as e:
-        cursor.close()
-
         return False
 
 
@@ -92,21 +61,15 @@ def isCorrectPWD(uid: str, pwd: int) -> bool:
     회원 전용
     """
     try:
-        cursor = conn.cursor()
-
         # 유저 비밀번호 획득
         SELECT_USER_PWD = f"""
             SELECT  password
             FROM    user
             WHERE   user_id = '{uid}'
         """
-        cursor.execute(SELECT_USER_PWD)
-        user_pwd = cursor.fetchall()[0][0]
-        cursor.close()
+        user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD)[0][0]
         return pwd == user_pwd
     except Exception as e:
-        cursor.close()
-
         raise False
 
 
@@ -191,22 +154,16 @@ def getNickname(uid: str) -> bool:
     회원 전용
     """
     try:
-        cursor = conn.cursor()
-
         # 유저 비밀번호 획득
         SELECT_USER_NICKNAME = f"""
             SELECT  nickname
             FROM    user
             WHERE   user_id = '{uid}'
         """
-        cursor.execute(SELECT_USER_NICKNAME)
-        nickname = escape(cursor.fetchall()[0][0])
-        cursor.close()
+        nickname = sqliteObj.selectQuery(SELECT_USER_NICKNAME)[0][0]
 
         return nickname
     except Exception as e:
-        cursor.close()
-
         raise Exception('DB 확인 에러!')
 
 
@@ -232,7 +189,7 @@ def decodeBase64(data):
     ### base64 디코딩
     """
     return base64.b64decode(data).decode("UTF-8")
-
+    
 
 ##############
 ## 회원 가입 페이지
@@ -252,8 +209,9 @@ def memberJoinRequest():
         request_pwd = request.form['new_pwd']
         request_nickname = request.form['new_nickname']
 
-        request_uid = decodeBase64(request_uid)
-        request_pwd = decodeBase64(request_pwd)
+        request_uid = escape(decodeBase64(request_uid))
+        request_pwd = escape(decodeBase64(request_pwd))
+        request_nickname = escape(request_nickname)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -277,7 +235,6 @@ def memberJoinRequest():
 
     try:
         request_pwd = encodeSHA256(request_pwd)
-        cursor = conn.cursor()
 
         INSERT_USER = """
             INSERT INTO user (
@@ -290,14 +247,10 @@ def memberJoinRequest():
                 ?
             )
         """
-        cursor.execute(INSERT_USER, (request_uid, request_pwd, request_nickname))
-        cursor.close()
-        conn.commit()
+        sqliteObj.insertQuery(INSERT_USER, (request_uid, request_pwd, request_nickname))
 
         return makeReturnDict(True, '회원가입 성공'), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
 
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
@@ -319,8 +272,8 @@ def memberLoginRequest():
         request_uid = request.form['request_uid']
         request_pwd = request.form['request_pwd']
         
-        request_uid = decodeBase64(request_uid)
-        request_pwd = decodeBase64(request_pwd)
+        request_uid = escape(decodeBase64(request_uid))
+        request_pwd = escape(decodeBase64(request_pwd))
         request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -352,7 +305,7 @@ def memberLoginRequest():
 def memberLogout():
     try:
         request_uid = request.form['uid']
-        request_uid = decodeBase64(request_uid)
+        request_uid = escape(decodeBase64(request_uid))
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -390,10 +343,10 @@ def memberUpdateRequest():
         request_new_pwd = request.form.get('new_pwd', default=False)
         request_new_nickname = request.form.get('new_nickname', default=False)
 
-        request_uid = decodeBase64(request_uid)
-        request_pwd = decodeBase64(request_pwd)
+        request_uid = escape(decodeBase64(request_uid))
+        request_pwd = escape(decodeBase64(request_pwd))
         request_pwd = encodeSHA256(request_pwd)
-        request_new_pwd = decodeBase64(request_new_pwd)
+        request_new_pwd = escape(decodeBase64(request_new_pwd))
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -422,8 +375,6 @@ def memberUpdateRequest():
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 0), 400
 
     try:
-        cursor = conn.cursor()
-
         if request_new_pwd and request_new_nickname:
             request_new_pwd = encodeSHA256(request_new_pwd)
             set_query = f"password='{request_new_pwd}', nickname='{request_new_nickname}'"
@@ -441,17 +392,13 @@ def memberUpdateRequest():
             SET     {set_query}
             WHERE   user_id='{request_uid}'
         """
-        cursor.execute(UPDATE_USER)
-        cursor.close()
-        conn.commit()
+        sqliteObj.updateQuery(UPDATE_USER)
 
         if request_new_nickname:
             session['nickname'] = getNickname(request_uid)
 
         return makeReturnDict(True, "정보수정 완료"), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
 
         return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
@@ -474,8 +421,8 @@ def memberDeleteeRequest():
         request_pwd = request.form['pwd']
         request_confirm = request.form['confirm']
 
-        request_uid = decodeBase64(request_uid)
-        request_pwd = decodeBase64(request_pwd)
+        request_uid = escape(decodeBase64(request_uid))
+        request_pwd = escape(decodeBase64(request_pwd))
         request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -497,24 +444,16 @@ def memberDeleteeRequest():
         return makeReturnDict(False, '비밀번호가 일치하지 않습니다.'), 400
 
     try:
-        cursor = conn.cursor()
-
         DELETE_USER = f"""
             DELETE  
             FROM    user
             WHERE   user_id='{request_uid}'
         """
-        cursor.execute(DELETE_USER)
-        cursor.close()
-        conn.commit()
-
+        sqliteObj.deleteQuery(DELETE_USER)
         memberLogout()
 
         return makeReturnDict(True, "탈퇴 성공"), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return makeReturnDict(False, "서버에서 에러가 발생했습니다."), 500
 
 
@@ -527,6 +466,9 @@ def articleHit():
     try:
         uid = request.form['uid']
         aid = request.form['aid']
+
+        uid = escape(uid)
+        aid = escape(uid)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
@@ -540,16 +482,13 @@ def articleHit():
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
-        cursor = conn.cursor()
-
         # 추천했던 유저인지 확인
         SELECT_HIT_HISTORY = f"""
             SELECT  *
             FROM    hit_history
             WHERE   article_id={aid} and user_id='{uid}';
         """
-        cursor.execute(SELECT_HIT_HISTORY)
-        res = cursor.fetchall()
+        res = sqliteObj.selectQuery(SELECT_HIT_HISTORY)
 
         if res:
             return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 200
@@ -564,7 +503,7 @@ def articleHit():
                 ?
             )
         """
-        cursor.execute(INSERT_HIT_USER, (aid, uid))
+        sqliteObj.insertQuery(INSERT_HIT_USER, (aid, uid))
 
         # 추천수 증가
         UPDATE_ARTICLE_HIT = f"""
@@ -572,7 +511,7 @@ def articleHit():
             SET     hit = hit + 1
             WHERE   article_id={aid};
         """
-        cursor.execute(UPDATE_ARTICLE_HIT)
+        sqliteObj.updateQuery(UPDATE_ARTICLE_HIT)
 
         # 추천수 반환
         SELECT_ARTICLE_HIT = f"""
@@ -580,15 +519,10 @@ def articleHit():
             FROM    article
             WHERE   article_id={aid};
         """
-        cursor.execute(SELECT_ARTICLE_HIT)
-        hit = cursor.fetchall()[0][0]
-        cursor.close()
-        conn.commit()
+        hit = sqliteObj.selectQuery(SELECT_ARTICLE_HIT)[0][0]
 
         return makeReturnDict(True, '추천 성공', hit), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
 
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
@@ -596,15 +530,14 @@ def articleHit():
 ##############
 ## aid에 해당하는 댓글 정보 반환
 ##############
-def selectComment(cursor, aid, uid, board):
+def selectComment(aid, uid, board):
     try:
         SELECT_ARTICLE_WRITER = f"""
             SELECT  user_id
             FROM    article
             WHERE   article_id={aid}
         """
-        cursor.execute(SELECT_ARTICLE_WRITER)
-        writer = cursor.fetchall()[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
 
         # 댓글 정보 반환
         SELECT_COMMENTS = f"""
@@ -614,8 +547,7 @@ def selectComment(cursor, aid, uid, board):
             WHERE   article_id={aid}
             ORDER BY comment_id ASC;
         """
-        cursor.execute(SELECT_COMMENTS)
-        comments = cursor.fetchall()
+        comments = sqliteObj.selectQuery(SELECT_COMMENTS)
 
         for idx, comment in enumerate(comments):
             comment = list(comment)
@@ -653,6 +585,11 @@ def commentCreateCall():
         aid = request.form['aid']
         comment = request.form['input_comment']
         board = request.form['board']
+
+        request_uid = escape(request_uid)
+        aid = escape(aid)
+        comment = escape(comment)
+        board = escape(board)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
@@ -672,8 +609,6 @@ def commentCreateCall():
         return makeReturnDict(False, '도배 방지.'), 400
 
     try:
-        cursor = conn.cursor()
-
         # 댓글 정보 추가
         INSERT_COMMENT = """
             INSERT INTO comment (
@@ -686,19 +621,12 @@ def commentCreateCall():
                 ?
             )
         """
-        cursor.execute(INSERT_COMMENT, (aid, request_uid, comment))
-
-        comments = selectComment(cursor, aid, request_uid, board)
-
-        cursor.close()
-        conn.commit()
-
+        sqliteObj.insertQuery(INSERT_COMMENT, (aid, request_uid, comment))
+        comments = selectComment(aid, request_uid, board)
         session['last_comment_write'] = datetime.now().timestamp()
 
         return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
 
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
@@ -713,6 +641,11 @@ def commentDeleteCall():
         aid = request.form['aid']
         request_uid = request.form['uid']
         board = request.form['board']
+
+        cid = escape(cid)
+        aid = escape(aid)
+        request_uid = escape(request_uid)
+        board = escape(board)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -726,16 +659,13 @@ def commentDeleteCall():
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
-        cursor = conn.cursor()
-        
         # 댓글 작성자 가져오기
         SELECT_COMMENT_WRITER = f"""
             SELECT  user_id
             FROM    comment
             WHERE   comment_id={cid}
         """
-        cursor.execute(SELECT_COMMENT_WRITER)
-        writer = cursor.fetchall()[0][0]
+        writer = sqliteObj.selectQuery(SELECT_COMMENT_WRITER)[0][0]
 
         if writer != request_uid:
             return makeReturnDict(False, '작성자와 일치하지 않습니다.'), 400
@@ -746,18 +676,11 @@ def commentDeleteCall():
             FROM    comment
             WHERE   comment_id={cid}
         """
-        cursor.execute(DELETE_COMMENT)
-
-        comments = selectComment(cursor, aid, request_uid, board)
-
-        cursor.close()
-        conn.commit()
+        sqliteObj.deleteQuery(DELETE_COMMENT)
+        comments = selectComment(aid, request_uid, board)
 
         return makeReturnDict(True, '댓글삭제 성공.', comments), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
@@ -771,14 +694,14 @@ def articleCreate():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
         return errorPage(4)
 
     # 글 작성 페이지
-    return render_template('article_write.html', board=board, board_name=boardClass.get_board_name(board)), 200
+    return render_template('article_write.html', board=board, board_name=boardObj.get_board_name(board)), 200
 
 
 ##############
@@ -791,14 +714,12 @@ def imageUploadCall(board):
     except Exception as e:
         return {"uploaded": False, "url": False}, 400
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return {"uploaded": False, "url": False}, 400
 
     try:
-        cursor = conn.cursor()
-
-        image_file_name = pathlib.Path(image.filename).name
-        extension = pathlib.Path(image_file_name).suffix
+        image_file_name = escape(pathlib.Path(image.filename).name)
+        extension = escape(pathlib.Path(image_file_name).suffix)
 
         INSERT_IMAGE_FILE = """
             INSERT INTO image_files (
@@ -809,18 +730,17 @@ def imageUploadCall(board):
                 ?
             )
         """
-        cursor.execute(INSERT_IMAGE_FILE, (image_file_name, extension))
-        image_id = cursor.lastrowid
-        SAVE_PATH = f"static/image/{board}/{board}-{image_id}{extension}"
-        image.save(SAVE_PATH)
+        image_id = sqliteObj.insertQuery(INSERT_IMAGE_FILE, (image_file_name, extension))
+        SAVE_DIR = f"static/image/{board}"
+        SAVE_PATH = SAVE_DIR + f"/{board}-{image_id}{extension}"
+        
+        if not os.path.exists(SAVE_DIR):
+            os.makedirs(SAVE_DIR)
 
-        cursor.close()
-        conn.commit()
+        image.save(SAVE_PATH)
 
         return {"uploaded": True, "url": "/" + SAVE_PATH}, 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
         return {"uploaded": False, "url": False}, 400
 
 
@@ -834,30 +754,27 @@ def articleCreateCall():
         board = request.form['board']
         title = request.form['title']
         content = request.form['content']
+
+        uid = escape(uid)
+        board = escape(board)
+        title = escape(title)
     except Exception as e:
         return errorPage(2)
 
     if len(title) == 0:
         return errorPage(msg="제목을 전달받지 못했습니다.")
-    
-    if len(content) == 0:
+    elif len(content) == 0:
         return errorPage(msg="내용을 전달받지 못했습니다.")
-
-    if not isLogin():
+    elif not isLogin():
         return errorPage(4)
-    
-    if not isSessionUser(uid):
+    elif not isSessionUser(uid):
         return errorPage(5)
-
-    if not isExistUser(uid):
+    elif not isExistUser(uid):
         return errorPage(2)
-    
-    if datetime.now().timestamp() - session.get('last_article_write') < 20:
+    elif datetime.now().timestamp() - session.get('last_article_write') < 20:
         return errorPage(msg="도배 방지.")
 
     try:
-        cursor = conn.cursor()
-
         INSERT_ARTICLE = """
             INSERT INTO article (
                 user_id,
@@ -871,38 +788,29 @@ def articleCreateCall():
                 ?
             )
         """
-        cursor.execute(INSERT_ARTICLE, (uid, board, title, content))
-
-        cursor.close()
-        conn.commit()
-
+        sqliteObj.insertQuery(INSERT_ARTICLE, (uid, board, title, content))
         session['last_article_write'] = datetime.now().timestamp()
 
         return redirect(url_for('board', board=board))
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return errorPage(1)
     
 
 ##############
 ## 글 목록 가져오기
 ##############
-def getArticles(cursor, board, page, art_per_page, option, keyword):
+def getArticles(board, page, art_per_page, option, keyword):
     try:
         SELECT_BOARD_COUNT = f"""
             SELECT  count(article_id)
             FROM    article
             WHERE   board='{board}';
         """
-        cursor.execute(SELECT_BOARD_COUNT)
-        a_cnt = cursor.fetchall()[0][0]         # 글의 수
-        p_cnt = math.ceil(a_cnt / art_per_page)  # 전체 페이지 개수
+        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_COUNT)[0][0]     # 글의 수
+        p_cnt = math.ceil(a_cnt / art_per_page)                     # 전체 페이지 개수
 
         SELECT_ARTICLE = boardQueryBuilder(board, option, keyword)
-        cursor.execute(SELECT_ARTICLE)
-        articles = cursor.fetchall()
+        articles = sqliteObj.selectQuery(SELECT_ARTICLE)
 
         tmp = (page - 1) * art_per_page
         articles = articles[tmp:min(tmp + art_per_page, a_cnt)]
@@ -936,19 +844,17 @@ def acrticlePage():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     try:
-        cursor = conn.cursor()
-
         # 조회수 증가
         UPDATE_ARTICLE_VIEW = f"""
             UPDATE  article
             SET     view = view + 1
             WHERE   article_id={aid};
         """
-        cursor.execute(UPDATE_ARTICLE_VIEW)
+        sqliteObj.updateQuery(UPDATE_ARTICLE_VIEW)
 
         # 게시물 정보 반환
         SELECT_ARTICLE= f"""
@@ -959,8 +865,7 @@ def acrticlePage():
                     on article.user_id = user.user_id
             WHERE   article.article_id = {aid};
         """
-        cursor.execute(SELECT_ARTICLE)
-        article = cursor.fetchall()[0]
+        article = sqliteObj.selectQuery(SELECT_ARTICLE)[0]
 
         if not article[1]:
             tmp = list(article)
@@ -968,22 +873,15 @@ def acrticlePage():
             article = tuple(tmp)
 
         # 댓글 정보 반환
-        comments = selectComment(cursor, aid, session.get('uid'), board)
-
-        articles, start, end = getArticles(cursor, board, page, art_per_page, option, keyword)
+        comments = selectComment(aid, session.get('uid'), board)
+        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
-        
-        cursor.close()
-        conn.commit()
 
         # 글 보기
-        return render_template('article_page.html', board=board, board_name=boardClass.get_board_name(board),
+        return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=aid, article=article, comments=comments, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return errorPage(1)
 
 
@@ -999,7 +897,7 @@ def anonymousCheck():
         aid = request.args.get('aid', type=int)
         check_type = request.args.get('check_type', type=str)
 
-        return render_template('anonymous_check.html', board=board, board_name=boardClass.get_board_name(board), 
+        return render_template('anonymous_check.html', board=board, board_name=boardObj.get_board_name(board), 
         uid=uid, aid=aid, check_type=check_type), 200
     except Exception as e:
         return errorPage(2)
@@ -1018,7 +916,7 @@ def acrticleUpdate():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1031,27 +929,20 @@ def acrticleUpdate():
         return errorPage(2)
 
     try:
-        cursor = conn.cursor()
-
         # 게시물 정보 획득 획득
         SELECT_ARTICLE_INFO = f"""
             SELECT  title, content, user_id
             FROM    article
             WHERE   article_id = {aid};
         """
-        cursor.execute(SELECT_ARTICLE_INFO)
-        title, content, user_id = cursor.fetchall()[0]
+        title, content, user_id = sqliteObj.selectQuery(SELECT_ARTICLE_INFO)[0]
 
         if user_id != request_uid:
             return errorPage(3)
 
-        cursor.close()
-
-        return render_template('article_update.html', board=board, board_name=boardClass.get_board_name(board), 
+        return render_template('article_update.html', board=board, board_name=boardObj.get_board_name(board), 
         aid=aid, title=title, content=content), 200
     except Exception as e:
-        cursor.close()
-
         return errorPage(1)
 
 
@@ -1077,7 +968,7 @@ def acrticleUpdateCall():
     if len(content) == 0:
         return errorPage(msg="내용을 전달받지 못했습니다.")
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1090,16 +981,13 @@ def acrticleUpdateCall():
         return errorPage(2)
     
     try:
-        cursor = conn.cursor()
-
         # 회원은 아이디만으로도 글을 수정할 수 있다.
         SELECT_ARTICLE_WRITER = f"""
             SELECT  user_id
             FROM    article
             WHERE   article_id = {aid};
         """
-        cursor.execute(SELECT_ARTICLE_WRITER)
-        writer = cursor.fetchall()[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
 
         if writer != request_uid:
             return errorPage(2)
@@ -1111,16 +999,10 @@ def acrticleUpdateCall():
                 content = '{content}'
             WHERE article_id = '{aid}'
             """
-
-        cursor.execute(UPDATE_ARTICLE)
-        cursor.close()
-        conn.commit()
+        sqliteObj.updateQuery(UPDATE_ARTICLE)
 
         return redirect(url_for('board', board=board))
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return errorPage(1)
 
 
@@ -1137,7 +1019,7 @@ def articleDalete():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     if not isLogin():
@@ -1151,15 +1033,12 @@ def articleDalete():
 
     # 글 삭제
     try:
-        cursor = conn.cursor()
-
         SELECT_ARTICLE_WRITER = f"""
             SELECT  user_id
             FROM    article
             WHERE   article_id = {aid};
         """
-        cursor.execute(SELECT_ARTICLE_WRITER)
-        writer = cursor.fetchall()[0][0]
+        writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER)[0][0]
 
         if writer != request_uid:
             return errorPage(2)
@@ -1169,16 +1048,10 @@ def articleDalete():
             FROM article
             WHERE article_id = {aid};
         """
-
-        cursor.execute(DELETE_ARTIECLE)
-        cursor.close()
-        conn.commit()
+        sqliteObj.deleteQuery(DELETE_ARTIECLE)
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
-        cursor.close()
-        conn.rollback()
-
         return errorPage(1)
 
 
@@ -1192,11 +1065,11 @@ def articleDaleteDone():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     # 삭제 완료 페이지, 2 초후 게시판으로 이동함
-    return render_template(f'article_delete.html', board=board, board_name=boardClass.get_board_name(board)), 200
+    return render_template(f'article_delete.html', board=board, board_name=boardObj.get_board_name(board)), 200
 
 
 ##############
@@ -1205,6 +1078,8 @@ def articleDaleteDone():
 @app.route('/board/articles', methods=["GET"])
 def board():
     try:
+        mapEescape(request.args)
+
         board = request.args.get('board', type=str)
         page = request.args.get('page', type=int, default=1)          # 현재 페이지
         art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
@@ -1213,22 +1088,18 @@ def board():
     except Exception as e:
         return errorPage(2)
 
-    if boardClass.isNotAllowBoard(board):
+    if boardObj.isNotAllowBoard(board):
         return errorPage(0)
 
     try:
-        cursor = conn.cursor()
-        articles, start, end = getArticles(cursor, board, page, art_per_page, option, keyword)
+        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
-        cursor.close()
 
         # 게시판 페이지, db에서 가져온 정보
-        return render_template(f'board_page.html', board=board, board_name=boardClass.get_board_name(board), 
+        return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board), 
         aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch,
         option=option, keyword=keyword), 200
     except Exception as e:
-        cursor.close()
-
         return errorPage(1)
 
 
@@ -1277,7 +1148,7 @@ def boardQueryBuilder(board, option, keyword)->str:
 ##############
 @app.route('/')
 def main():
-    return render_template('main.html', boards=boardClass.get_board_dict()), 200
+    return render_template('main.html', boards=boardObj.get_board_dict()), 200
 
 
 @app.errorhandler(404)
@@ -1324,11 +1195,5 @@ def errorPage(signal: int=-1, msg=None) -> str:
         return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
 
 
-def init():
-    cursor = conn.cursor()
-    cursor.execute('PRAGMA foreign_keys=ON;')
-    cursor.close
-
 if __name__ == '__main__':
-    init()
     app.run(host='0.0.0.0', port=80, debug=True)

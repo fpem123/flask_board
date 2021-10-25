@@ -3,3 +3,5 @@ test.py
 
 static/ckeditor5
 static/image
+
+__pycache__
