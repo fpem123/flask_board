@@ -21,7 +21,7 @@ boardObj = BoardClass()
 sqliteObj = SquliteClass("test.db")
 
 
-def isExistUser(uid: str=None, nickname: str=None):
+def isExistUser(uid: str=None, nickname: str=None) -> bool:
     """
     ### 존재하는 회원 id인지 확인
     회원 전용
@@ -36,22 +36,18 @@ def isExistUser(uid: str=None, nickname: str=None):
         if not uid is None and not nickname is None:
             # uid과 nickname에 해당하는 유저가 있는지
             SELECT_USER += "user_id = ? or nickname = ?"
-            data = [uid, nickname]
+            data = (uid, nickname)
         elif not uid is None:
             # uid에 해당하는 유저가 있는지
             SELECT_USER += "user_id = ?"
-            data = [uid, ]
+            data = (uid, )
         elif not nickname is None:
             # nickname에 해당하는 유저가 있는지
             SELECT_USER += "nickname = ?"
-            data = [nickname, ]
+            data = (nickname, )
         res = sqliteObj.selectQuery(SELECT_USER, data)
 
-        if res:
-            return True
-        else:
-            return False
-
+        return res
     except Exception as e:
         return False
 
@@ -68,7 +64,7 @@ def isCorrectPWD(uid: str, pwd: int) -> bool:
             FROM    user
             WHERE   user_id = ?
         """
-        user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD, [uid, ])[0][0]
+        user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD, (uid, ))[0][0]
         return pwd == user_pwd
     except Exception as e:
         raise False
@@ -161,7 +157,7 @@ def getNickname(uid: str) -> bool:
             FROM    user
             WHERE   user_id = ?
         """
-        nickname = sqliteObj.selectQuery(SELECT_USER_NICKNAME, [uid, ])[0][0]
+        nickname = sqliteObj.selectQuery(SELECT_USER_NICKNAME, (uid, ))[0][0]
 
         return nickname
     except Exception as e:
@@ -381,8 +377,7 @@ def memberUpdateRequest():
             WHERE   user_id = ?
         """
         data.append(request_uid)
-        print(UPDATE_USER, data)
-        sqliteObj.updateQuery(UPDATE_USER, data)
+        sqliteObj.updateQuery(UPDATE_USER, tuple(data))
 
         if request_new_nickname:
             session['nickname'] = getNickname(request_uid)
@@ -434,7 +429,7 @@ def memberDeleteeRequest():
             FROM    user
             WHERE   user_id = ?
         """
-        sqliteObj.deleteQuery(DELETE_USER, [request_uid, ])
+        sqliteObj.deleteQuery(DELETE_USER, (request_uid, ))
         memberLogout()
 
         return makeReturnDict(True, "탈퇴 성공"), 200
@@ -468,7 +463,7 @@ def articleHit():
             FROM    hit_history
             WHERE   article_id = ? and user_id = ?;
         """
-        res = sqliteObj.selectQuery(SELECT_HIT_HISTORY, [aid, uid])
+        res = sqliteObj.selectQuery(SELECT_HIT_HISTORY, (aid, uid))
 
         if res:
             return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 200
@@ -765,21 +760,20 @@ def articleCreateCall():
 ##############
 def getArticles(board, page, art_per_page, option, keyword):
     try:
-        SELECT_BOARD_COUNT = f"""
-            SELECT  count(article_id)
-            FROM    article
-            WHERE   board = ?;
-        """
-        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_COUNT, [board, ])[0][0]     # 글의 수
-        p_cnt = math.ceil(a_cnt / art_per_page)                     # 전체 페이지 개수
+        page_length = 10
 
         SELECT_ARTICLE, data = boardQueryBuilder(board, option, keyword)
         articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
-
-        tmp = (page - 1) * art_per_page
-        articles = articles[tmp:min(tmp + art_per_page, a_cnt)]
-        start = (page // 10) * 10 + 1
-        end = min((page // 10 + 1) * 10, p_cnt) + 1
+        a_cnt = len(articles)                       # 전체 글의 개수
+        p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
+        page -= 1
+        tmp = page * art_per_page
+        articles = articles[tmp:min(tmp + art_per_page, a_cnt)]     # 한 페이지에 보여줄 수 있는 게시물들만
+        start = (page // page_length) * page_length + 1               # 페이징 시작점
+        end = min((page // page_length + 1) * page_length, p_cnt) + 1 # 페이징 끝점
+        
+        left_arrow = page_length < start
+        right_arrow = end < p_cnt 
 
         for idx, article in enumerate(articles):
             if not article[1]:
@@ -787,7 +781,7 @@ def getArticles(board, page, art_per_page, option, keyword):
                 tmp[1] = "(탈퇴한 유저)"
                 articles[idx] = tuple(tmp)
 
-        return articles, start, end
+        return articles, start, end, left_arrow, right_arrow
 
     except Exception as e:
         raise Exception('요청 처리 중 에러가 발생했습니다.')
@@ -838,15 +832,15 @@ def acrticlePage():
 
         # 댓글 정보 반환
         comments = selectComment(aid, session.get('uid'), board)
-        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
+        articles, start, end, left_arrow, right_arrow= getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=aid, article=article, comments=comments, articles=articles, medias=False,
-        page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword), 200
+        page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword, 
+        left_arrow=left_arrow, right_arrow=right_arrow), 200
     except Exception as e:
-        print(e)
         return errorPage(1)
 
 
@@ -1044,13 +1038,13 @@ def board():
         return errorPage(0)
 
     try:
-        articles, start, end = getArticles(board, page, art_per_page, option, keyword)
+        articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 게시판 페이지, db에서 가져온 정보
         return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board), 
-        aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch,
-        option=option, keyword=keyword), 200
+        aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch, 
+        option=option, keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow), 200
     except Exception as e:
         return errorPage(1)
 
@@ -1086,7 +1080,7 @@ def boardQueryBuilder(board, option, keyword) -> str:
             content like ? ESCAPE '$'
             """
             data.append(keyword)
-        elif option == 'user':
+        elif option == 'user' and board != 'anonymous':
             query += """ and
             nickname like ? ESCAPE '$'
             """
@@ -1096,9 +1090,28 @@ def boardQueryBuilder(board, option, keyword) -> str:
         GROUP BY article.article_id
         ORDER BY article.article_id DESC;
         """
-        return query, data
+        return query, tuple(data)
     except Exception as e:
         raise Exception("DB 확인 중 에러가 발생했습니다.")
+
+
+##############
+## 어드민 페이지
+##############
+@app.route('/admin', methods=['POST'])
+def admin():
+    # TO-DO : frame_member에 접근 페이지 링크 추가
+    try:
+        request_uid = request.form['uid']
+    except:
+        return errorPage(2)
+
+    # TO-DO : db에 is_admin 컬럼 추가
+    # TO-DO : 어드민인지 체크
+
+    # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
+    return render_template(''), 200
+
 
 ##############
 ## 메인 페이지

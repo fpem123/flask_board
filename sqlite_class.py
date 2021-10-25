@@ -1,4 +1,3 @@
-from flask import escape
 import sqlite3
 
 class SquliteClass():
@@ -12,16 +11,16 @@ class SquliteClass():
 
     def insertQuery(self, query, data):
         """
-        ### db에 데이터 추가
+            ### db에 데이터 추가
 
-        * 입력
+            * 입력
 
-            query : 쿼리
-            data : 추가할 데이터
+                query : 쿼리
+                data : 추가할 데이터
 
-        * 출력
+            * 출력
 
-            추가된 데이터의 id
+                추가된 데이터의 id
         """
         try:
             cursor = self.conn.cursor()
@@ -38,16 +37,16 @@ class SquliteClass():
 
     def selectQuery(self, query, data):
         """
-        ### db에 데이터 추가
+            ### db에 데이터 추가
 
-        * 입력
+            * 입력
 
-            query : 쿼리
-            data : 검색할 조건 데이터
-            
-        * 출력
+                query : 쿼리
+                data : 검색할 조건 데이터
+                
+            * 출력
 
-            select 결과
+                select 결과
         """
         try:
             cursor = self.conn.cursor()
@@ -63,16 +62,16 @@ class SquliteClass():
 
     def updateQuery(self, query, data):
         """
-        ### db에 데이터 추가
+            ### db에 데이터 추가
 
-        * 입력
+            * 입력
 
-            query : 쿼리
-            data : 수정할 데이터
-            
-        * 출력
+                query : 쿼리
+                data : 수정할 데이터
+                
+            * 출력
 
-            bool 성공여부
+                bool 성공여부
         """
         try:
             cursor = self.conn.cursor()
@@ -83,23 +82,20 @@ class SquliteClass():
 
             return True
         except Exception as e:
-            print(e)
-            print(query)
-            print(data)
             cursor.close()
             self.conn.rollback()
 
 
     def deleteQuery(self, query, data):
         """
-        ### db에 데이터 추가
+            ### db에 데이터 추가
 
-        * 입력
+            * 입력
 
-            query : 쿼리
-            data : 제거할 타겟 데이터
+                query : 쿼리
+                data : 제거할 타겟 데이터
 
-        * 출력
+            * 출력
 
             bool 성공여부
         """

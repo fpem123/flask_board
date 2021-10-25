@@ -55,16 +55,31 @@
 </div>
 <br>
 <div class="page" align="center">
-    &nbsp;
+    {% if left_arrow %}
+        {% if isSearch %}
+            <a href="{{ url_for('board', board=board, page=start-1, art_per_page=30, option=option, keyword=keyword) }}">◀</a>
+        {% else %}
+            <a href="{{ url_for('board', board=board, page=start-1, art_per_page=30) }}">◀</a>
+        {% endif %}
+    {% endif %}
+
     {% for i in range(start, end) %}
         {% if i == page %}
             {{ i }}
         {% elif isSearch %}
-            <a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}</a>
-        {% else %}
             <a href="{{ url_for('board', board=board, page=i, art_per_page=30, option=option, keyword=keyword) }}">{{ i }}</a>
+        {% else %}
+            <a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}</a>
         {% endif %}
     {% endfor %}
+
+    {% if right_arrow %}
+        {% if isSearch %}
+            <a href="{{ url_for('board', board=board, page=end, art_per_page=30, option=option, keyword=keyword) }}">▶</a>
+        {% else %}
+            <a href="{{ url_for('board', board=board, page=end, art_per_page=30) }}">▶</a>
+        {% endif %}
+    {% endif %}
 </div>
 <br>
 <br>
