@@ -189,7 +189,7 @@ def decodeBase64(data):
     ### base64 디코딩
     """
     return base64.b64decode(data).decode("UTF-8")
-    
+
 
 ##############
 ## 회원 가입 페이지
@@ -209,9 +209,8 @@ def memberJoinRequest():
         request_pwd = request.form['new_pwd']
         request_nickname = request.form['new_nickname']
 
-        request_uid = escape(decodeBase64(request_uid))
-        request_pwd = escape(decodeBase64(request_pwd))
-        request_nickname = escape(request_nickname)
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -272,8 +271,8 @@ def memberLoginRequest():
         request_uid = request.form['request_uid']
         request_pwd = request.form['request_pwd']
         
-        request_uid = escape(decodeBase64(request_uid))
-        request_pwd = escape(decodeBase64(request_pwd))
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
         request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -305,7 +304,7 @@ def memberLoginRequest():
 def memberLogout():
     try:
         request_uid = request.form['uid']
-        request_uid = escape(decodeBase64(request_uid))
+        request_uid = decodeBase64(request_uid)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -343,10 +342,10 @@ def memberUpdateRequest():
         request_new_pwd = request.form.get('new_pwd', default=False)
         request_new_nickname = request.form.get('new_nickname', default=False)
 
-        request_uid = escape(decodeBase64(request_uid))
-        request_pwd = escape(decodeBase64(request_pwd))
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
         request_pwd = encodeSHA256(request_pwd)
-        request_new_pwd = escape(decodeBase64(request_new_pwd))
+        request_new_pwd = decodeBase64(request_new_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -421,8 +420,8 @@ def memberDeleteeRequest():
         request_pwd = request.form['pwd']
         request_confirm = request.form['confirm']
 
-        request_uid = escape(decodeBase64(request_uid))
-        request_pwd = escape(decodeBase64(request_pwd))
+        request_uid = decodeBase64(request_uid)
+        request_pwd = decodeBase64(request_pwd)
         request_pwd = encodeSHA256(request_pwd)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
@@ -466,9 +465,6 @@ def articleHit():
     try:
         uid = request.form['uid']
         aid = request.form['aid']
-
-        uid = escape(uid)
-        aid = escape(uid)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
@@ -583,13 +579,8 @@ def commentCreateCall():
     try:
         request_uid = request.form['uid']
         aid = request.form['aid']
-        comment = request.form['input_comment']
+        comment = escape(request.form['input_comment'])
         board = request.form['board']
-
-        request_uid = escape(request_uid)
-        aid = escape(aid)
-        comment = escape(comment)
-        board = escape(board)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
@@ -627,7 +618,6 @@ def commentCreateCall():
 
         return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
-
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
 
@@ -641,11 +631,6 @@ def commentDeleteCall():
         aid = request.form['aid']
         request_uid = request.form['uid']
         board = request.form['board']
-
-        cid = escape(cid)
-        aid = escape(aid)
-        request_uid = escape(request_uid)
-        board = escape(board)
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
@@ -718,8 +703,8 @@ def imageUploadCall(board):
         return {"uploaded": False, "url": False}, 400
 
     try:
-        image_file_name = escape(pathlib.Path(image.filename).name)
-        extension = escape(pathlib.Path(image_file_name).suffix)
+        image_file_name = pathlib.Path(image.filename).name
+        extension = pathlib.Path(image_file_name).suffix
 
         INSERT_IMAGE_FILE = """
             INSERT INTO image_files (
@@ -752,12 +737,8 @@ def articleCreateCall():
     try:
         uid = request.form['uid']
         board = request.form['board']
-        title = request.form['title']
+        title = escape(request.form['title'])
         content = request.form['content']
-
-        uid = escape(uid)
-        board = escape(board)
-        title = escape(title)
     except Exception as e:
         return errorPage(2)
 
@@ -957,7 +938,7 @@ def acrticleUpdateCall():
 
         request_uid = request.form['uid']
         aid = request.form['aid']
-        title = request.form['title']
+        title = escape(request.form['title'])
         content = request.form['content']
     except:
         return errorPage(2)
@@ -1078,8 +1059,6 @@ def articleDaleteDone():
 @app.route('/board/articles', methods=["GET"])
 def board():
     try:
-        mapEescape(request.args)
-
         board = request.args.get('board', type=str)
         page = request.args.get('page', type=int, default=1)          # 현재 페이지
         art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
