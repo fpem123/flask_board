@@ -2,9 +2,10 @@
 
 /* 게시판 테이블 */
 .board-table {
+    width: 100%;
     border-top: 0.1em solid darkgrey;
     border-bottom: 0.1em solid darkgrey;
-    margin-bottom: 2em;
+    margin: 0em auto 2em auto;
 }
 
 .board-table>colgroup .col-num, .board-table>colgroup .col-view, .board-table>colgroup .col-hit{

@@ -24,6 +24,10 @@ div.article {
     margin-bottom: 0.75em;
 }
 
+.ck.ck-editor {
+    margin: 2em 0em 0em 0em;
+}
+
 .hit-btn {
     background-color: #FFE400;
     color: darkslategrey;

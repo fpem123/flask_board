@@ -80,14 +80,16 @@ footer {
 .wrapper {
     height: auto;
     display: flex;
-    width: 80em;
+    width: 100%;
+    min-width: 75em;
     border-bottom: 0.1em solid darkgray;
 }
 
 /* 사이드바 */
 .sidebar {
     background-color: #2980B9;
-    width: 15em;
+    min-width: 15em;
+    max-width: 20em;
     border-right: 0.01em grey solid;
     min-height: 50em;
 }
@@ -141,10 +143,12 @@ footer {
     padding: 10px 0px 0px 15px;
 }
 
-/* 변하는 페이지 */
+/* 페이지 */
 .frame {
     width: calc(100% - 10em);
     padding: 3em 0em 0em 3em;
+    min-width: 70em;
+    max-width: 75em;
 }
 
 /* 페이지 전광판 */
@@ -162,7 +166,7 @@ footer {
     padding: 3em 2em 2.5em 2em;
     background-color: #F8F8F8;
     margin: 2.5em 0em 2.5em 0em;
-    width: 85%;
+    width: 90%;
 }
 
 p.msg{
@@ -191,10 +195,4 @@ button.icon-btn.git-btn {
 button.icon-btn.kakao-btn {
     background: url("/static/icons/ico-kakao.png") no-repeat;
     background-size: cover;
-}
-
-@media (max-width:700px) {
-    .sidebar{
-        display:none;
-    }
 }
