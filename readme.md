@@ -10,6 +10,8 @@
 
 * 프로토타입 : [OVEN](https://ovenapp.io/view/6xyc7AHTnkoAuw75yHj5af5yY7xJylTH/)
 
+* 기본 프로필 사진 : [pixabay](https://pixabay.com/ko/vectors/%eb%b9%88-%ed%94%84%eb%a1%9c%ed%95%84-%ec%82%ac%ec%a7%84-%eb%af%b8%ec%8a%a4%ed%84%b0%eb%a6%ac-%eb%a7%a8-973460/)
+
 
 ---
 

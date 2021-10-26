@@ -89,15 +89,32 @@ button {
 }
 
 .member {
-    height: 10em;
+    height: 17.5%;
     margin: 1.5em 0em 1.5em 0em;
     text-align: center;
 }
 
-.login_input {
-    width: 14em;
-    margin: 0em 0em 1.25em 0em;
-}
+    /* 로그인 전 */
+    .login_input {
+        width: 14em;
+        margin: 0em 0em 1.25em 0em;
+    }
+
+    /* 로그인 후 */
+    .profile {
+        padding: 0em 0.5em 0em 0.5em;
+        margin: 1em 0em 1.75em 0em;
+        display: flex;
+    }
+
+    img.profile-img {
+        height: 5em;
+    }
+
+    label.profile-msg {
+        padding: 0.25em 0.5em 0.25em 0.5em;
+        text-align: left;
+    }
 
 .boards {
     margin-top: 1.5em;

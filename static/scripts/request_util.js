@@ -2,8 +2,8 @@ let UID = undefined;
 const ALLOW_RESPONSE_STATUS = [200, 400, 500];
 
 // 유저 아이디 반환
-function setUID(){
-    UID =  document.getElementById( 'uid' ).value;
+function setUID(uid){
+    UID = uid;
 }
 
 function isUIDEmpty(){

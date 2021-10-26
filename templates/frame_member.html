@@ -1,22 +1,24 @@
 <div class="member">
     {% if not session['uid'] %}
-    <form name="login_form" method="POST" onsubmit="return sendLoginUser(this)">
+    <form class="login_form" name="login_form" method="POST" onsubmit="return sendLoginUser(this)">
         <input class="login_input" type="text" name="request_uid" placeholder="ID" 
         maxlength='16' onkeydown="return onKeydownEnter()">
         <input class="login_input" type="password" name="request_pwd" placeholder="PASSWORD" 
         maxlength='16'>
-        <br>
         <button class="join_btn" type="button" onclick="location.href='{{ url_for('memberJoin') }}'">회원가입</button>
         <button class="login_btn" type="submit">로그인</button>
     </form>
-    <br>
     {% else %}
-    <input type="hidden" id="uid" value="{{ session.get('uid') }}">
-    <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
-    <p>{{ session.get('nickname') }}님 환영합니다.</p>
-    <script>setUID()</script>
-    <button onclick="return sendLogoutUser(this)"
-    style="width:80px; height:40px; border:1px solid black; padding: 10px" value="{{ session.get('uid') }}">로그아웃</button>
-    <a href="{{ url_for('memberUpdate') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">정보변경</a>
+    <div class="profile-wrapper">
+        <div class="profile">
+            <input type="hidden" id="uid" value="{{ session.get('uid') }}">
+            <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
+            <img class="profile-img" src="{{ url_for('static', filename='default_profile.png') }}">
+            <label class="profile-msg">{{ session.get('nickname') }}님 환영합니다.</label>
+        </div>
+        <script>setUID("{{ session.get('uid') }}")</script>
+        <button onclick="location.href='{{ url_for('memberUpdate') }}'">정보변경</button>
+        <button class="del-btn" onclick="return sendLogoutUser(this)" value="{{ session.get('uid') }}">로그아웃</button>
+    </div>
     {% endif %}
 </div>
