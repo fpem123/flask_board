@@ -41,6 +41,10 @@ button {
     background-color: #3498DB;
 }
 
+footer {
+    background-color: #34495E;
+}
+
 .left-btn {
     float: left;
     display: inline-block;
@@ -88,11 +92,11 @@ button {
     min-height: 50em;
 }
 
-.member {
-    height: 17.5%;
-    margin: 1.5em 0em 1.5em 0em;
-    text-align: center;
-}
+    .member {
+        height: 10em;
+        margin: 1.5em 0em 1.5em 0em;
+        text-align: center;
+    }
 
     /* 로그인 전 */
     .login_input {
@@ -164,4 +168,33 @@ button {
 p.msg{
     height: 10em;
     line-height: 10em;
+}
+
+/* footer */
+.foot-btns {
+    padding: 2.5em 0em 2em 0em;
+    text-align: center;
+}
+
+button.icon-btn {
+    width: 3em;
+    height: 3em;
+    border-radius: 3em;
+    margin: 0em 1em 0em 1em;
+}
+
+button.icon-btn.git-btn {
+    background: url("/static/icons/GitHub-Mark-64px.png") no-repeat;
+    background-size: cover;
+}
+
+button.icon-btn.kakao-btn {
+    background: url("/static/icons/ico-kakao.png") no-repeat;
+    background-size: cover;
+}
+
+@media (max-width:700px) {
+    .sidebar{
+        display:none;
+    }
 }

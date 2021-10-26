@@ -13,7 +13,7 @@
         <div class="profile">
             <input type="hidden" id="uid" value="{{ session.get('uid') }}">
             <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
-            <img class="profile-img" src="{{ url_for('static', filename='default_profile.png') }}">
+            <img class="profile-img" src="{{ url_for('static', filename='profiles/default_profile.png') }}">
             <label class="profile-msg">{{ session.get('nickname') }}님 환영합니다.</label>
         </div>
         <script>setUID("{{ session.get('uid') }}")</script>
