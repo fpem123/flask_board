@@ -60,45 +60,43 @@
         <p align="center">검색된 결과가 없습니다.</p>
     {% endif %}
 {% endif %}
-<div class='btns'>
+<div class='board-bottom'>
     <button class="btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
     <div class='paging'>
     {% if articles %}
         <ui>
         {% if left_arrow %}
             {% if isSearch %}
-                <li><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30, option=option, keyword=keyword) }}">◀</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30, option=option, keyword=keyword) }}">◀</a></li>
             {% else %}
-                <li><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30) }}">◀</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30) }}">◀</a></li>
             {% endif %}
         {% endif %}
 
         {% for i in range(start, end) %}
             {% if i == page %}
-                <li>{{ i }}</li>
+                <li class="page">{{ i }}</li>
             {% elif isSearch %}
-                <li><a href="{{ url_for('board', board=board, page=i, art_per_page=30, option=option, keyword=keyword) }}">{{ i }}</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=i, art_per_page=30, option=option, keyword=keyword) }}">{{ i }}</a></li>
             {% else %}
-                <li><a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}</a></li>
             {% endif %}
         {% endfor %}
 
         {% if right_arrow %}
             {% if isSearch %}
-                <li><a href="{{ url_for('board', board=board, page=end, art_per_page=30, option=option, keyword=keyword) }}">▶</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=end, art_per_page=30, option=option, keyword=keyword) }}">▶</a></li>
             {% else %}
-                <li><a href="{{ url_for('board', board=board, page=end, art_per_page=30) }}">▶</a></li>
+                <li class="page"><a href="{{ url_for('board', board=board, page=end, art_per_page=30) }}">▶</a></li>
             {% endif %}
         {% endif %}
         </ui>
     {% endif %}
     </div>
-</div>
-<div class="search" align="center">
-    <form action="{{ url_for('board') }}", method="GET">
+    <form class="search" action="{{ url_for('board') }}", method="GET">
         <input type="hidden" name="board" value="{{ board }}">
         <input type="hidden" name="art_per_page" value="{{ 30 }}">
-        <select name="option">
+        <select class="search-option" name="option">
             <option value="title, content">제목/내용</option>
             <option value="title">제목</option>
             <option value="content">내용</option>
@@ -106,7 +104,7 @@
             <option value="user">작성자</option>
             {% endif %}
         </select>
-        <input class="search" type="search" name="keyword">
+        <input class="search-input" type="search" name="keyword">
         <button type="submit">검색</button>
     </form>
 </div>

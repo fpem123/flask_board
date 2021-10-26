@@ -7,36 +7,38 @@
     <body>
         {% include 'frame_header.html' %}
 
-        <br>
-
-        {% include 'frame_sidebar.html' %}
-
-        <br>
-
-        <h3>회원탈퇴</h3>
-
-
-        <div class="member-secession">
-            {% if session.get("uid") %}
-            <p>{{ session.get("nickname") }} 님 정말 탈퇴를 원한다면 비밀번호와 탈퇴합니다를 입력해주세요.</p>
-            <form method="POST" onsubmit="return sendDeleteUser(this)">
-                <input type="hidden" name="uid" value={{ session.get('uid') }}>
-                <input type="password" name="pwd" placeholder="PASSWORD" 
-                maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-                <br><br>
-                <input type="text" name="confirm" placeholder="탈퇴합니다" 
-                maxlength='5' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-                <br><br>
-                <button type="submit" style="width:80px; height:40px">회원탈퇴</button>
-            </form>
-            {% else %}
-                <p>비회원은 할 수 없는 작업입니다.</p>
-
-                <div class="btns" align="center">
-                    <a href="javascript:history.back()" 
-                    style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+        <div class="wrapper">
+            {% include 'frame_sidebar.html' %}
+            <div class="frame">
+                <div class="frame-sigh">
+                    <a>회원탈퇴</a>
                 </div>
-            {% endif %}
+
+                <div class="frame-contents">
+                    {% if session.get("uid") %}
+                    <p>{{ session.get("nickname") }} 님 정말 탈퇴를 원한다면 비밀번호와 탈퇴합니다를 입력해주세요.</p>
+                    <form method="POST" onsubmit="return sendDeleteUser(this)">
+                        <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                        <input type="password" name="pwd" placeholder="PASSWORD" 
+                        maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+                        <br><br>
+                        <input type="text" name="confirm" placeholder="탈퇴합니다" 
+                        maxlength='5' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
+                        <br><br>
+                        <button type="submit" style="width:80px; height:40px">회원탈퇴</button>
+                    </form>
+                    {% else %}
+                        <p>비회원은 할 수 없는 작업입니다.</p>
+
+                        <div class="btns" align="center">
+                            <a href="javascript:history.back()" 
+                            style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        
+        {% include 'frame_foot.html' %}
     </body>
 </html>

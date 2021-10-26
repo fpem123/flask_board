@@ -6,26 +6,31 @@
 
     <body>
         {% include 'frame_header.html' %}
-
-        <br>
-
-        {% include 'frame_sidebar.html' %}
-
-        <br>
-
-        <div class="errBox" style="border:1px solid black; padding: 10px">
-            <br>
-            <br>
-                <div class="errMsg" align="center">
-                    {{ errMsg }}
+        
+        <div class="wrapper">
+            {% include 'frame_sidebar.html' %}
+            <div class="frame">
+                <div class="frame-sigh">
+                    <a>에러 페이지</a>
                 </div>
-            <br>
-            <br>
-            <div class="btns" align="center">
-                <a href="javascript:history.back()" 
-                style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+
+                <div class="frame-contents">
+                    <br>
+                    <br>
+                        <div class="errMsg" align="center">
+                            {{ errMsg }}
+                        </div>
+                    <br>
+                    <br>
+                    <div class="btns" align="center">
+                        <a href="javascript:history.back()" 
+                        style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+                    </div>
+                    <br>
+                </div>
             </div>
-            <br>
         </div>
+        
+        {% include 'frame_foot.html' %}
     </body>
 </html>

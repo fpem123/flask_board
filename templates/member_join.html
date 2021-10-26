@@ -7,43 +7,46 @@
     <body>
         {% include 'frame_header.html' %}
 
-        <br>
-        
-        {% include 'frame_sidebar.html' %}
+        <div class="wrapper">
+            {% include 'frame_sidebar.html' %}
+            <div class="frame">
+                <div class="frame-sigh">
+                    <a>회원가입</a>
+                </div>
 
-        <br>
+                <div class="frame-contents">
+                    {% if not session.get("uid") %}
+                    <p>
+                        <h4>규 칙</h4>
+                        <label>아이디는 5 ~ 16 글자여야 하며 영문과 숫자만 가능합니다.</label><br>
+                        <label>비밀번호는 5 ~ 16 글자여야 하며 영문과 숫자, !, @, #, $, %, ^, & 만 가능합니다.</label><br>
+                        <label>닉네임은 2 ~ 10 글자여야 하며 공백과 ', " 는 사용 불가능합니다.</label><br>
+                    </p>
+                    
+                    <br>
 
-        <h3>회원가입</h3>
-
-        <div class="member-join">
-            {% if not session.get("uid") %}
-            <p>
-                <h4>규 칙</h4>
-                <label>아이디는 5 ~ 16 글자여야 하며 영문과 숫자만 가능합니다.</label><br>
-                <label>비밀번호는 5 ~ 16 글자여야 하며 영문과 숫자, !, @, #, $, %, ^, & 만 가능합니다.</label><br>
-                <label>닉네임은 2 ~ 10 글자여야 하며 공백과 ', " 는 사용 불가능합니다.</label><br>
-            </p>
-            
-            <br>
-
-            <form method="POST" onsubmit="return sendInsertUser(this)">
-                <label>아 이 디 : </label>
-                <input type="text" name="new_uid" placeholder="ID" 
-                maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-                <br><br>
-                <label>비밀번호 : </label>
-                <input type="password" name="new_pwd" placeholder="PASSWORD" 
-                maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-                <br><br>
-                <label>닉 네 임 : </label>
-                <input type="text" name="new_nickname" placeholder="닉네임" 
-                maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
-                <br><br>
-                <button type="submit" style="width:80px; height:40px">회원가입</button>
-            </form>
-            {% else %}
-            <p>로그인 상태에선 불가능한 작업입니다.</p>
-            {% endif %}
+                    <form method="POST" onsubmit="return sendInsertUser(this)">
+                        <label>아 이 디 : </label>
+                        <input type="text" name="new_uid" placeholder="ID" 
+                        maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                        <br><br>
+                        <label>비밀번호 : </label>
+                        <input type="password" name="new_pwd" placeholder="PASSWORD" 
+                        maxlength='16' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                        <br><br>
+                        <label>닉 네 임 : </label>
+                        <input type="text" name="new_nickname" placeholder="닉네임" 
+                        maxlength='10' style="width:200px; height:20px;" onkeydown="if(event.keyCode==13) return false">
+                        <br><br>
+                        <button type="submit" style="width:80px; height:40px">회원가입</button>
+                    </form>
+                    {% else %}
+                    <p>로그인 상태에선 불가능한 작업입니다.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        
+        {% include 'frame_foot.html' %}
     </body>
 </html>

@@ -1,6 +1,27 @@
 * {
     margin: 0px;
     padding: 0px;
+    vertical-align: middle;
+}
+
+.search-option {
+    height: 2.5em;
+    width: 7em;
+    text-align: center;
+}
+
+.board-bottom {
+    width: 100%;
+}
+
+li.page {
+    display: inline-block;
+    margin: 0em 0.5em 0em 0.5em;
+}
+
+.paging {
+    text-align: center;
+    display: block;
 }
 
 body {
@@ -14,11 +35,15 @@ a:link, a:visited, a:hover {
 
 header {
     background-color: #34495E;
-    height: 100px;
+    height: 7em;
 }
 
 input {
-    height: 30px;
+    height: 2.5em;
+}
+
+input.search-input {
+    width: 30em;
 }
 
 table {
@@ -40,22 +65,26 @@ table {
     background-color: #2980B9;
     width: 200px;
     border-right: 0.01em grey solid;
+    min-height: 50em;
 }
 
 .member {
-    height: 150px;
+    height: 10em;
+    margin: 1.5em 0em 1.5em 0em;
 }
 
 .boards {
-    font-size: 20px;
+    margin-top: 1.5em;
+    font-size: 1.2em;
     font-weight: bold;
 }
 
 .board_list_title {
-    height: 50px;
+    height: 2.5em;
     background: grey;
     color: white;
-    padding: 10px 0px 0px 15px;
+    text-align: center;
+    padding-top: 1em;
 }
 
 .board {
@@ -71,13 +100,20 @@ table {
 }
 
 form {
-    padding: 10px 0px 0px 10px;
+    padding: 1em 0em 0em 1em;
 }
 
 button {
     border: none;
     height: 35px;
     width: 75px;
+    font-weight: bold;
+    color: white;
+    background-color: #3498DB;
+}
+
+.btn {
+    float: right;
 }
 
 .wrapper {
@@ -93,11 +129,14 @@ button {
 }
 
 .frame-contents {
-    padding: 3em 0em 0em 0em;
-    border-bottom: 0.1em solid darkgrey;
+    padding: 3em 2em 2.5em 2em;
+    background-color: #F8F8F8;
+    margin: 2.5em 0em 2.5em 0em;
+    width: 85%;
 }
 
-.frame-sigh {
+.frame-sigh{
+    color: black;
     font-size: 1.75em;
     font-weight: bold;
     width: 25em;
@@ -106,8 +145,9 @@ button {
 }
 
 .search {
-    width: 60%; 
-    max-width: 500px;
+    text-align: center;
+    margin: 1em 0em 1em 0em;
+    padding-right: 5em;
 }
 
 .num-comment{
@@ -115,7 +155,7 @@ button {
     color: gray;
 }
 
-table.board-table {
+.board-table {
     border-top: 0.1em solid darkgrey;
     border-bottom: 0.1em solid darkgrey;
     margin-bottom: 2em;
