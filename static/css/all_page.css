@@ -27,6 +27,11 @@ table {
     border-collapse: collapse;
 }
 
+caption {
+    text-align: left;
+    margin-bottom: 1em;
+}
+
 button {
     border: none;
     height: 3em;
@@ -139,3 +144,7 @@ button {
     width: 85%;
 }
 
+p.msg{
+    height: 10em;
+    line-height: 10em;
+}

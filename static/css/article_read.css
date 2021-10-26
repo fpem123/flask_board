@@ -1,6 +1,12 @@
 /* 작성글을 보는 페이지에서 사용하는 css */
 
 /* 글 정보 */
+div.article {
+    background-color: #E0E0E0;
+    margin-bottom: 2em;
+    padding: 2em 2em 1em 2em;
+}
+
 .article-info-2 {
     display: inline-block;
     float: right;
@@ -27,11 +33,17 @@
 }
 
 /* 댓글 table */
+div.view-comment {
+    background-color: #E0E0E0;
+    padding: 0.05em 0em 0.05em 0em;
+    margin: 1em 0em 1em 0em;
+}
+
 #comments {
     width: 95%;
     margin: 2em auto 2em auto;
-    border-top: 0.1em dashed gainsboro;
-    border-bottom: 0.1em dashed gainsboro;
+    border-top: 0.25em dashed darkgrey;
+    border-bottom: 0.25em dashed darkgrey;
 }
 
 #comments>tbody>tr {
@@ -44,8 +56,13 @@
 
 #comments>tbody>tr>td {
     height: 5em;
-    padding: 0.5em 0.1em 0.5em 0.1em;
+    padding: 1.5em 0.1em 0.5em 0.1em;
     vertical-align: unset;
+}
+
+#comments>tbody>tr>.msg {
+    padding-bottom: 1.5em;
+    vertical-align: middle;
 }
 
 .col-btn {
@@ -76,8 +93,10 @@ col.col-date {
 
 /* 댓글작성 from*/
 div.write-comment {
-    height: 8em;
-    margin: 0em 0em 2em 0em;
+    height: 11em;
+    margin: 2em 0em 2em 0em;
+    padding: 2em 1.5em 0em 1.5em;
+    background-color: #E0E0E0;
 }
 
 #input-comment {
