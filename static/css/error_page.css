@@ -1,0 +1,6 @@
+/* 에러 페이지에서 사용하는 css */
+
+.errMsg {
+    font-size: 2em;
+    font-weight: bold;
+}

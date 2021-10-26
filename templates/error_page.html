@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        <link href="{{ url_for('static', filename='css/error_page.css') }}" rel="stylesheet">
     </head>
 
     <body>
@@ -22,9 +23,8 @@
                         </div>
                     <br>
                     <br>
-                    <div class="btns" align="center">
-                        <a href="javascript:history.back()" 
-                        style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+                    <div class="btns" align="center">   
+                        <button type="button" onclick="javascript:history.back()">뒤로가기</button>
                     </div>
                     <br>
                 </div>

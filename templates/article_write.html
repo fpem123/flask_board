@@ -3,6 +3,7 @@
     <head>
         {% include 'frame_head.html' %}
         {% include 'frame_ckeditor5.html' %}
+        <link href="{{ url_for('static', filename='css/article_write.css') }}" rel="stylesheet">
     </head>
 
     <body>
@@ -17,21 +18,26 @@
                 </div>
                 
                 <div class="frame-contents">
+                    {% if session.get('uid') %}
                     <form id="write-form" action="{{ url_for('articleCreateCall') }}" method="POST"
                     onsubmit="return article_check(this)">
                         <input type="hidden" name="board" value='{{ board }}'>
                         <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                         <br>
                         <input type="text" id="title" name="title" 
-                        placeholder="제목을 입력하세요." style="width:300px; height:20px" onkeydown="return onKeydownEnter()">
+                        placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">
                         <br><br>
-                        <textarea id="editor" name="content" style="width:80%; resize: none;" rows="30" onkeydown="return onKeydownTap(this);"></textarea>
+                        <textarea id="editor" name="content" rows="30" onkeydown="return onKeydownTap(this);"></textarea>
                         <script>setCkeditor( "{{board}}" )</script>
                         <br><br>
-                        <input type="submit" value="글쓰기" style="width:80px; height:40px">
-                        <a onclick="javascript:history.back()" 
-                        style="width:80px; height:40px; border:1px solid black; padding: 10px">취소</a>
+                        <div class="btns">
+                            <button class="right-btn" id="form-submit" type="submit" value="글쓰기">글쓰기</button>
+                            <button class="left-btn del-btn" type="button" onclick="javascript:history.back()">취소</button>
+                        </div>
                     </form>
+                    {% else %}
+                    <p>비회원은 불가능한 작업입니다.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>

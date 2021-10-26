@@ -4,7 +4,8 @@ function setCkeditor(board){
     ClassicEditor
     .create( document.querySelector( '#editor' ), {
         language: { ui: 'ko', content: 'ko'},
-        ckfinder : {uploadUrl: `/board/${board}/image-upload`}
+        ckfinder : { uploadUrl: `/board/${board}/image-upload` },
+        style : { margin: "1.5em 0em 1.5em 0em"}
     })
     .then(editor => {
         ckEditor = editor;

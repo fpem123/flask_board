@@ -1,2 +1,141 @@
 /* 모든 페이지에서 사용하는 css */
 /* header, footer, sidebar, frame shape */
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+}
+
+a:link, a:visited, a:hover {
+    text-decoration: none;
+}
+
+header {
+    background-color: #34495E;
+    height: 7em;
+}
+
+input {
+    height: 2.5em;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+button {
+    border: none;
+    height: 3em;
+    width: 7em;
+    font-weight: bold;
+    color: white;
+    background-color: #3498DB;
+}
+
+.left-btn {
+    float: left;
+    display: inline-block;
+    margin-right: 1.5em;
+}
+
+.right-btn {
+    float: right;
+    margin-left: 1.5em;
+}
+.del-btn {
+    background-color: #DB0000;
+}
+
+.btns {
+    height: 1em;
+    margin: 1em 0em 1em 0em;
+}
+
+/* 게시판 로고 */
+.logo {
+    font-size: 2.0em;
+    font-weight: bold;
+    color: white;
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    overflow: hidden;
+    width: 10em;
+}
+
+/* 사이드바, frame wrapper */
+.wrapper {
+    height: auto;
+    display: flex;
+    width: 80em;
+    border-bottom: 0.1em solid darkgray;
+}
+
+/* 사이드바 */
+.sidebar {
+    background-color: #2980B9;
+    width: 15em;
+    border-right: 0.01em grey solid;
+    min-height: 50em;
+}
+
+.member {
+    height: 10em;
+    margin: 1.5em 0em 1.5em 0em;
+    text-align: center;
+}
+
+.login_input {
+    width: 14em;
+    margin: 0em 0em 1.25em 0em;
+}
+
+.boards {
+    margin-top: 1.5em;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.board_list_title {
+    height: 2.5em;
+    background: grey;
+    color: white;
+    text-align: center;
+    padding-top: 1em;
+}
+
+.board {
+    background-color: #E0E0E0;
+    display: block;
+    height: 50px;
+    padding: 10px 0px 0px 15px;
+}
+
+/* 변하는 페이지 */
+.frame {
+    width: calc(100% - 10em);
+    padding: 3em 0em 0em 3em;
+}
+
+/* 페이지 전광판 */
+.frame-sigh{
+    color: black;
+    font-size: 1.75em;
+    font-weight: bold;
+    width: 25em;
+    padding-bottom: 1.25em;
+    border-bottom: 0.1em solid darkgray;
+}
+
+/* 페이지 컨텐츠 */
+.frame-contents {
+    padding: 3em 2em 2.5em 2em;
+    background-color: #F8F8F8;
+    margin: 2.5em 0em 2.5em 0em;
+    width: 85%;
+}
+

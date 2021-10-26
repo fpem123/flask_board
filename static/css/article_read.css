@@ -1,1 +1,96 @@
 /* 작성글을 보는 페이지에서 사용하는 css */
+
+/* 글 정보 */
+.article-info-2 {
+    display: inline-block;
+    float: right;
+}
+
+.article-info-1 {
+    display: inline-block;
+    float: left;
+}
+
+.article-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.75em;
+}
+
+.hit-btn {
+    background-color: #FFE400;
+    color: darkslategrey;
+    border-radius: 2em;
+    height: 4em;
+    margin: 1.5em 0em 1.5em 0em;
+}
+
+/* 댓글 table */
+#comments {
+    width: 95%;
+    margin: 2em auto 2em auto;
+    border-top: 0.1em dashed gainsboro;
+    border-bottom: 0.1em dashed gainsboro;
+}
+
+#comments>tbody>tr {
+    border-bottom: 0.1em solid lightgrey;
+}
+ 
+#comments>tbody>tr:last-child {
+    border-bottom: none;
+}
+
+#comments>tbody>tr>td {
+    height: 5em;
+    padding: 0.5em 0.1em 0.5em 0.1em;
+    vertical-align: unset;
+}
+
+.col-btn {
+    width: 5%;
+}
+
+.col-comment {
+    width: 60%;
+}
+
+col.col-writer {
+    width: 10%;
+}
+
+col.col-date {
+    width: 10%;
+}
+
+.num-comment{
+    font-size:0.9em; 
+    color: gray;
+}
+
+.comment-btn {
+    height: 2em;
+    width: 2em;
+}
+
+/* 댓글작성 from*/
+div.write-comment {
+    height: 8em;
+    margin: 0em 0em 2em 0em;
+}
+
+#input-comment {
+    width: 80%;
+    height: 6em;
+    resize: none;
+    margin: 2em 1.25em 0em 0em;
+}
+
+.write-btn {
+    height: 6em;
+}
+
+.form-comment {
+    text-align: center;
+}

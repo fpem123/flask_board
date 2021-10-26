@@ -1,7 +1,48 @@
 * {
     margin: 0px;
     padding: 0px;
-    vertical-align: middle;
+}
+
+.btns {
+    padding: 1.5em 0em 1.5em 0em;
+}
+
+.write-comment {
+    height: 8em;
+    margin: 0em 0em 2em 0em;
+}
+
+.col-btn {
+    width: 5%;
+}
+
+.col-comment {
+    width: 60%;
+}
+
+col.col-writer {
+    width: 10%;
+}
+
+col.col-date {
+    width: 10%;
+}
+
+.article-info-2 {
+    display: inline-block;
+    float: right;
+}
+
+.article-info-1 {
+    display: inline-block;
+    float: left;
+}
+
+li.article-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.75em;
 }
 
 .search-option {
@@ -14,7 +55,7 @@
     width: 100%;
 }
 
-li.page {
+.page {
     display: inline-block;
     margin: 0em 0.5em 0em 0.5em;
 }
@@ -42,12 +83,26 @@ input {
     height: 2.5em;
 }
 
-input.search-input {
+#input-comment {
+    width: 80%;
+    height: 6em;
+    resize: none;
+    margin: 2em 1em 0em 0em;
+}
+
+.search-input {
     width: 30em;
 }
 
 table {
     border-collapse: collapse;
+}
+
+#comments {
+    width: 95%;
+    margin: 2em 0em 2em 0em;
+    border-top: 0.1em dashed gainsboro;
+    border-bottom: 0.1em dashed gainsboro;
 }
 
 .logo {
@@ -63,7 +118,7 @@ table {
 
 .sidebar {
     background-color: #2980B9;
-    width: 200px;
+    width: 15em;
     border-right: 0.01em grey solid;
     min-height: 50em;
 }
@@ -71,6 +126,7 @@ table {
 .member {
     height: 10em;
     margin: 1.5em 0em 1.5em 0em;
+    text-align: center;
 }
 
 .boards {
@@ -95,26 +151,49 @@ table {
 }
 
 .login_input {
-    width: 152px;
-    margin: 0px 0px 10px 0px;
+    width: 14em;
+    margin: 0em 0em 1.25em 0em;
 }
 
-form {
-    padding: 1em 0em 0em 1em;
-}
 
 button {
     border: none;
-    height: 35px;
-    width: 75px;
+    height: 3em;
+    width: 7em;
     font-weight: bold;
     color: white;
     background-color: #3498DB;
 }
 
-.btn {
-    float: right;
+.left_btn {
+    float: left;
+    display: inline-block;
+    margin-right: 1.5em;
 }
+
+.write-btn {
+    height: 6em;
+}
+
+.del-btn {
+    background-color: #DB0000;
+    height: 2em;
+    width: 2em;
+}
+
+.hit-btn {
+    background-color: #FFE400;
+    color: darkslategrey;
+    border-radius: 2em;
+    height: 4em;
+    margin: 1.5em 0em 1.5em 0em;
+}
+
+.right_btn {
+    float: right;
+    margin-left: 1.5em;
+}
+
 
 .wrapper {
     height: auto;
@@ -177,12 +256,23 @@ button {
     width: 20%;
 }
 
-td, th{
-    padding: 0.5em 0.1em 0.5em 0.1em;
+#comments>tbody>tr{
     border-bottom: 0.1em solid lightgrey;
 }
 
-.board-table>thead>.board-table-thead {
+#comments>tbody>tr:last-child{
+    border-bottom: none;
+}
+
+#comments>tbody>tr>td{
+    height: 5em;
+    padding: 0.5em 0.1em 0.5em 0.1em;
+    vertical-align: unset;
+}
+
+.board-table>thead>tr>th, .board-table>tbody>tr>td{
+    height: 3em;
+    padding: 0.5em 0.1em 0.5em 0.1em;
     border-bottom: 0.1em solid darkgrey; 
     border-top: 0.1em solid darkgrey; 
 }

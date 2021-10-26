@@ -1,1 +1,65 @@
 /* 게시판 목록을 사용하는 페이지에서 사용하는 css */
+
+/* 게시판 테이블 */
+.board-table {
+    border-top: 0.1em solid darkgrey;
+    border-bottom: 0.1em solid darkgrey;
+    margin-bottom: 2em;
+}
+
+.board-table>colgroup .col-num, .board-table>colgroup .col-view, .board-table>colgroup .col-hit{
+    width: 5%;
+}
+
+.board-table>colgroup .col-title{
+    width: 45%;
+}
+
+.board-table>colgroup .col-writer{
+    width: 15%;
+}
+
+.board-table>colgroup .col-date{
+    width: 20%;
+}
+
+.board-table>thead>tr>th, .board-table>tbody>tr>td{
+    height: 3em;
+    padding: 0.5em 0.1em 0.5em 0.1em;
+    border-bottom: 0.1em solid darkgrey; 
+    border-top: 0.1em solid darkgrey; 
+}
+
+/* 게시판 테이블 아랫부분 */
+.board-bottom {
+    width: 100%;
+}
+
+/* 페이징 */
+.paging {
+    text-align: center;
+    display: block;
+}
+
+.page {
+    display: inline-block;
+    margin: 0em 0.5em 0em 0.5em;
+}
+
+/* 검색옵션 */
+.search-option {
+    height: 2.5em;
+    width: 7em;
+    text-align: center;
+}
+
+.search {
+    text-align: center;
+    margin: 3em 0em 1em 0em;
+    padding-right: 5em;
+}
+
+.search-input {
+    width: 30em;
+}
+
