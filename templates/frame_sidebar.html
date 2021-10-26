@@ -1,0 +1,14 @@
+<div class='sidebar'>
+{% include 'frame_member.html' %}
+    <div class='boards'>
+        <div class="board_list_title">커뮤니티</div>
+        <ul class="board_list">
+            {% for board, name in boards.items() %}
+            <li class="board">
+                <a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>

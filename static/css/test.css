@@ -1,0 +1,148 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+body {
+    height: 100%;
+    width: 100%;
+}
+
+a:link, a:visited, a:hover {
+    text-decoration: none;
+}
+
+header {
+    background-color: #34495E;
+    height: 100px;
+}
+
+input {
+    height: 30px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+.logo {
+    font-size: 2.0em;
+    font-weight: bold;
+    color: white;
+    position: absolute;
+    top: 1em;
+    left: 1em;
+    overflow: hidden;
+    width: 10em;
+}
+
+.sidebar {
+    background-color: #2980B9;
+    width: 200px;
+    border-right: 0.01em grey solid;
+}
+
+.member {
+    height: 150px;
+}
+
+.boards {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.board_list_title {
+    height: 50px;
+    background: grey;
+    color: white;
+    padding: 10px 0px 0px 15px;
+}
+
+.board {
+    background-color: #E0E0E0;
+    display: block;
+    height: 50px;
+    padding: 10px 0px 0px 15px;
+}
+
+.login_input {
+    width: 152px;
+    margin: 0px 0px 10px 0px;
+}
+
+form {
+    padding: 10px 0px 0px 10px;
+}
+
+button {
+    border: none;
+    height: 35px;
+    width: 75px;
+}
+
+.wrapper {
+    height: auto;
+    display: flex;
+    width: 80em;
+    border-bottom: 0.1em solid darkgray;
+}
+
+.frame {
+    width: calc(100% - 10em);
+    padding: 3em 0em 0em 3em;
+}
+
+.frame-contents {
+    padding: 3em 0em 0em 0em;
+    border-bottom: 0.1em solid darkgrey;
+}
+
+.frame-sigh {
+    font-size: 1.75em;
+    font-weight: bold;
+    width: 25em;
+    padding-bottom: 1.25em;
+    border-bottom: 0.1em solid darkgray;
+}
+
+.search {
+    width: 60%; 
+    max-width: 500px;
+}
+
+.num-comment{
+    font-size:0.9em; 
+    color: gray;
+}
+
+table.board-table {
+    border-top: 0.1em solid darkgrey;
+    border-bottom: 0.1em solid darkgrey;
+    margin-bottom: 2em;
+}
+
+.board-table>colgroup .col-num, .board-table>colgroup .col-view, .board-table>colgroup .col-hit{
+    width: 5%;
+}
+
+.board-table>colgroup .col-title{
+    width: 45%;
+}
+
+.board-table>colgroup .col-writer{
+    width: 15%;
+}
+
+.board-table>colgroup .col-date{
+    width: 20%;
+}
+
+td, th{
+    padding: 0.5em 0.1em 0.5em 0.1em;
+    border-bottom: 0.1em solid lightgrey;
+}
+
+.board-table>thead>.board-table-thead {
+    border-bottom: 0.1em solid darkgrey; 
+    border-top: 0.1em solid darkgrey; 
+}

@@ -1,14 +1,15 @@
 <div class="member">
     {% if not session['uid'] %}
-    <form method="POST" onsubmit="return sendLoginUser(this)">
-        <input type="text" name="request_uid" placeholder="ID" 
-        maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-        <input type="password" name="request_pwd" placeholder="PASSWORD" 
-        maxlength='16' style="width:200px; height:20px;">
-        <button type="submit">로그인</button>
+    <form name="login_form" method="POST" onsubmit="return sendLoginUser(this)">
+        <input class="login_input" type="text" name="request_uid" placeholder="ID" 
+        maxlength='16' onkeydown="return onKeydownEnter()">
+        <input class="login_input" type="password" name="request_pwd" placeholder="PASSWORD" 
+        maxlength='16'>
+        <br>
+        <button class="join_btn" type="button" onclick="location.href='{{ url_for('memberJoin') }}'">회원가입</button>
+        <button class="login_btn" type="submit">로그인</button>
     </form>
     <br>
-    <a href="{{ url_for('memberJoin') }}">회원가입</a>
     {% else %}
     <input type="hidden" id="uid" value="{{ session.get('uid') }}">
     <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">

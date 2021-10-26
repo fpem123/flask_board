@@ -193,7 +193,7 @@ def decodeBase64(data):
 ##############
 @app.route('/member/join')
 def memberJoin():
-    return render_template('member_join.html'), 200
+    return render_template('member_join.html', boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -251,7 +251,7 @@ def memberJoinRequest():
 ##############
 @app.route('/member/login')
 def memberLogin():
-    return render_template('member_login.html'), 200
+    return render_template('member_login.html', boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -317,7 +317,7 @@ def memberLogout():
 ##############
 @app.route('/member/update')
 def memberUpdate():
-    return render_template('member_update.html'), 200
+    return render_template('member_update.html', boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -393,7 +393,7 @@ def memberUpdateRequest():
 ##############
 @app.route('/member/delete')
 def memberDelete():
-    return render_template('member_delete.html'), 200
+    return render_template('member_delete.html', boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -662,7 +662,8 @@ def articleCreate():
         return errorPage(4)
 
     # 글 작성 페이지
-    return render_template('article_write.html', board=board, board_name=boardObj.get_board_name(board)), 200
+    return render_template('article_write.html', board=board, board_name=boardObj.get_board_name(board),
+    boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -766,6 +767,12 @@ def getArticles(board, page, art_per_page, option, keyword):
         articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
         a_cnt = len(articles)                       # 전체 글의 개수
         p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
+
+        if page < 1:
+            page = 1
+        elif page > p_cnt:
+            page = p_cnt
+
         page -= 1
         tmp = page * art_per_page
         articles = articles[tmp:min(tmp + art_per_page, a_cnt)]     # 한 페이지에 보여줄 수 있는 게시물들만
@@ -832,14 +839,14 @@ def acrticlePage():
 
         # 댓글 정보 반환
         comments = selectComment(aid, session.get('uid'), board)
-        articles, start, end, left_arrow, right_arrow= getArticles(board, page, art_per_page, option, keyword)
+        articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=aid, article=article, comments=comments, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword, 
-        left_arrow=left_arrow, right_arrow=right_arrow), 200
+        left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
@@ -857,7 +864,7 @@ def anonymousCheck():
         check_type = request.args.get('check_type', type=str)
 
         return render_template('anonymous_check.html', board=board, board_name=boardObj.get_board_name(board), 
-        uid=uid, aid=aid, check_type=check_type), 200
+        uid=uid, aid=aid, check_type=check_type, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(2)
 
@@ -897,7 +904,7 @@ def acrticleUpdate():
             return errorPage(3)
 
         return render_template('article_update.html', board=board, board_name=boardObj.get_board_name(board), 
-        aid=aid, title=title, content=content), 200
+        aid=aid, title=title, content=content, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
@@ -1017,7 +1024,8 @@ def articleDaleteDone():
         return errorPage(0)
 
     # 삭제 완료 페이지, 2 초후 게시판으로 이동함
-    return render_template(f'article_delete.html', board=board, board_name=boardObj.get_board_name(board)), 200
+    return render_template(f'article_delete.html', board=board, 
+    board_name=boardObj.get_board_name(board), boards=boardObj.get_board_dict()), 200
 
 
 ##############
@@ -1044,7 +1052,8 @@ def board():
         # 게시판 페이지, db에서 가져온 정보
         return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board), 
         aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch, 
-        option=option, keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow), 200
+        option=option, keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow,
+        boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
@@ -1146,23 +1155,25 @@ def errorPage(signal: int=-1, msg=None) -> str:
         * render_template('error_page.html', errMsg: 에러메시지)
     """
     if not msg is None:
-        return render_template('error_page.html', errMsg=msg)
+        errMsg = msg
     elif signal == -1:
-        return render_template('error_page.html', errMsg="존재하지 않는 페이지입니다.")
+        errMsg = "존재하지 않는 페이지입니다."
     elif signal == 0:
-        return render_template('error_page.html', errMsg="존재하지 않는 게시판입니다.")
+        errMsg = "존재하지 않는 게시판입니다."
     elif signal == 1:
-        return render_template('error_page.html', errMsg="DB 확인 중 문제가 발생했습니다.")
+        errMsg = "DB 확인 중 문제가 발생했습니다."
     elif signal == 2:
-        return render_template('error_page.html', errMsg="잘못된 요청입니다.")
+        errMsg = "잘못된 요청입니다."
     elif signal == 3:
-        return render_template('error_page.html', errMsg="작성자와 다른 유저입니다.")
+         errMsg = "작성자와 다른 유저입니다."
     elif signal == 4:
-        return render_template('error_page.html', errMsg="비회원은 할 수 없는 작업입니다.")
+        errMsg = "비회원은 할 수 없는 작업입니다."
     elif signal == 5:
-        return render_template('error_page.html', errMsg="세션과 정보가 동일하지 않습니다.")
+        errMsg = "세션과 정보가 동일하지 않습니다."
     else:
-        return render_template('error_page.html', errMsg="잘못된 페이지 입니다.")
+        errMsg = "잘못된 페이지 입니다."
+
+    return render_template('error_page.html', errMsg=errMsg, boards=boardObj.get_board_dict())
 
 
 if __name__ == '__main__':
