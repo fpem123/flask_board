@@ -1,24 +1,30 @@
 <div class="member">
     {% if not session['uid'] %}
-    <form class="login_form" name="login_form" method="POST" onsubmit="return sendLoginUser(this)">
-        <input class="login_input" type="text" name="request_uid" placeholder="ID" 
-        maxlength='16' onkeydown="return onKeydownEnter()">
-        <input class="login_input" type="password" name="request_pwd" placeholder="PASSWORD" 
-        maxlength='16'>
-        <button class="join_btn" type="button" onclick="location.href='{{ url_for('memberJoin') }}'">회원가입</button>
-        <button class="login_btn" type="submit">로그인</button>
+    <form class="profile-wrapper" name="login_form" method="POST" onsubmit="return sendLoginUser(this)">
+        <div class="login_inputs">
+            <input class="login_input" type="text" name="request_uid" placeholder="ID" 
+            maxlength='16' onkeydown="return onKeydownEnter()">
+            <input class="login_input" type="password" name="request_pwd" placeholder="PASSWORD" 
+            maxlength='16'>
+        </div>
+        <div class="member_btns">
+            <button class="member_btn" type="button" onclick="location.href='{{ url_for('memberJoin') }}'">회원가입</button>
+            <button class="member_btn" type="submit">로그인</button>
+        </div>
     </form>
     {% else %}
     <div class="profile-wrapper">
         <div class="profile">
             <input type="hidden" id="uid" value="{{ session.get('uid') }}">
             <input type="hidden" id="nickname" value="{{ session.get('nickname') }}">
-            <img class="profile-img" src="{{ url_for('static', filename='profiles/default_profile.png') }}">
-            <label class="profile-msg">{{ session.get('nickname') }}님 환영합니다.</label>
+            <img class="profile-img" src="{{ url_for('static', filename='profiles/default_profile.png') }}"><br>
+            <p class="profile-msg">{{ session.get('nickname') }}님</p>
         </div>
         <script>setUID("{{ session.get('uid') }}")</script>
-        <button onclick="location.href='{{ url_for('memberUpdate') }}'">정보변경</button>
-        <button class="del-btn" onclick="return sendLogoutUser(this)" value="{{ session.get('uid') }}">로그아웃</button>
+        <div class="member_btns">
+            <button class="member_btn" onclick="location.href='{{ url_for('memberUpdate') }}'">정보변경</button>
+            <button class="member_btn del-btn" onclick="return sendLogoutUser(this)" value="{{ session.get('uid') }}">로그아웃</button>
+        </div>
     </div>
     {% endif %}
 </div>

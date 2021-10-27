@@ -41,7 +41,12 @@
                         <button type="submit" style="width:80px; height:40px">회원가입</button>
                     </form>
                     {% else %}
-                    <p>로그인 상태에선 불가능한 작업입니다.</p>
+                    <div class="errMsg" align="center">
+                        로그인 상태에선 불가능한 작업입니다.
+                    </div>
+                    <div class="btns" align="center">  
+                        <button onclick="javascript:history.back()">뒤로가기</button>
+                    </div>
                     {% endif %}
                 </div>
             </div>

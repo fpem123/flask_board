@@ -88,38 +88,62 @@ footer {
 /* 사이드바 */
 .sidebar {
     background-color: #2980B9;
-    min-width: 15em;
-    max-width: 20em;
+    max-width: 10em;
     border-right: 0.01em grey solid;
     min-height: 50em;
 }
 
     .member {
         height: 10em;
-        margin: 1.5em 0em 1.5em 0em;
+        margin: 1em 0em 1.5em 0em;
+        width: 100%;
         text-align: center;
     }
 
+    button.member_btn {
+        width: 40%;
+    }
+    
+    .member_btns {
+        height: 30%;
+    }
+
     /* 로그인 전 */
+    .login_inputs {
+        height: 70%;
+    }
+
     .login_input {
-        width: 14em;
+        width: 80%;
         margin: 0em 0em 1.25em 0em;
     }
 
     /* 로그인 후 */
+    .profile-wrapper {
+        padding-top: 1em;
+        width: 100%;
+        height: 100%;
+        background-color: #E0E0E0;
+    }
+
     .profile {
-        padding: 0em 0.5em 0em 0.5em;
-        margin: 1em 0em 1.75em 0em;
-        display: flex;
+        width: 100%;
+        height: 70%;
+        background-color: #E0E0E0;
     }
 
-    img.profile-img {
-        height: 5em;
+    .profile-img {
+        max-width: 30%;
+        height: auto;
+        padding-top: 0.5em;
     }
 
-    label.profile-msg {
+    .profile-msg {
         padding: 0.25em 0.5em 0.25em 0.5em;
-        text-align: left;
+        margin-top: 0.5em;
+        text-align: center;
+        font-size: 0.8em;
+        font-weight: bold;
     }
 
 .boards {
@@ -145,10 +169,10 @@ footer {
 
 /* 페이지 */
 .frame {
-    width: calc(100% - 10em);
+    width: calc(80% - 10em);
     padding: 3em 0em 0em 3em;
-    min-width: 70em;
-    max-width: 75em;
+    max-width: 62em;
+    min-width: 60em;
 }
 
 /* 페이지 전광판 */
@@ -195,4 +219,13 @@ button.icon-btn.git-btn {
 button.icon-btn.kakao-btn {
     background: url("/static/icons/ico-kakao.png") no-repeat;
     background-size: cover;
+}
+
+/* 에러 메시지 */
+.errMsg {
+    padding: 3em 0em;
+    font-size: 2em;
+    font-weight: bold;
+    font-size: 2em;
+    font-weight: bold;
 }

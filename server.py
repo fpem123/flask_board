@@ -539,7 +539,7 @@ def selectComment(aid, uid, board):
         if board == 'anonymous':
             for idx, comment in enumerate(comments):
                 comment = list(comment)
-                if writer == comment[4]:
+                if comment[4]:
                     comment[1] = "작성자"
                 else:
                     comment[1] = "익명"
@@ -783,10 +783,20 @@ def getArticles(board, page, art_per_page, option, keyword):
         right_arrow = end < p_cnt 
 
         for idx, article in enumerate(articles):
+            tmp = list(article)
             if not article[1]:
-                tmp = list(article)
                 tmp[1] = "(탈퇴한 유저)"
-                articles[idx] = tuple(tmp)
+
+            if len(article[2]) > 15:
+                tmp[2] = tmp[2][:15] + "..."
+
+            # 같은날 작성한 글은 시간만 표시, 다른 날 작성한 글은 날짜만 표시
+            if (datetime.now() - datetime.strptime(article[3], '%Y-%m-%d %H:%M:%S')).days == 0:
+                tmp[3] = tmp[3].split(" ")[1]
+            else:
+                tmp[3] = tmp[3].split(" ")[0]
+
+            articles[idx] = tuple(tmp)
 
         return articles, start, end, left_arrow, right_arrow
 

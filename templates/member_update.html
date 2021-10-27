@@ -37,17 +37,18 @@
                         <label>변경할 닉네임 : </label><input type="text" name="new_nickname" placeholder="닉네임" 
                         maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
                         <br><br>
-                        <button type="submit" style="width:80px; height:40px">정보 변경</button>
+                        <button type="submit">정보 변경</button>
                     </form>
                     <br>
                     <p>회원탈퇴페이지는 아래 버튼을 클릭하세요.</p>
-                    <a href="{{ url_for('memberDelete') }}" style="width:80px; height:40px; border:1px solid black; padding: 10px">탈퇴하기</a>
+                    <button class="del-btn" onclick="location.href='{{ url_for('memberDelete') }}'">탈퇴하기</button>
                     {% else %}
-                    <p>비회원은 할 수 없는 작업입니다.</p>
-
+                    <div class="errMsg" align="center">
+                        비회원은 할 수 없는 작업입니다.
+                    </div>
+    
                     <div class="btns" align="center">
-                        <a href="javascript:history.back()" 
-                        style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
+                        <button onclick="javascript:history.back()">뒤로가기</button>
                     </div>
                     {% endif %}
                 </div>

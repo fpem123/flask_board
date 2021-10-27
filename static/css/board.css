@@ -3,32 +3,47 @@
 /* 게시판 테이블 */
 .board-table {
     width: 100%;
-    border-top: 0.1em solid darkgrey;
-    border-bottom: 0.1em solid darkgrey;
+    border-top: thick dashed darkgrey;
+    border-bottom: thick dashed darkgrey;
     margin: 0em auto 2em auto;
 }
 
 .board-table>colgroup .col-num, .board-table>colgroup .col-view, .board-table>colgroup .col-hit{
-    width: 5%;
+    width: 8%;
 }
 
 .board-table>colgroup .col-title{
-    width: 45%;
+    width: 35%;
 }
 
 .board-table>colgroup .col-writer{
-    width: 15%;
+    width: 25%;
 }
 
 .board-table>colgroup .col-date{
-    width: 20%;
+    width: 15%;
 }
 
 .board-table>thead>tr>th, .board-table>tbody>tr>td{
     height: 3em;
-    padding: 0.5em 0.1em 0.5em 0.1em;
-    border-bottom: 0.1em solid darkgrey; 
-    border-top: 0.1em solid darkgrey; 
+    padding: 0.5em 0.2em 0.5em 0.2em;
+}
+
+.board-table>thead>tr>th{
+    border-bottom: thick double dimgrey;
+}
+
+.board-table>tbody>tr>td{
+    border-bottom: thin inset darkgrey;
+}
+
+.board-table>tbody>tr:last-child {
+    border-bottom: none;
+}
+
+.num-comment{
+    font-size:0.9em; 
+    color: gray;
 }
 
 /* 게시판 테이블 아랫부분 */

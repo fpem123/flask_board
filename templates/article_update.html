@@ -23,7 +23,7 @@
                         <input type="hidden" name="aid" value='{{ aid }}'>
                         <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                         <br>
-                        <input type="text" id="title" name="title" value="{{ title }}"
+                        <input type="text" id="title" name="title" value="{{ title }}"  maxlength="20"
                         placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">
                         <br><br>
                         <textarea id="editor" name="content" rows="30" onkeydown="return onKeydownTap(this);">{{ content }}</textarea>

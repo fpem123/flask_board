@@ -105,8 +105,10 @@
 
                     <div class="btns">
                         <button class="left-btn" type="button" onclick="location.href='{{ url_for('board', board=board, art_per_page=30) }}'">글목록</button>   
-                        {% if session.get('uid') == article_uid %}
+                        {% if session.get('uid') %}
                         <button class="right-btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
+                        {% endif %}
+                        {% if session.get('uid') == article_uid %}
                         <form name="delete_article" action="{{ url_for('articleDalete', board=board) }}" method="post">
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <input type="hidden" name="aid" value="{{ aid }}">

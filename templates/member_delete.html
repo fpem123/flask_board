@@ -25,15 +25,16 @@
                         <input type="text" name="confirm" placeholder="탈퇴합니다" 
                         maxlength='5' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
                         <br><br>
-                        <button type="submit" style="width:80px; height:40px">회원탈퇴</button>
+                        <button class="del-btn" type="submit">회원탈퇴</button>
                     </form>
                     {% else %}
-                        <p>비회원은 할 수 없는 작업입니다.</p>
+                    <div class="errMsg" align="center">
+                        비회원은 할 수 없는 작업입니다.
+                    </div>
 
-                        <div class="btns" align="center">
-                            <a href="javascript:history.back()" 
-                            style="width:80px; height:40px; border:1px solid black; padding: 10px">뒤로가기</a>
-                        </div>
+                    <div class="btns" align="center">
+                        <button onclick="javascript:history.back()">뒤로가기</button>
+                    </div>
                     {% endif %}
                 </div>
             </div>
