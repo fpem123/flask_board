@@ -70,15 +70,15 @@ div.view-comment {
 }
 
 #comments>colgroup .col-btn {
-    width: 5%;
+    width: 6%;
 }
 
 #comments>colgroup .col-comment {
-    width: 50%;
+    width: 40%;
 }
 
 #comments>colgroup .col-writer {
-    width: 20%;
+    width: 12%;
 }
 
 #comments>colgroup col.col-date {

@@ -64,7 +64,7 @@
                                     <td align="left">{{ comment }}</td>
                                     <td align="right">{{ cdate_time }}</td>
                                     {% if comment_id_flag %}
-                                    <td align="right">
+                                    <td align="center">
                                         <form  onsubmit="return sendDeleteComment(this)"> 
                                             <input type="hidden" name="uid" value={{ session.get('uid') }}>
                                             <input type="hidden" name="aid" value={{ aid }}>

@@ -81,7 +81,7 @@ function commentBuilder(comments, uid, aid, board) {
         comment_date_cell.align = "right";
         comment_date_cell.innerText = comment[3]
 
-        comment_btn_cell.align = "right";
+        comment_btn_cell.align = "center";
 
         if (comment[4]){
             const del_form = document.createElement('form');

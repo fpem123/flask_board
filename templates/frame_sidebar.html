@@ -1,11 +1,22 @@
 <div class='sidebar'>
 {% include 'frame_member.html' %}
     <div class='boards'>
+        {% if True %}
+        <div class="board_list_title">관리자</div>
+        <ul class="board_list">
+            <li class="board">
+                <form name="go_admin_page" action="{{ url_for('admin', art_per_page=30) }}" method="POST">
+                    <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                    <a class="board-anchor" href="#" onclick="javascript:document.go_admin_page.submit();">관리자 페이지</a>
+                </form>
+            </li>
+        </ul>
+        {% endif %}
         <div class="board_list_title">커뮤니티</div>
         <ul class="board_list">
             {% for board, name in boards.items() %}
             <li class="board">
-                <a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a>
+                <a class="board-anchor" href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a>
             </li>
             {% endfor %}
         </ul>

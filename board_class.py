@@ -1,10 +1,12 @@
 class BoardClass():
 
     def __init__(self):
-        self.board_dict = {'etc':'기타', 
-        'game' : '게임',
-        'anonymous' : '익명',
-        'no-member' : '비회원'
+        self.board_dict = {
+            'all' : '전체',
+            'free' : '자유',
+            'etc' : '기타', 
+            'game' : '게임',
+            'anonymous' : '익명',
         }
 
     def get_board_dict(self):

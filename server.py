@@ -21,6 +21,13 @@ boardObj = BoardClass()
 sqliteObj = SquliteClass("test.db")
 
 
+def isAdmin(uid: str=None) -> bool:
+    """
+    ### 해당 유저가 어드민인지 확인
+    """
+    return True
+
+
 def isExistUser(uid: str=None, nickname: str=None) -> bool:
     """
     ### 존재하는 회원 id인지 확인
@@ -526,24 +533,18 @@ def selectComment(aid, uid, board):
 
         for idx, comment in enumerate(comments):
             comment = list(comment)
+            if not comment[1]:
+                comment[1] = "(탈퇴한 유저)"
+            if board == 'anonymous':
+                if writer == comment[4]:
+                    comment[1] = "작성자"
+                else:
+                    comment[1] = "익명"
             if uid == comment[4]:
                 comment[4] = True
             else:
                 comment[4] = False
-
-            if not comment[1]:
-                comment[1] = "(탈퇴한 유저)"
-
             comments[idx] = tuple(comment)
-
-        if board == 'anonymous':
-            for idx, comment in enumerate(comments):
-                comment = list(comment)
-                if comment[4]:
-                    comment[1] = "작성자"
-                else:
-                    comment[1] = "익명"
-                comments[idx] = tuple(comment)
 
         return comments
     except Exception as e:
@@ -615,7 +616,6 @@ def commentCreateCall():
 
         return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
-        print(e)
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
 
@@ -1101,9 +1101,18 @@ def boardQueryBuilder(board, option, keyword) -> str:
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
-            WHERE   board=?"""
-        data = [board, ]
+            WHERE   """
         keyword = '%' + keyword + '%'
+
+        if board == 'all':
+            query += "board != 'anonymous'"
+            data = []
+        elif board == 'admin':
+            query += "1=1"
+            data = []
+        else:
+            query += "board=?"
+            data = [board, ]
 
         if option == 'title, content':
             query += """ and (
@@ -1150,7 +1159,7 @@ def admin():
     # TO-DO : 어드민인지 체크
 
     # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
-    return render_template(''), 200
+    return render_template('admin_page.html'), 200
 
 
 ##############
