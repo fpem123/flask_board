@@ -59,48 +59,6 @@ function sendHit(){
 }
 
 
-// 댓글 상태 업데이트
-function commentBuilder(comments, uid, aid, board) {
-    document.getElementById( "num-comments" ).innerText = comments.length;
-    let table = document.getElementById( "comments" );
-    table.removeChild(table.getElementsByTagName("tbody")[0]);
-
-    for (let comment of comments) {
-        const row = table.insertRow();
-        const comment_nickname_cell = row.insertCell(0);
-        const comment_content_cell = row.insertCell(1);
-        const comment_date_cell = row.insertCell(2);
-        const comment_btn_cell = row.insertCell(3);
-        
-        row.align = "center";
-        comment_nickname_cell.innerText = comment[1];
-
-        comment_content_cell.align = "left";
-        comment_content_cell.innerText = comment[2];
-
-        comment_date_cell.align = "right";
-        comment_date_cell.innerText = comment[3]
-
-        comment_btn_cell.align = "center";
-
-        if (comment[4]){
-            const del_form = document.createElement('form');
-            del_form.setAttribute("onsubmit", "return sendDeleteComment(this)");
-            del_form.innerHTML = `
-            <input type="hidden" name="uid" value=${uid}>
-            <input type="hidden" name="aid" value=${aid}>
-            <input type="hidden" name="board" value=${board}>
-            <input type="hidden" name="cid" value=${comment[0]}>
-            <button class="del-btn comment-btn" type="submit">X</button>
-            `
-            comment_btn_cell.appendChild(del_form);
-        }
-        else
-            comment_btn_cell.innerHTML = '&nbsp;';
-    }
-}
-
-
 // 댓글 작성 리퀘스트
 function sendInsertComment(form) {
     try{
@@ -136,7 +94,7 @@ function sendInsertComment(form) {
         })
         .then(result => {
             if (result['result']){
-                commentBuilder(result['data'], uid_element.value, form.aid.value, form.board.value);
+                getComments(form.aid.value, form.board.value, uid_element.value);
                 document.getElementById( 'input-comment' ).value = "";
             }
             else if (signal){
@@ -164,9 +122,9 @@ function sendInsertComment(form) {
 // 댓글 삭제 리퀘스트
 function sendDeleteComment(form){
     try{
-        const uid = form.uid.value
+        const uid_element = form.uid
         
-        if (uid === undefined){
+        if (uid_element.value === undefined){
             alert("로그인이 필요한 작업입니다.");
     
             return false;
@@ -188,7 +146,7 @@ function sendDeleteComment(form){
         .then(result => {
             if (result['result']){
                 alert(result['msg']);
-                commentBuilder(result['data'], uid, form.aid.value, form.board.value);
+                getComments(form.aid.value, form.board.value, uid_element.value);
             }
             else if (signal){
                 signal = false;

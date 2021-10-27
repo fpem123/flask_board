@@ -46,6 +46,7 @@
                     </div>
                     
                     <div class="view-comment">
+                        <script>getComments('{{ aid }}', '{{ board }}', '{{ session.get("uid") }}');</script>
                         <table id="comments">
                             <caption>
                                 <h5>댓글 <label id="num-comments">{{ comments | length }}</label>개</h5>
@@ -56,33 +57,8 @@
                                 <col class="col-date">
                                 <col class="col-btn">
                             </colgroup>
-                            {% if comments %}
-                                <tbody>
-                                {% for cid, comment_nickname, comment, cdate_time, comment_id_flag in comments %}
-                                <tr align="center">
-                                    <td>{{ comment_nickname }}</td>
-                                    <td align="left">{{ comment }}</td>
-                                    <td align="right">{{ cdate_time }}</td>
-                                    {% if comment_id_flag %}
-                                    <td align="center">
-                                        <form  onsubmit="return sendDeleteComment(this)"> 
-                                            <input type="hidden" name="uid" value={{ session.get('uid') }}>
-                                            <input type="hidden" name="aid" value={{ aid }}>
-                                            <input type="hidden" name="board" value={{ board }}>
-                                            <input type="hidden" name="cid" value="{{ cid }}">
-                                            <button class="del-btn comment-btn" type="submit">X</button>
-                                        </form>
-                                    </td>
-                                    {% else %}
-                                    <td align="right">&nbsp;</td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-                                </tbody>
-                            {% else %}
-                                <tbody>
-                                </tbody>
-                            {% endif %}
+                            <tbody>
+                            </tbody>
                         </table>
                     </div>
 

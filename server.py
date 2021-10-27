@@ -512,7 +512,16 @@ def articleHit():
 ##############
 ## aid에 해당하는 댓글 정보 반환
 ##############
-def selectComment(aid, uid, board):
+@app.route('/comments/get', methods=['GET'])
+def getComment():
+    try:
+        aid = request.args['aid']          # 현재 페이지
+        board = request.args['board']
+
+        uid = request.args.get('uid', type=str, default=None)
+    except:
+        return makeReturnDict(False, '잘못된 리퀘스트 입니다.'), 400
+
     try:
         SELECT_ARTICLE_WRITER = """
             SELECT  user_id
@@ -540,15 +549,15 @@ def selectComment(aid, uid, board):
                     comment[1] = "작성자"
                 else:
                     comment[1] = "익명"
-            if uid == comment[4]:
+            if uid is not None and uid == comment[4]:
                 comment[4] = True
             else:
                 comment[4] = False
             comments[idx] = tuple(comment)
 
-        return comments
-    except Exception as e:
-        raise e
+        return makeReturnDict(True, '성공', comments), 200
+    except:
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -611,10 +620,9 @@ def commentCreateCall():
             )
         """
         sqliteObj.insertQuery(INSERT_COMMENT, (aid, request_uid, new_comment))
-        comments = selectComment(aid, request_uid, board)
         session['last_comment_write'] = datetime.now().timestamp()
 
-        return makeReturnDict(True, '댓글작성 성공.', comments), 200
+        return makeReturnDict(True, '성공.'), 200
     except Exception as e:
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
@@ -625,6 +633,7 @@ def commentCreateCall():
 @app.route('/comment/delete', methods=['POST'])
 def commentDeleteCall():
     try:
+        print(request.form)
         cid = request.form['cid']
         aid = request.form['aid']
         request_uid = request.form['uid']
@@ -660,9 +669,8 @@ def commentDeleteCall():
             WHERE   comment_id = ?
         """
         sqliteObj.deleteQuery(DELETE_COMMENT, (cid, ))
-        comments = selectComment(aid, request_uid, board)
 
-        return makeReturnDict(True, '댓글삭제 성공.', comments), 200
+        return makeReturnDict(True, '댓글삭제 성공.'), 200
     except Exception as e:
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
@@ -825,6 +833,11 @@ def getArticles(board, page, art_per_page, option, keyword):
         raise Exception('요청 처리 중 에러가 발생했습니다.')
 
 
+@app.route('/get/article', methods=['GET'])
+def getArticle():
+    pass
+
+
 ##############
 ## 글 페이지
 ##############
@@ -869,13 +882,12 @@ def acrticlePage():
             article = tuple(tmp)
 
         # 댓글 정보 반환
-        comments = selectComment(aid, session.get('uid'), board)
         articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
-        aid=aid, article=article, comments=comments, articles=articles, medias=False,
+        aid=aid, article=article, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword, 
         left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
     except Exception as e:
