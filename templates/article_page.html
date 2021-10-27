@@ -103,7 +103,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="btns">
+                    <div class="article-btns">
                         <button class="back-btn left-btn" type="button" onclick="location.href='{{ url_for('board', board=board, art_per_page=30) }}'">글목록</button>   
                         {% if session.get('uid') %}
                         <button class="right-btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>

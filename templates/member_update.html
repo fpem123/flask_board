@@ -23,26 +23,26 @@
                         <form method="POST" onsubmit="return sendUpdateUser(this)">
                             <input type="hidden" name="uid" value={{ session.get('uid') }}>
                             <div class="form-block">
-                                <p class="input-type-box"><span class="input-type">이전<br>비밀번호</span></p>
+                                <button class="input-type" type="button" onclick="document.getElementById('old_pwd').focus()">이전<br>비밀번호</button>
                                 <div class="input-block">
-                                    <input class="member-input" type="password" name="old_pwd" placeholder="PASSWORD" 
-                                    maxlength='16' onkeydown="return onKeydownEnter()">
+                                    <input class="member-input" type="password" name="old_pwd" id="old_pwd" 
+                                    placeholder="PASSWORD" maxlength='16' onkeydown="return onKeydownEnter()">
                                     <p>현재 비밀번호를 입력하세요.</p>
                             </div>
                             </div>
                             <div class="form-block">
-                                <p class="input-type-box"><span class="input-type">변경할<br>비밀번호</span></p>
+                                <button class="input-type" type="button" onclick="document.getElementById('new_pwd').focus()">변경할<br>비밀번호</button>
                                 <div class="input-block">
-                                    <input class="member-input" type="password" name="new_pwd" placeholder="PASSWORD" 
-                                maxlength='16' onkeydown="return onKeydownEnter()">
+                                    <input class="member-input" type="password" name="new_pwd" id="new_pwd" 
+                                    placeholder="PASSWORD" maxlength='16' onkeydown="return onKeydownEnter()">
                                     <p>띄어쓰기 없이 5~16자리의 영문과 숫자, !, @, #, $, %, ^, &만 가능합니다.</p>
                                 </div>
                             </div>
                             <div class="form-block">
-                                <p class="input-type-box"><span class="input-type">변경할<br>닉네임</span></p>
+                                <button class="input-type" type="button" onclick="document.getElementById('new_nickname').focus()">변경할<br>닉네임</button>
                                 <div class="input-block">
-                                    <input class="member-input" type="text" name="new_nickname" placeholder="NICKNAME" 
-                                maxlength='10' onkeydown="return onKeydownEnter()">
+                                    <input class="member-input" type="text" name="new_nickname" id="new_nickname" 
+                                    placeholder="NICKNAME" maxlength='10' onkeydown="return onKeydownEnter()">
                                     <p>띄어쓰기 없이 2~10자리의 영문과 숫자, 일부 특수문자만 가능합니다.</p>
                                 </div>
                             </div>
