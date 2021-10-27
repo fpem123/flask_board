@@ -39,6 +39,8 @@ function commentBuilder(comments, uid, aid, board) {
     }
 }
 
+
+// 댓글 가져오기
 function getComments(aid, board, uid=undefined) {
     const url = `/comments/get?aid=${aid}&board=${board}&uid=${uid}`;
 
@@ -55,3 +57,60 @@ function getComments(aid, board, uid=undefined) {
         console.log(err);
     });
 }
+
+
+// 글 정보 업데이트
+function articleReadBuilder(article) {
+    document.getElementById( "article-title" ).innerText = article["title"];
+    document.getElementById( "article-nickname" ).innerText = article["nickname"];
+    document.getElementById( "article-date" ).innerText = article["article_time"];
+    document.getElementById( "article-view" ).innerText = article["view"];
+    ckEditor.data.set(article["content"]);
+    for (let hit of document.getElementsByName( "hit" ))
+        hit.innerText = article["hit"];
+}
+
+
+// 글 가져오기 for article_read
+function getArticleForReadPage(aid, board) {
+    const url = `/article/get?aid=${aid}&board=${board}`;
+
+    fetch (url)
+    .then(response=>{
+        if (response.status === 200)
+            return response.json()
+    })
+    .then(result => {
+        if (result['result'])
+            articleReadBuilder(result['data']);
+    })
+    .catch(err => {
+        console.log(err);
+    });
+}
+
+
+// 글 정보 업데이트
+function articleUpdateBuilder(article) {
+    document.getElementById( "title" ).value = article["title"];
+    ckEditor.data.set(article["content"]);
+}
+
+// 글 가져오기 for article_update
+function getArticleForUpdatePage(aid, board) {
+    const url = `/article/get?aid=${aid}&board=${board}`;
+
+    fetch (url)
+    .then(response=>{
+        if (response.status === 200)
+            return response.json()
+    })
+    .then(result => {
+        if (result['result'])
+            articleUpdateBuilder(result['data']);
+    })
+    .catch(err => {
+        console.log(err);
+    });
+}
+

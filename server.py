@@ -633,7 +633,6 @@ def commentCreateCall():
 @app.route('/comment/delete', methods=['POST'])
 def commentDeleteCall():
     try:
-        print(request.form)
         cid = request.form['cid']
         aid = request.form['aid']
         request_uid = request.form['uid']
@@ -833,10 +832,38 @@ def getArticles(board, page, art_per_page, option, keyword):
         raise Exception('요청 처리 중 에러가 발생했습니다.')
 
 
-@app.route('/get/article', methods=['GET'])
+@app.route('/article/get', methods=['GET'])
 def getArticle():
-    pass
+    try:
+        aid = request.args['aid']
+        board = request.args['board']
+    except:
+        return makeReturnDict(False, '실패'), 400
 
+    try:
+        # 게시물 정보 반환
+        SELECT_ARTICLE= """
+            SELECT  distinct nickname, article_time, title, content, view, hit
+            FROM    article left join comment
+                    on article.article_id = comment.article_id
+                    left join user
+                    on article.user_id = user.user_id
+            WHERE   article.article_id = ?;
+        """
+        article = sqliteObj.selectQuery(SELECT_ARTICLE, (aid, ))[0]
+
+        tmp = list(article)
+        if board == 'anonymous':
+            tmp[0] = '익명'
+        if not article[0]:
+            tmp[0] = "(탈퇴한 유저)"
+        article = tuple(tmp)
+
+        article = dict(zip(('nickname', 'article_time', 'title', 'content', 'view', 'hit'), article))
+
+        return makeReturnDict(True, '성공', article), 200
+    except:
+        return makeReturnDict(False, '실패'), 500
 
 ##############
 ## 글 페이지
@@ -865,29 +892,12 @@ def acrticlePage():
         """
         sqliteObj.updateQuery(UPDATE_ARTICLE_VIEW, (aid, ))
 
-        # 게시물 정보 반환
-        SELECT_ARTICLE= """
-            SELECT  distinct article.user_id, nickname, article_time, title, content, view, hit
-            FROM    article left join comment
-                    on article.article_id = comment.article_id
-                    left join user
-                    on article.user_id = user.user_id
-            WHERE   article.article_id = ?;
-        """
-        article = sqliteObj.selectQuery(SELECT_ARTICLE, (aid, ))[0]
-
-        if not article[1]:
-            tmp = list(article)
-            tmp[1] = "(탈퇴한 유저)"
-            article = tuple(tmp)
-
-        # 댓글 정보 반환
         articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
-        aid=aid, article=article, articles=articles, medias=False,
+        aid=aid, articles=articles, medias=False,
         page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword, 
         left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
     except Exception as e:

@@ -19,29 +19,23 @@
                 </div>
                 <div class="frame-contents">
                     <div class="article">
-                        {% set article_uid, article_nickname, article_date, article_title, 
-                            article_content, article_view, article_hit = article %}
+                        <script>getArticleForReadPage('{{ aid }}', '{{ board }}');</script>
                         <div class="article-info">
                             <input type="hidden" id="aid" value='{{ aid }}'>
                             <ul>
-                                <li class="article-title">{{ article_title }}</li>
-                                {% if board == 'anonymous' %}
-                                <li class="article-info-1">익명 | {{ article_date }}</li>
-                                {% else %}
-                                <li class="article-info-1">{{ article_nickname }} | {{ article_date }}</li>
-                                {% endif %}
-                                <li class="article-info-2">조회수 {{ article_view }} | 추천 <label name="hit">{{ article_hit }}</label></li>
+                                <li class="article-title"><label id="article-title"></label></li>
+                                <li class="article-info-1"><label id="article-nickname"></label> | <label id="article-date"></label></li>
+                                <li class="article-info-2">조회수 <label id="article-view"></label> | 추천 <label name="hit"></label></li>
                             </ul>
                         </div>
                         <br>
                         <textarea id="content" rows="30" onkeydown="return onKeydownTap(this);">
-                            {{ article_content }}
                         </textarea>
                         <script>setCkeditorReadOnly()</script>
                         
 
                         <div align="center">
-                            <button class="hit-btn" onclick="return sendHit()">추천하기 (<label name="hit">{{ article_hit }}</label>)</button>
+                            <button class="hit-btn" onclick="return sendHit()">추천하기 (<label name="hit"></label>)</button>
                         </div>
                     </div>
                     
@@ -49,7 +43,7 @@
                         <script>getComments('{{ aid }}', '{{ board }}', '{{ session.get("uid") }}');</script>
                         <table id="comments">
                             <caption>
-                                <h5>댓글 <label id="num-comments">{{ comments | length }}</label>개</h5>
+                                <h5>댓글 <label id="num-comments"></label>개</h5>
                             </caption>
                             <colgroup>
                                 <col class="col-writer">
@@ -82,7 +76,6 @@
                         {% if session.get('uid') %}
                         <button class="right-btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
                         {% endif %}
-                        {% if session.get('uid') == article_uid %}
                         <form name="delete_article" action="{{ url_for('articleDalete', board=board) }}" method="post">
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <input type="hidden" name="aid" value="{{ aid }}">
@@ -93,7 +86,6 @@
                         </form>
                         <button class="right-btn del-btn" type="button" onclick="javascript:document.delete_article.submit();">삭제</button>
                         <button class="right-btn" type="button" onclick="javascript:document.update_article.submit();">수정</button>
-                        {% endif %}
                     </div>
                 </div>
                 
