@@ -20,7 +20,8 @@
                     <div class="member-frame-wrapper">
                         <form method="POST" onsubmit="return sendInsertUser(this)">
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('new_uid').focus()">아 이 디</button>
+                                <button class="input-type" type="button" tabindex="-1" 
+                                onclick="document.getElementById('new_uid').focus()">아 이 디</button>
                                 <div class="input-block">
                                     <input class="member-input" type="text" name="new_uid" id="new_uid"
                                     placeholder="ID" maxlength='16' onkeydown="if(event.keyCode==13) return false">
@@ -28,7 +29,8 @@
                                 </div>
                             </div>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('new_pwd').focus()">비밀번호</button>
+                                <button class="input-type" type="button" tabindex="-1" 
+                                onclick="document.getElementById('new_pwd').focus()">비밀번호</button>
                                 <div class="input-block">
                                     <input class="member-input" type="password" name="new_pwd" id="new_pwd"
                                     placeholder="PASSWORD" maxlength='16' onkeydown="if(event.keyCode==13) return false">
@@ -36,7 +38,8 @@
                                 </div>
                             </div>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('new_nickname').focus()">닉 네 임</button>
+                                <button class="input-type" type="button" tabindex="-1" 
+                                onclick="document.getElementById('new_nickname').focus()">닉 네 임</button>
                                 <div class="input-block">
                                     <input class="member-input" type="text" name="new_nickname" id="new_nickname"
                                     placeholder="NICKNAME" maxlength='10' onkeydown="if(event.keyCode==13) return false">

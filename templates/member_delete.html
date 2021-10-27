@@ -23,7 +23,8 @@
                         <form method="POST" onsubmit="return sendDeleteUser(this)">
                             <input type="hidden" name="uid" value={{ session.get('uid') }}>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('pwd').focus()">비밀번호</button>
+                                <button class="input-type" type="button" tabindex="-1"
+                                onclick="document.getElementById('pwd').focus()">비밀번호</button>
                                 <div class="input-block">
                                     <input class="member-input" type="password" name="pwd" id="pwd"
                                     placeholder="PASSWORD" maxlength='10'" onkeydown="return onKeydownEnter()">
@@ -31,7 +32,8 @@
                                 </div>
                             </div>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('confirm').focus()">확인문자</button>
+                                <button class="input-type" type="button" tabindex="-1"
+                                onclick="document.getElementById('confirm').focus()">확인문자</button>
                                 <div class="input-block">
                                     <input class="member-input" type="text" name="confirm" id="confirm"
                                     placeholder="탈퇴합니다" maxlength='5' onkeydown="return onKeydownEnter()">

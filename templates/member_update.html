@@ -23,7 +23,8 @@
                         <form method="POST" onsubmit="return sendUpdateUser(this)">
                             <input type="hidden" name="uid" value={{ session.get('uid') }}>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('old_pwd').focus()">이전<br>비밀번호</button>
+                                <button class="input-type" type="button" tabindex="-1" 
+                                onclick="document.getElementById('old_pwd').focus()">이전<br>비밀번호</button>
                                 <div class="input-block">
                                     <input class="member-input" type="password" name="old_pwd" id="old_pwd" 
                                     placeholder="PASSWORD" maxlength='16' onkeydown="return onKeydownEnter()">
@@ -31,7 +32,8 @@
                             </div>
                             </div>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('new_pwd').focus()">변경할<br>비밀번호</button>
+                                <button class="input-type" type="button" tabindex="-1" 
+                                onclick="document.getElementById('new_pwd').focus()">변경할<br>비밀번호</button>
                                 <div class="input-block">
                                     <input class="member-input" type="password" name="new_pwd" id="new_pwd" 
                                     placeholder="PASSWORD" maxlength='16' onkeydown="return onKeydownEnter()">
@@ -39,7 +41,8 @@
                                 </div>
                             </div>
                             <div class="form-block">
-                                <button class="input-type" type="button" onclick="document.getElementById('new_nickname').focus()">변경할<br>닉네임</button>
+                                <button class="input-type" type="button" tabindex="-1"
+                                onclick="document.getElementById('new_nickname').focus()">변경할<br>닉네임</button>
                                 <div class="input-block">
                                     <input class="member-input" type="text" name="new_nickname" id="new_nickname" 
                                     placeholder="NICKNAME" maxlength='10' onkeydown="return onKeydownEnter()">
