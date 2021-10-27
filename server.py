@@ -558,12 +558,12 @@ def commentCreateCall():
     try:
         request_uid = request.form['uid']
         aid = request.form['aid']
-        comment = escape(request.form['input_comment'])
+        new_comment = escape(request.form['input_comment'])
         board = request.form['board']
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
-    if len(comment) == 0:
+    if len(new_comment) == 0:
         return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
     elif boardObj.isNotAllowBoard(board):
         return makeReturnDict(False, '존재하지 않는 게시판입니다.'), 400
@@ -573,10 +573,30 @@ def commentCreateCall():
         return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'),400
     elif not isExistUser(request_uid):
         return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
-    elif datetime.now().timestamp() - session.get('last_comment_write') < 3:
+    elif datetime.now().timestamp() - session.get('last_comment_write') < 1:
         return makeReturnDict(False, '도배 방지.'), 400
 
     try:
+        # 기존 댓글 정보 가져오기
+        SELECT_COMMENTS = """
+            SELECT  user_id, comment_time
+            FROM    comment
+            WHERE   article_id = ?
+            ORDER BY comment_id DESC
+            LIMIT 3;
+        """
+        comments = sqliteObj.selectQuery(SELECT_COMMENTS, (aid, ))
+
+        # 같은 글에 10초 안에 연속 4번으로 댓글 작성 방지
+        if len(comments) == 3:
+            time_diff_sum = 0
+            for idx in range(2):
+                time_diff_sum += datetime.strptime(comments[idx][1], '%Y-%m-%d %H:%M:%S').timestamp() \
+                    - datetime.strptime(comments[idx + 1][1], '%Y-%m-%d %H:%M:%S').timestamp()
+            time_diff_sum += datetime.now().timestamp() - datetime.strptime(comments[2][1], '%Y-%m-%d %H:%M:%S').timestamp()
+            if time_diff_sum < 10 and len(set(map(lambda x: x[0], comments))) == 1:
+                return makeReturnDict(False, '도배 방지.'), 400
+
         # 댓글 정보 추가
         INSERT_COMMENT = """
             INSERT INTO comment (
@@ -589,12 +609,13 @@ def commentCreateCall():
                 ?
             )
         """
-        sqliteObj.insertQuery(INSERT_COMMENT, (aid, request_uid, comment))
+        sqliteObj.insertQuery(INSERT_COMMENT, (aid, request_uid, new_comment))
         comments = selectComment(aid, request_uid, board)
         session['last_comment_write'] = datetime.now().timestamp()
 
         return makeReturnDict(True, '댓글작성 성공.', comments), 200
     except Exception as e:
+        print(e)
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
     
 

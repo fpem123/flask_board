@@ -94,8 +94,7 @@
                             <input type="hidden" name="uid" value={{ session.get('uid') }}>
                             <input type="hidden" name="aid" value={{ aid }}>
                             <input type="hidden" name="board" value={{ board }}>
-                            <input onkeydown="if(event.keyCode==13) return sendInsertComment('{{ board }}')" type="text" 
-                            id="input-comment" name="input_comment"></textarea>
+                            <input type="text" id="input-comment" name="input_comment"></textarea>
                             <button class="write-btn" type="submit">댓글 달기</button>
                         </form>
                         {% else %}
