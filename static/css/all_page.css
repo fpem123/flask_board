@@ -20,6 +20,7 @@ header {
 }
 
 input {
+    padding: 0em 0.5em;
     height: 2.5em;
 }
 
@@ -55,8 +56,16 @@ footer {
     float: right;
     margin-left: 1.5em;
 }
+
 .del-btn {
     background-color: #DB0000;
+}
+
+.back-btn {
+    background-color: white;
+    border: medium solid cornflowerblue;
+    color: black;
+}
 }
 
 .btns {

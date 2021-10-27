@@ -46,12 +46,12 @@ div.view-comment {
 #comments {
     width: 95%;
     margin: 2em auto 2em auto;
-    border-top: 0.25em dashed darkgrey;
-    border-bottom: 0.25em dashed darkgrey;
+    border-top: thick dashed darkgrey;
+    border-bottom: thick dashed darkgrey;
 }
 
 #comments>tbody>tr {
-    border-bottom: 0.1em solid lightgrey;
+    border-bottom: thin solid lightgrey;
 }
  
 #comments>tbody>tr:last-child {

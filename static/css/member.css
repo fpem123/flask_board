@@ -1,1 +1,37 @@
 /* 로그인을 제외한 회원 작업에서 사용하는 css */
+.member-frame-wrapper {
+    margin: 0em auto 3em auto;
+    padding: 3em 1em;
+    width: 75%;
+}
+
+p.page-explain {
+    font-size: 1.1em;
+}
+
+.form-block {
+    margin: 2em 0em;
+    height: 5em;
+    display: flex;
+}
+
+.input-type-box {
+    margin-right: 1em;
+    width: 5em;
+    background-color: #3498DB;
+    font-weight: bold;
+    color: white;
+    text-align: center;
+    border-radius: 0.15em;
+}
+
+.input-type {
+    position: relative;
+    top: 35%;
+}
+
+input.member-input {
+    width: 20em;
+    margin-bottom: 1em;
+}
+

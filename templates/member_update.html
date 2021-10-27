@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        <link href="{{ url_for('static', filename='css/member.css') }}" rel="stylesheet">
     </head>
 
     <body>
@@ -16,39 +17,49 @@
 
                 <div class="frame-contents">
                     {% if session.get("uid") %}
-                    <p>
-                        <h4>규 칙</h4>
-                        <label>아이디 변경은 불가능합니다.</label><br>
-                        <label>이전 비밀번호는 필수로 입력해야하며, 비밀번호와 닉네임 중 변경을 원하시는 항목만 작성하시면 됩니다.</label><br>
-                        <label>비밀번호는 5 ~ 16 글자여야 하며 영문과 숫자, !, @, #, $, %, ^, & 만 가능합니다.</label><br>
-                        <label>닉네임은 2 ~ 10 글자여야 하며 공백과 ', " 는 사용 불가능합니다.</label><br>
-                    </p>
-                    
-                    <br>
+                    <div class="member-frame-wrapper">
+                        <p class="page-explain">아이디는 변경이 불가능합니다.</p>
 
-                    <form method="POST" onsubmit="return sendUpdateUser(this)">
-                        <input type="hidden" name="uid" value={{ session.get('uid') }}>
-                        <label>이전 비밀번호 : </label><input type="password" name="old_pwd" placeholder="PASSWORD" 
-                        maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-                        <br><br>
-                        <label>변경 비밀번호 : </label><input type="password" name="new_pwd" placeholder="PASSWORD" 
-                        maxlength='16' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-                        <br><br>
-                        <label>변경할 닉네임 : </label><input type="text" name="new_nickname" placeholder="닉네임" 
-                        maxlength='10' style="width:200px; height:20px;" onkeydown="return onKeydownEnter()">
-                        <br><br>
-                        <button type="submit">정보 변경</button>
-                    </form>
-                    <br>
-                    <p>회원탈퇴페이지는 아래 버튼을 클릭하세요.</p>
-                    <button class="del-btn" onclick="location.href='{{ url_for('memberDelete') }}'">탈퇴하기</button>
+                        <form method="POST" onsubmit="return sendUpdateUser(this)">
+                            <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                            <div class="form-block">
+                                <p class="input-type-box"><span class="input-type">이전<br>비밀번호</span></p>
+                                <div class="input-block">
+                                    <input class="member-input" type="password" name="old_pwd" placeholder="PASSWORD" 
+                                    maxlength='16' onkeydown="return onKeydownEnter()">
+                                    <p>현재 비밀번호를 입력하세요.</p>
+                            </div>
+                            </div>
+                            <div class="form-block">
+                                <p class="input-type-box"><span class="input-type">변경할<br>비밀번호</span></p>
+                                <div class="input-block">
+                                    <input class="member-input" type="password" name="new_pwd" placeholder="PASSWORD" 
+                                maxlength='16' onkeydown="return onKeydownEnter()">
+                                    <p>띄어쓰기 없이 5~16자리의 영문과 숫자, !, @, #, $, %, ^, &만 가능합니다.</p>
+                                </div>
+                            </div>
+                            <div class="form-block">
+                                <p class="input-type-box"><span class="input-type">변경할<br>닉네임</span></p>
+                                <div class="input-block">
+                                    <input class="member-input" type="text" name="new_nickname" placeholder="NICKNAME" 
+                                maxlength='10' onkeydown="return onKeydownEnter()">
+                                    <p>띄어쓰기 없이 2~10자리의 영문과 숫자, 일부 특수문자만 가능합니다.</p>
+                                </div>
+                            </div>
+                            <div class='btns'>
+                                <button class="left-btn back-btn" type="button" onclick="javascript:history.back()">취소</button>
+                                <button class="left-btn del-btn" type="button" class="del-btn" onclick="location.href='{{ url_for('memberDelete') }}'">탈퇴하기</button>
+                                <button class="right-btn" type="submit">정보 변경</button>
+                            </div>
+                        </form>
+                    </div>
                     {% else %}
                     <div class="errMsg" align="center">
                         비회원은 할 수 없는 작업입니다.
                     </div>
     
                     <div class="btns" align="center">
-                        <button onclick="javascript:history.back()">뒤로가기</button>
+                        <button class="back-btn" onclick="javascript:history.back()">뒤로가기</button>
                     </div>
                     {% endif %}
                 </div>
