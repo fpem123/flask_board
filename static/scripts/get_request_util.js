@@ -60,14 +60,18 @@ function getComments(aid, board, uid=undefined) {
 
 
 // 글 정보 업데이트
-function articleReadBuilder(article) {
+function articleReadBuilder(article, aid) {
     document.getElementById( "article-title" ).innerText = article["title"];
     document.getElementById( "article-nickname" ).innerText = article["nickname"];
+    document.getElementById( "article-id" ).innerText = aid;
     document.getElementById( "article-date" ).innerText = article["article_time"];
     document.getElementById( "article-view" ).innerText = article["view"];
     ckEditor.data.set(article["content"]);
     for (let hit of document.getElementsByName( "hit" ))
         hit.innerText = article["hit"];
+    if (article["flag"])
+        for (let flag_need of document.getElementsByClassName( "flag-need" ))
+            flag_need.style.display = "block";
 }
 
 
@@ -82,7 +86,7 @@ function getArticleForReadPage(aid, board) {
     })
     .then(result => {
         if (result['result'])
-            articleReadBuilder(result['data']);
+            articleReadBuilder(result['data'], aid);
     })
     .catch(err => {
         console.log(err);
@@ -95,6 +99,7 @@ function articleUpdateBuilder(article) {
     document.getElementById( "title" ).value = article["title"];
     ckEditor.data.set(article["content"]);
 }
+
 
 // 글 가져오기 for article_update
 function getArticleForUpdatePage(aid, board) {

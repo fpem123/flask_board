@@ -72,6 +72,11 @@ footer {
     margin: 1em 0em 1em 0em;
 }
 
+.flag-need {
+    display: none;
+}
+
+
 /* 게시판 로고 */
 .logo {
     font-size: 2.0em;

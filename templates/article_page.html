@@ -25,7 +25,7 @@
                             <ul>
                                 <li class="article-title"><label id="article-title"></label></li>
                                 <li class="article-info-1"><label id="article-nickname"></label> | <label id="article-date"></label></li>
-                                <li class="article-info-2">조회수 <label id="article-view"></label> | 추천 <label name="hit"></label></li>
+                                <li class="article-info-2">번호 <label id="article-id"></label> | 조회수 <label id="article-view"></label> | 추천 <label name="hit"></label></li>
                             </ul>
                         </div>
                         <br>
@@ -84,8 +84,8 @@
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <input type="hidden" name="aid" value="{{ aid }}">
                         </form>
-                        <button class="right-btn del-btn" type="button" onclick="javascript:document.delete_article.submit();">삭제</button>
-                        <button class="right-btn" type="button" onclick="javascript:document.update_article.submit();">수정</button>
+                        <button class="right-btn del-btn flag-need" type="button" onclick="javascript:document.delete_article.submit();">삭제</button>
+                        <button class="right-btn flag-need" type="button" onclick="javascript:document.update_article.submit();">수정</button>
                     </div>
                 </div>
                 

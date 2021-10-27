@@ -843,7 +843,7 @@ def getArticle():
     try:
         # 게시물 정보 반환
         SELECT_ARTICLE= """
-            SELECT  distinct nickname, article_time, title, content, view, hit
+            SELECT  distinct nickname, article_time, title, content, view, hit, user.user_id
             FROM    article left join comment
                     on article.article_id = comment.article_id
                     left join user
@@ -857,13 +857,18 @@ def getArticle():
             tmp[0] = '익명'
         if not article[0]:
             tmp[0] = "(탈퇴한 유저)"
+        if article[6] == session.get('uid'):
+            tmp[6] = True
+        else:
+            tmp[6] = False
         article = tuple(tmp)
-
-        article = dict(zip(('nickname', 'article_time', 'title', 'content', 'view', 'hit'), article))
+        article = dict(zip(('nickname', 'article_time', 'title', 'content', 'view', 'hit', 'flag'), article))
 
         return makeReturnDict(True, '성공', article), 200
-    except:
+    except Exception as e:
+        print(e)
         return makeReturnDict(False, '실패'), 500
+
 
 ##############
 ## 글 페이지
@@ -946,18 +951,18 @@ def acrticleUpdate():
 
     try:
         # 게시물 정보 획득 획득
-        SELECT_ARTICLE_INFO = """
-            SELECT  title, content, user_id
+        SELECT_ARTICLE_WRITER = """
+            SELECT  user_id
             FROM    article
             WHERE   article_id = ?;
         """
-        title, content, user_id = sqliteObj.selectQuery(SELECT_ARTICLE_INFO, (aid, ))[0]
+        user_id = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
         if user_id != request_uid:
             return errorPage(3)
 
         return render_template('article_update.html', board=board, board_name=boardObj.get_board_name(board), 
-        aid=aid, title=title, content=content, boards=boardObj.get_board_dict()), 200
+        aid=aid, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
