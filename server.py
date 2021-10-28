@@ -1274,6 +1274,37 @@ def adminBoard():
 
 
 ##############
+## 메인 페이지를 장식하기 위한 게시물 가져오기 리퀘스트
+##############
+@app.route('/get/main', methods=['GET'])
+def mainGetArticles():
+    try:
+        SELECT_ARTICLE_10 = """
+            SELECT  article.article_id, title, count(comment_id) as num_comment
+            FROM    article 
+                    left join comment
+                    on article.article_id = comment.article_id
+            WHERE	board = ?
+            GROUP BY article.article_id
+            LIMIT	10
+        """
+        data = {}
+        for board in boardObj.get_board_dict():
+            top10 = sqliteObj.selectQuery(SELECT_ARTICLE_10, (board, ))
+
+            for idx, article in enumerate(top10):
+                if len(article[1]) > 15:
+                    article = list(article)
+                    article[1] = article[1][:15] + "..."
+                    top10[idx] = tuple(article)
+
+            data[board] = top10
+        return makeReturnDict(True, 'success', data), 200
+    except Exception as e:
+        return makeReturnDict(False, 'fail'), 500
+
+
+##############
 ## 메인 페이지
 ##############
 @app.route('/')

@@ -40,10 +40,16 @@ button {
     font-weight: bold;
     color: white;
     background-color: #3498DB;
+    cursor: pointer;
 }
 
 footer {
     background-color: #34495E;
+}
+
+ul, li{
+    list-style:none;
+    padding-left:0px;
 }
 
 .left-btn {

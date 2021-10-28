@@ -1,1 +1,40 @@
 /* 메인 페이지에서 사용하는 css */
+.boards-frame {
+    display: grid;
+    width: 90%;
+    margin: 2em auto;
+    text-align: center;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 22em 22em;
+}
+
+.name-block {
+    background-color: #34495E;
+    font-size: 1.25em;
+    font-weight: bolder;
+    padding: 0.5em 0em;
+}
+
+.board-name {
+    color: whitesmoke;
+}
+
+
+.board-block {
+    margin: 0em auto;
+    width: 95%;
+}
+
+.article-block {
+    text-align: left;
+    padding: 0.5em;
+}
+
+li.title-block {
+    margin: 0em 0em 0.35em 0em;
+}
+
+.num-comment {
+    font-size: 0.9em;
+    color: grey;
+}

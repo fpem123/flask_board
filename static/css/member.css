@@ -24,6 +24,7 @@ p.page-explain {
     color: white;
     text-align: center;
     border-radius: 0.15em;
+    cursor: default;
 }
 
 input.member-input {

@@ -35,6 +35,7 @@ function sendDeleteArticleForAdmin(form){
     }
 }
 
+
 // 페이징을 위한 li 생성
 function mkPagingLiForAdmin(uid, page, current_page, query, char){
     const paging_li = document.createElement( "li" );

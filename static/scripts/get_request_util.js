@@ -236,3 +236,40 @@ function getArticles(board, aid=undefined, page=undefined, art_per_page=undefine
     });
 }
 
+
+// 메인 페이지 상태 업데이트
+function mainPageBuilder(data){
+    for (const board in data) {
+        const board_articles = document.getElementById( `${board}-articles` );
+        for (const article of data[board]) {
+            const article_li = document.createElement( 'li' );
+            const article_anchor = document.createElement('a');
+            article_li.className = "title-block";
+            article_anchor.href = `/board/view?board=${board}&aid=${article[0]}`;
+            article_anchor.className = "to-article";
+            article_anchor.innerHTML = `${article[1]}<label class="num-comment">[${article[2]}]</label>`;
+            
+            article_li.appendChild(article_anchor);
+            board_articles.appendChild(article_li);
+        }
+    }
+}
+
+
+// 메인 페이지 게시판당 게시글 10개 씩 가져오기
+function getMainArticles(){
+    const url = `/get/main`;
+    
+    fetch (url)
+    .then(response=>{
+        if (response.status === 200)
+            return response.json();
+    })
+    .then(result => {
+        if (result['result'])
+            mainPageBuilder(result['data']);
+    })
+    .catch(err => {
+        console.log(err);
+    });
+}

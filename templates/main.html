@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        <link href="{{ url_for('static', filename='css/main_page.css') }}" rel="stylesheet">
     </head>
 
     <body>
@@ -15,11 +16,20 @@
                 </div>
 
                 <div class="frame-contents">
+                    <script>getMainArticles()</script>
+                    <div class="boards-frame">
                     {% for board, name in boards.items() %}
-                        <div class="board-{{ board }}">
-                            <h4><a href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a></h4>
+                        {% if board != 'all' %}
+                        <div class="board-block">
+                            <ul>
+                                <li class="name-block"><a class="board-name" href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a></li>
+                                <ul id="{{ board }}-articles" class="article-block">
+                                </ul>
+                            </ul>
                         </div>
+                        {% endif %}
                     {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
