@@ -76,16 +76,16 @@
                         {% if session.get('uid') %}
                         <button class="right-btn need-board-check" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
                         {% endif %}
-                        <form name="delete_article" action="{{ url_for('articleDalete', board=board) }}" method="post">
+                        <form name="delete_article" onsubmit="return sendDeleteArticle(this, '{{ board }}')" method="POST">
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <input type="hidden" name="aid" value="{{ aid }}">
+                            <button class="right-btn del-btn flag-need" type="submit">삭제</button>
                         </form>
-                        <form name="update_article" action="{{ url_for('acrticleUpdate', board=board) }}" method="post">
+                        <form name="update_article" action="{{ url_for('acrticleUpdate', board=board) }}" method="POST">
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <input type="hidden" name="aid" value="{{ aid }}">
+                            <button class="right-btn flag-need" type="submit">수정</button>
                         </form>
-                        <button class="right-btn del-btn flag-need" type="button" onclick="javascript:document.delete_article.submit();">삭제</button>
-                        <button class="right-btn flag-need" type="button" onclick="javascript:document.update_article.submit();">수정</button>
                     </div>
                 </div>
                 

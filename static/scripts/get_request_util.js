@@ -73,9 +73,6 @@ function articleReadBuilder(article, aid, board) {
     if (article["flag"])
         for (let flag_need of document.getElementsByClassName( "flag-need" ))
             flag_need.style.display = "block";
-    if (board == 'all')
-        for (let board_check of document.getElementsByClassName( "need-board-check" ))
-            board_check.style.display = "none";
 }
 
 
@@ -145,6 +142,10 @@ function boardBuilder(data, board, search_data) {
     table.removeChild(table.getElementsByTagName("tbody")[0]);
     table.appendChild(document.createElement('tbody'))
     msg_block.style.display = "none";
+    
+    if (board == 'all')
+        for (let board_check of document.getElementsByClassName( "need-board-check" ))
+            board_check.style.display = "none";
 
     if (data['articles'].length === 0){
         msg_block.style.display = "block";

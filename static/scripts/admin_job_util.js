@@ -1,3 +1,40 @@
+function sendDeleteArticleForAdmin(form){
+    try{
+        const uid_element = form.uid;
+        const board = form.board.value;
+
+        if (uid_element.value === undefined){
+            alert("로그인이 필요한 작업입니다.");
+    
+            return false;
+        }
+        
+        const formData = new FormData(form);
+        const url = `/delete/article?board=${board}`;
+
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (response.status === 200)
+                return response.json()
+        })
+        .then(result => {
+            console.log(result);
+            alert('삭제 성공');
+            window.location.reload();
+        })
+        .catch(err => {
+            alert('삭제 실패');
+            console.log(err);
+        });
+        return false;
+    }
+    catch(err){
+        console.log(err)
+        alert("에러가 발생했습니다.");
+        return false;
+    }
+}
+
 // 페이징을 위한 li 생성
 function mkPagingLiForAdmin(uid, page, current_page, query, char){
     const paging_li = document.createElement( "li" );
@@ -38,6 +75,9 @@ function boardBuilderForAdmin(data, uid, board, search_data) {
     table.appendChild(document.createElement('tbody'))
     msg_block.style.display = "none";
 
+    for (let board_check of document.getElementsByClassName( "need-board-check" ))
+        board_check.style.display = "none";
+
     if (data['articles'].length === 0){
         msg_block.style.display = "block";
         msg_block.innerText = "작성된 글이 없습니다.";
@@ -51,7 +91,7 @@ function boardBuilderForAdmin(data, uid, board, search_data) {
         const article_date_cell = row.insertCell(3);
         const article_view_cell = row.insertCell(4);
         const article_hit_cell = row.insertCell(5);
-        const article_del_btn_cell = row.insertCell(5);
+        const article_del_btn_cell = row.insertCell(6);
         
         row.align = "center";
 
@@ -71,6 +111,16 @@ function boardBuilderForAdmin(data, uid, board, search_data) {
         article_date_cell.innerText = article[3];
         article_view_cell.innerText = article[4];
         article_hit_cell.innerText = article[5];
+        
+        const del_form = document.createElement('form');
+        del_form.setAttribute("onsubmit", "return sendDeleteArticleForAdmin(this)");
+        del_form.innerHTML = `
+            <input type="hidden" name="uid" value=${uid}>
+            <input type="hidden" name="aid" value=${article[0]}>
+            <input type="hidden" name="board" value=${article[7]}>
+            <button class="del-btn article-del-btn" type="submit">X</button>
+            `
+        article_del_btn_cell.appendChild(del_form);
     }
 
     // 페이징 상태 업데이트

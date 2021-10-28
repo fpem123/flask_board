@@ -708,6 +708,8 @@ def articleCreate():
 
     if boardObj.isNotAllowBoard(board):
         return errorPage(0)
+    elif board == 'etc':
+        return errorPage(msg="해당 게시판은 글을 작성할 수 없습니다.")
     elif not isLogin():
         return errorPage(4)
 
@@ -1066,24 +1068,24 @@ def acrticleUpdateCall():
 ##############
 ## 글 삭제 페이지
 ##############
-@app.route('/board/delete', methods=['POST'])
+@app.route('/delete/article', methods=['POST'])
 def articleDalete():
     try:
         board = request.args.get('board', type=str)
-        
+
         request_uid = request.form['uid']     # 삭제 요청자
         aid = request.form['aid']
     except Exception as e:
-        return errorPage(2), 400
+        return makeReturnDict(False, '실패'), 400
 
     if boardObj.isNotAllowBoard(board):
-        return errorPage(0), 400
+        return makeReturnDict(False, '실패'), 400
     elif not isLogin():
-        return errorPage(4), 400
+        return makeReturnDict(False, '실패'), 400
     elif not isSessionUser(request_uid):
-        return errorPage(5), 400
+        return makeReturnDict(False, '실패'), 400
     elif not isExistUser(request_uid):
-        return errorPage(2), 400
+        return makeReturnDict(False, '실패'), 400
 
     # 글 삭제
     try:
@@ -1096,24 +1098,25 @@ def articleDalete():
 
         # 어드민은 삭제가능
         if writer != request_uid and not isAdmin(request_uid):
-            return errorPage(2), 400
+            return errorPage(2)
 
         DELETE_ARTIECLE = f"""
             DELETE
             FROM article
             WHERE article_id = ?;
         """
-        sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, )), 200
+        sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, ))
 
-        return redirect(url_for('articleDaleteDone', board=board))
+
+        return makeReturnDict(True, '성공', board), 200
     except Exception as e:
-        return errorPage(1), 500
+        return makeReturnDict(False, '실패'), 500
 
 
 ##############
 ## 글 삭제 완료 페이지
 ##############
-@app.route('/board/delete_submit')
+@app.route('/board/delete')
 def articleDaleteDone():
     try:
         board = request.args.get('board', type=str)

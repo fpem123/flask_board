@@ -45,14 +45,20 @@
     border-bottom: none;
 }
 
-.origin-board{
+.origin-board {
     color: gray;
 }
 
-.num-comment{
+.num-comment {
     font-size:0.9em; 
     color: gray;
 }
+
+.article-del-btn {
+    height: 2em;
+    width: 2em;
+}
+
 
 /* 게시판 테이블 아랫부분 */
 .board-bottom {

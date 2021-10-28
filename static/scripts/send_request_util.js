@@ -59,6 +59,45 @@ function sendHit(){
 }
 
 
+// 글 삭제 리퀘스트
+function sendDeleteArticle(form, board) {
+    try{
+        const uid_element = form.uid;
+
+        if (uid_element.value === undefined){
+            alert("로그인이 필요한 작업입니다.");
+    
+            return false;
+        }
+        
+        const formData = new FormData(form);
+        const url = `/delete/article?board=${board}`;
+
+        formData.append('json_return', true)
+
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (response.status === 200)
+                return response.json()
+        })
+        .then(result => {
+            if (result['result'])
+                window.location.replace(`/board/delete?board=${board}`);
+        })
+        .catch(err => {
+            console.log(err);
+            alert("삭제 실패");
+        });
+        return false;
+    }
+    catch(err){
+        console.log(err)
+        alert("에러가 발생했습니다.");
+        return false;
+    }
+}
+
+
 // 댓글 작성 리퀘스트
 function sendInsertComment(form) {
     try{
@@ -119,6 +158,7 @@ function sendInsertComment(form) {
     }
 }
 
+
 // 댓글 삭제 리퀘스트
 function sendDeleteComment(form){
     try{
@@ -168,6 +208,7 @@ function sendDeleteComment(form){
         return false;
     }
 }
+
 
 // 회원 가입 리퀘스트
 function sendInsertUser(form) {
@@ -253,6 +294,7 @@ function sendInsertUser(form) {
     }
 }
 
+
 // 로그인 리퀘스트
 function sendLoginUser(form) {
     if (!isUIDEmpty()){
@@ -327,6 +369,7 @@ function sendLoginUser(form) {
     }
 }
 
+
 // 로그아웃 리퀘스트
 function sendLogoutUser(button) {
     const uid = button.value;
@@ -367,6 +410,7 @@ function sendLogoutUser(button) {
         }
     });
 }
+
 
 // 회원 정보 수정 리퀘스트
 function sendUpdateUser(form) {
@@ -445,6 +489,7 @@ function sendUpdateUser(form) {
         return false;
     }
 }
+
 
 // 회원 탈퇴 리퀘스트
 function sendDeleteUser(form) {
