@@ -534,11 +534,20 @@ def getComment():
         SELECT_COMMENTS = """
             SELECT  comment_id, nickname, comment, comment_time, user.user_id
             FROM    comment left join user
-                    on comment.user_id = user.user_id
-            WHERE   article_id = ?
-            ORDER BY comment_id ASC;
+                    on comment.user_id = user.user_id left join article
+		            on comment.article_id = article.article_id
+            WHERE   comment.article_id = ? 
         """
-        comments = sqliteObj.selectQuery(SELECT_COMMENTS, (aid, ))
+        data = [aid,]
+
+        # 익명 게시판 작성자 유출 방지
+        if board != 'all':
+            SELECT_COMMENTS += "and article.board = ? "
+            data.append(board)
+        
+        SELECT_COMMENTS += "ORDER BY comment_id ASC"
+
+        comments = sqliteObj.selectQuery(SELECT_COMMENTS, data)
 
         for idx, comment in enumerate(comments):
             comment = list(comment)
@@ -791,9 +800,23 @@ def getArticles(board, page, art_per_page, option, keyword):
     try:
         page_length = 10
 
+        # 게시물 가져오기
         SELECT_ARTICLE, data = boardQueryBuilder(board, option, keyword)
+        data.extend([1 + art_per_page * (page - 1), art_per_page * page])
         articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
-        a_cnt = len(articles)                       # 전체 글의 개수
+        # 게시판 전체 글 개수 가져오기
+        SELECT_BOARD_SIZE = """
+            SELECT  count(*)
+            FROM    article
+        """
+        data = []
+        if board == 'all':
+            SELECT_BOARD_SIZE += "WHERE	board != 'anonymous'"
+        else:
+            SELECT_BOARD_SIZE += "WHERE	board = ?"
+            data.append(board)
+
+        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_SIZE, data)[0][0]    # 전체 글의 개수
         p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
 
         if page < 1:
@@ -803,7 +826,6 @@ def getArticles(board, page, art_per_page, option, keyword):
 
         page -= 1
         tmp = page * art_per_page
-        articles = articles[tmp:min(tmp + art_per_page, a_cnt)]     # 한 페이지에 보여줄 수 있는 게시물들만
         start = (page // page_length) * page_length + 1               # 페이징 시작점
         end = min((page // page_length + 1) * page_length, p_cnt) + 1 # 페이징 끝점
         
@@ -848,9 +870,15 @@ def getArticle():
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
-            WHERE   article.article_id = ?;
+            WHERE   article.article_id = ?
         """
-        article = sqliteObj.selectQuery(SELECT_ARTICLE, (aid, ))[0]
+        data = [aid,]
+        # 익명 게시판 작성자 유출 방지
+        if board != "all":
+            SELECT_ARTICLE += " and board = ?"
+            data.append(board)
+
+        article = sqliteObj.selectQuery(SELECT_ARTICLE, data)[0]
 
         tmp = list(article)
         if board == 'anonymous':
@@ -866,7 +894,6 @@ def getArticle():
 
         return makeReturnDict(True, '성공', article), 200
     except Exception as e:
-        print(e)
         return makeReturnDict(False, '실패'), 500
 
 
@@ -902,9 +929,8 @@ def acrticlePage():
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
-        aid=aid, articles=articles, medias=False,
-        page=page, start=start, end=end, isSearch=isSearch, option=option, keyword=keyword, 
-        left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
+        aid=aid, articles=articles, page=page, start=start, end=end, isSearch=isSearch, option=option, 
+        keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
@@ -1113,6 +1139,7 @@ def board():
         option=option, keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow,
         boards=boardObj.get_board_dict()), 200
     except Exception as e:
+        print(e)
         return errorPage(1)
 
 
@@ -1123,8 +1150,10 @@ def board():
 def boardQueryBuilder(board, option, keyword) -> str:
     try:
         query = """
-            SELECT  article.article_id, nickname, title, article_time, view, hit, count(comment_id)
-            FROM    article left join comment
+            SELECT  ROW_NUMBER() OVER(ORDER BY article.article_id DESC) as row_num, article.article_id, 
+				    nickname, title, article_time, view, hit, count(comment_id) as num_comment
+            FROM    article 
+                    left join comment
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
@@ -1133,9 +1162,6 @@ def boardQueryBuilder(board, option, keyword) -> str:
 
         if board == 'all':
             query += "board != 'anonymous'"
-            data = []
-        elif board == 'admin':
-            query += "1=1"
             data = []
         else:
             query += "board=?"
@@ -1164,9 +1190,19 @@ def boardQueryBuilder(board, option, keyword) -> str:
         
         query += """
         GROUP BY article.article_id
-        ORDER BY article.article_id DESC;
         """
-        return query, tuple(data)
+
+        query = """
+            SELECT  article_id, nickname, title, article_time, view, hit, num_comment
+            FROM	(
+        """     \
+        + query \
+        + """
+            )
+            WHERE row_num BETWEEN ? and ?
+            ORDER BY row_num ASC;
+        """
+        return query, data
     except Exception as e:
         raise Exception("DB 확인 중 에러가 발생했습니다.")
 
