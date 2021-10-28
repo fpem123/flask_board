@@ -5,7 +5,7 @@
         <div class="board_list_title">관리자</div>
         <ul class="board_list">
             <li class="board">
-                <form name="go_admin_page" action="{{ url_for('admin', art_per_page=30) }}" method="POST">
+                <form name="go_admin_page" action="{{ url_for('adminBoard', art_per_page=30) }}" method="POST">
                     <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                     <a class="board-anchor" href="#" onclick="javascript:document.go_admin_page.submit();">관리자 페이지</a>
                 </form>

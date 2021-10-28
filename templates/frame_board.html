@@ -2,36 +2,16 @@
     <p class="search_msg">"<b>{{ keyword }}</b>" 검색 결과</p>
 {% endif %}
 
-<script>
-    getArticles("{{ board }}", "{{ aid }}", "{{ page }}", "{{ art_per_page }}", "{{ option }}", "{{ keyword }}")
-</script>
-<table class="board-table" id="board-table">
-    <colgroup>
-        <col class="col-num">
-        <col class="col-title">
-        <col class="col-writer">
-        <col class="col-date">
-        <col class="col-view">
-        <col class="col-hit">
-    </colgroup>
-    <thead>
-        <tr class="board-table-thead">
-            <th>번호</th>
-            <th>제목</th>
-            <th>작성자</th>
-            <th>작성일</th>
-            <th>조회수</th>
-            <th>추천</th>
-        </tr>
-    </thead>
-    <tbody>
-    </tbody>
-</table>
+{% if board == 'admin' %}
+{% include 'frame_board_admin_table.html' %}
+{% else %}
+{% include 'frame_board_normal_table.html' %}
+{% endif %}
 
 <p class="msg" id="board-msg" align="center"></p>
 
 <div class='board-bottom'>
-    <button class="right-btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
+    <button class="right-btn need-board-check" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
     <div class='paging'>
         <ui id='paging-ui'>
         </ui>

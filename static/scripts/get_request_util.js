@@ -2,10 +2,11 @@
 function commentBuilder(comments, uid, aid, board) {
     document.getElementById( "num-comments" ).innerText = comments.length;
     let table = document.getElementById( "comments" );
-    table.removeChild(table.getElementsByTagName("tbody")[0]);
+    table.removeChild(table.getElementsByTagName( "tbody" )[0]);
+    table.appendChild(document.createElement( "tbody" ));
 
     for (let comment of comments) {
-        const row = table.insertRow();
+        const row = table.getElementsByTagName('tbody')[0].insertRow();
         const comment_nickname_cell = row.insertCell(0);
         const comment_content_cell = row.insertCell(1);
         const comment_date_cell = row.insertCell(2);
@@ -60,7 +61,7 @@ function getComments(aid, board, uid=undefined) {
 
 
 // 글 정보 업데이트
-function articleReadBuilder(article, aid) {
+function articleReadBuilder(article, aid, board) {
     document.getElementById( "article-title" ).innerText = article["title"];
     document.getElementById( "article-nickname" ).innerText = article["nickname"];
     document.getElementById( "article-id" ).innerText = aid;
@@ -72,6 +73,9 @@ function articleReadBuilder(article, aid) {
     if (article["flag"])
         for (let flag_need of document.getElementsByClassName( "flag-need" ))
             flag_need.style.display = "block";
+    if (board == 'all')
+        for (let board_check of document.getElementsByClassName( "need-board-check" ))
+            board_check.style.display = "none";
 }
 
 
@@ -86,7 +90,7 @@ function getArticleForReadPage(aid, board) {
     })
     .then(result => {
         if (result['result'])
-            articleReadBuilder(result['data'], aid);
+            articleReadBuilder(result['data'], aid, board);
     })
     .catch(err => {
         console.log(err);
@@ -120,6 +124,20 @@ function getArticleForUpdatePage(aid, board) {
 }
 
 
+// 페이징을 위한 li 생성
+function mkPagingLi(page, current_page, query, char){
+    const paging_li = document.createElement( "li" );
+    const paging_anchor = document.createElement( "a" );
+    paging_li.className = "page";
+    if (page != current_page)
+        paging_anchor.href = "/board/articles" + query + `&page=${page}`;
+    paging_anchor.innerText = char;
+    paging_li.appendChild(paging_anchor);
+
+    return paging_li
+}
+
+
 // 글 목록 상태 업데이트
 function boardBuilder(data, board, search_data) {
     const table = document.getElementById( "board-table" );
@@ -150,9 +168,14 @@ function boardBuilder(data, board, search_data) {
         article_title_cell.align = "left";
         const article_anchor = document.createElement('a');
         if (search_data["aid"] != article[0])
-            article_anchor.href = `/board/view` + search_data['query'] + `&aid=${article[0]}`;
+            article_anchor.href = `/board/view` + search_data['query'] + `&aid=${article[0]}&page=${search_data['page']}`;
         article_anchor.className = "to-article";
-        article_anchor.innerHTML = `${article[2]}<label class="num-comment">[${article[6]}]</label>`;
+        if (board == "all")
+            article_anchor.innerHTML = `<label class="origin-board">[${article[7]}]</label>
+            ${article[2]}<label class="num-comment">
+            [${article[6]}]</label>`;
+        else
+            article_anchor.innerHTML = `${article[2]}<label class="num-comment">[${article[6]}]</label>`;
         article_title_cell.appendChild(article_anchor);
 
         article_date_cell.innerText = article[3];
@@ -164,33 +187,17 @@ function boardBuilder(data, board, search_data) {
     const paging_ui = document.getElementById( "paging-ui" );
 
     if (data['start'] > 10) {
-        const paging_li = document.createElement( "li" );
-        const paging_anchor = document.createElement( "a" );
-        paging_li.className = "page";
-        paging_anchor.href = "/board/articles" + search_data['query'] + `&page=${data['start'] - 1}`;
-        paging_anchor.innerHTML = "◀";
-        paging_li.appendChild(paging_anchor);
+        const paging_li = mkPagingLi(data['start'] - 1, search_data["page"], search_data['query'], "◀");
         paging_ui.appendChild(paging_li);
     }
 
     for (let page = data['start']; page < data['end']; page++) {
-        const paging_li = document.createElement( "li" );
-        const paging_anchor = document.createElement( "a" );
-        paging_li.className = "page";
-        if (page != search_data["page"])
-            paging_anchor.href = "/board/articles" + search_data['query'] + `&page=${page}`;
-        paging_anchor.innerHTML = page;
-        paging_li.appendChild(paging_anchor);
+        const paging_li = mkPagingLi(page, search_data["page"], search_data['query'], page);
         paging_ui.appendChild(paging_li);
     }
 
     if (data['end'] < data['last_page']) {
-        const paging_li = document.createElement( "li" );
-        const paging_anchor = document.createElement( "a" );
-        paging_li.className = "page";
-        paging_anchor.href = "/board/articles" + search_data['query'] + `&page=${data['end']}`;
-        paging_anchor.innerHTML = "▶";
-        paging_li.appendChild(paging_anchor);
+        const paging_li = mkPagingLi(data['end'], search_data["page"], search_data['query'], "▶");
         paging_ui.appendChild(paging_li);
     }
 }

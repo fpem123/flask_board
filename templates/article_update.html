@@ -36,7 +36,12 @@
                         </div>
                     </form>
                     {% else %}
-                    <p>비회원은 불가능한 작업입니다.</p>
+                    <div class="errMsg" align="center">
+                        비회원은 불가능한 작업입니다.
+                    </div>
+                    <div class="btns" align="center">   
+                        <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
+                    </div>
                     {% endif %}
                 </div>
             </div>

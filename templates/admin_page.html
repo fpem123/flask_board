@@ -2,6 +2,7 @@
 <html lang="ko">
     <head>
         {% include 'frame_head.html' %}
+        <script src="{{ url_for('static', filename='scripts/admin_job_util.js') }}"></script>
         <link href="{{ url_for('static', filename='css/board.css') }}" rel="stylesheet">
     </head>
 
@@ -16,7 +17,16 @@
                 </div>
                 
                 <div class="frame-contents">
-                    {% include 'frame_board.html' %}
+                    {% if session.get('uid') %}
+                        {% include 'frame_board.html' %}
+                    {% else %}
+                    <div class="errMsg" align="center">
+                        비회원은 불가능한 작업입니다.
+                    </div>
+                    <div class="btns" align="center">   
+                        <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

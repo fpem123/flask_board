@@ -21,11 +21,25 @@ boardObj = BoardClass()
 sqliteObj = SquliteClass("test.db")
 
 
-def isAdmin(uid: str=None) -> bool:
+def isAdmin(uid: str) -> bool:
     """
-    ### 해당 유저가 어드민인지 확인
+    ### 회원이 어드민인지
     """
-    return True
+    try:
+        # 유저 비밀번호 획득
+        SELECT_USER_IS_ADMIN = """
+            SELECT  is_admin
+            FROM    user
+            WHERE   user_id = ?
+        """
+        is_admin = sqliteObj.selectQuery(SELECT_USER_IS_ADMIN, (uid, ))[0][0]
+        
+        if is_admin == 1:
+            return True
+        else:
+            return False
+    except Exception as e:
+        return False
 
 
 def isExistUser(uid: str=None, nickname: str=None) -> bool:
@@ -74,7 +88,7 @@ def isCorrectPWD(uid: str, pwd: int) -> bool:
         user_pwd = sqliteObj.selectQuery(SELECT_USER_PWD, (uid, ))[0][0]
         return pwd == user_pwd
     except Exception as e:
-        raise False
+        return False
 
 
 def isSessionUser(uid: str) -> bool:
@@ -168,7 +182,7 @@ def getNickname(uid: str) -> bool:
 
         return nickname
     except Exception as e:
-        raise Exception('DB 확인 에러!')
+        return False
 
 
 def makeReturnDict(result: bool, msg: str, data=None) -> dict:
@@ -314,6 +328,8 @@ def memberLogout():
         # 세션 나가기
         session.pop("uid", None)
         session.pop("nickname", None)
+        session.pop("last_article_write", None)
+        session.pop("last_comment_write", None)
         return makeReturnDict(True, '로그아웃 성공'), 200
     except Exception as e:
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
@@ -556,7 +572,7 @@ def getComment():
                     comment[1] = "작성자"
                 else:
                     comment[1] = "익명"
-            if uid is not None and uid == comment[4]:
+            if uid is not None and (uid == comment[4] or isAdmin(uid)):
                 comment[4] = True
             else:
                 comment[4] = False
@@ -641,7 +657,6 @@ def commentCreateCall():
 def commentDeleteCall():
     try:
         cid = request.form['cid']
-        aid = request.form['aid']
         request_uid = request.form['uid']
         board = request.form['board']
     except Exception as e:
@@ -664,8 +679,8 @@ def commentDeleteCall():
             WHERE   comment_id = ?
         """
         writer = sqliteObj.selectQuery(SELECT_COMMENT_WRITER, (cid, ))[0][0]
-
-        if writer != request_uid:
+        # 어드민은 체크 안함
+        if writer != request_uid and not isAdmin(request_uid):
             return makeReturnDict(False, '작성자와 일치하지 않습니다.'), 400
 
         # 댓글 삭제
@@ -768,6 +783,8 @@ def articleCreateCall():
         return errorPage(2)
     elif datetime.now().timestamp() - session.get('last_article_write') < 20:
         return errorPage(msg="도배 방지.")
+    elif board in ['etc', 'admin']:
+        return errorPage(msg="해당 페이지는 글을 작성할 수 없습니다.")
 
     try:
         INSERT_ARTICLE = """
@@ -886,7 +903,7 @@ def getArticle():
             tmp[0] = '익명'
         if not article[0]:
             tmp[0] = "(탈퇴한 유저)"
-        if article[6] == session.get('uid'):
+        if article[6] == session.get('uid') or isAdmin(session.get('uid')):
             tmp[6] = True
         else:
             tmp[6] = False
@@ -1057,16 +1074,16 @@ def articleDalete():
         request_uid = request.form['uid']     # 삭제 요청자
         aid = request.form['aid']
     except Exception as e:
-        return errorPage(2)
+        return errorPage(2), 400
 
     if boardObj.isNotAllowBoard(board):
-        return errorPage(0)
+        return errorPage(0), 400
     elif not isLogin():
-        return errorPage(4)
+        return errorPage(4), 400
     elif not isSessionUser(request_uid):
-        return errorPage(5)
+        return errorPage(5), 400
     elif not isExistUser(request_uid):
-        return errorPage(2)
+        return errorPage(2), 400
 
     # 글 삭제
     try:
@@ -1077,19 +1094,20 @@ def articleDalete():
         """
         writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
-        if writer != request_uid:
-            return errorPage(2)
+        # 어드민은 삭제가능
+        if writer != request_uid and not isAdmin(request_uid):
+            return errorPage(2), 400
 
         DELETE_ARTIECLE = f"""
             DELETE
             FROM article
             WHERE article_id = ?;
         """
-        sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, ))
+        sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, )), 200
 
         return redirect(url_for('articleDaleteDone', board=board))
     except Exception as e:
-        return errorPage(1)
+        return errorPage(1), 500
 
 
 ##############
@@ -1134,7 +1152,6 @@ def board():
         aid=False, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
-
 
 
 ##############
@@ -1221,28 +1238,36 @@ def boardQueryBuilder(board, option, keyword) -> str:
 
 
 ##############
-## 어드민 페이지
+## 어드민용 게시판 페이지
 ##############
-@app.route('/admin', methods=['POST'])
-def admin():
-    # TO-DO : frame_member에 접근 페이지 링크 추가
+@app.route('/admin/baord', methods=['POST'])
+def adminBoard():
     try:
         request_uid = request.form['uid']
 
         page = request.args.get('page', type=int, default=1)                    # 현재 페이지
-        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
         option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
-    except:
+    except Exception as e:
         return errorPage(2)
+    
+    try:
+        if not isLogin():
+            return errorPage(4)
+        elif not isSessionUser(request_uid):
+            return errorPage(5)
+        elif not isExistUser(request_uid):
+            return errorPage(2)
+        elif not isAdmin(request_uid):
+            return errorPage(msg="어드민 전용 페이지입니다.")
+        
+        isSearch = option != 'all'
 
-    # TO-DO : db에 is_admin 컬럼 추가
-    # TO-DO : 어드민인지 체크
-    articles, start, end, left_arrow, right_arrow = getArticles('admin', page, art_per_page, option, keyword) 
-    isSearch = option != 'all'
-
-    # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
-    return render_template('admin_page.html', boards=boardObj.get_board_dict()), 200
+        # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
+        return render_template('admin_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
+        option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
+    except Exception as e:
+        return errorPage(1)
 
 
 ##############

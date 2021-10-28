@@ -1,0 +1,27 @@
+<script>
+    getArticlesForAdmin("{{ board }}", "{{ session.get('uid') }}", "{{ aid }}", "{{ page }}", "{{ art_per_page }}", "{{ option }}", "{{ keyword }}")
+</script>
+<table class="board-table" id="board-table">
+    <colgroup>
+        <col class="col-num">
+        <col class="col-title">
+        <col class="col-writer">
+        <col class="col-date">
+        <col class="col-view">
+        <col class="col-hit">
+        <col class="col-del-btn">
+    </colgroup>
+    <thead>
+        <tr class="board-table-thead">
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성자</th>
+            <th>작성일</th>
+            <th>조회수</th>
+            <th>추천</th>
+            <th>삭제</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>

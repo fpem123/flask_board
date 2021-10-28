@@ -6,11 +6,13 @@ conn = sqlite3.connect("test.db")
 #   user_id : pk, 유저 id
 #   password : 유저 비밀번호
 #   nickname : 유저 닉네임
+#   is_admin : 어드민 여부
 CREATE_USER_TABLE = """
     create table if not exists user(
         user_id char(16) not null primary key,
         password char(64) not null,
         nickname char(10) UNIQUE not null
+        is_admin INTEGER default 0 not null
     );
 """
 
