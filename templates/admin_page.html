@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        {% include 'frame_head.html' %}
+        <link href="{{ url_for('static', filename='css/board.css') }}" rel="stylesheet">
+    </head>
+
+    <body>
+        {% include 'frame_header.html' %}
+        
+        <div class="wrapper">
+            {% include 'frame_sidebar.html' %}
+            <div class="frame">
+                <div class="frame-sigh">
+                    <a class="board-sign">어드민 페이지</a>
+                </div>
+                
+                <div class="frame-contents">
+                    {% include 'frame_board.html' %}
+                </div>
+            </div>
+        </div>
+
+        {% include 'frame_foot.html' %}
+    </body>
+</html>

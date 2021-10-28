@@ -1,8 +1,11 @@
 {% if isSearch %}
-    <p>"<b>{{ keyword }}</b>" 검색 결과</p>
+    <p class="search_msg">"<b>{{ keyword }}</b>" 검색 결과</p>
 {% endif %}
 
-<table class="board-table">
+<script>
+    getArticles("{{ board }}", "{{ aid }}", "{{ page }}", "{{ art_per_page }}", "{{ option }}", "{{ keyword }}")
+</script>
+<table class="board-table" id="board-table">
     <colgroup>
         <col class="col-num">
         <col class="col-title">
@@ -21,77 +24,17 @@
             <th>추천</th>
         </tr>
     </thead>
-    {% if articles %}
     <tbody>
-        {% for board_aid, board_writer, board_title, board_date_time,
-            board_view, board_hit, board_num_comment in articles %}
-        <tr align="center">
-            <td>{{ board_aid }}</td>
-            {% if aid == board_aid %}
-            <td align="left"><a>{{ board_title }}
-                <label class="num-comment">[{{ board_num_comment }}]</label></a></td>
-            {% elif isSearch %}
-            <td align="left"><a class="to-article" href="{{ url_for('acrticlePage', board=board, 
-                aid=board_aid, page=page, art_per_page=30, 
-                option=option, keyword=keyword) }}">{{ board_title }}
-                <label class="num-comment">[{{ board_num_comment }}]</label></a></td>
-            {% else %}
-            <td align="left"><a href="{{ url_for('acrticlePage', board=board, 
-                aid=board_aid, page=page, art_per_page=30) }}">{{ board_title }}
-                <label class="num-comment">[{{ board_num_comment }}]</label></a></td>
-            {% endif %}
-            {% if board == 'anonymous' %}
-            <td>익명</td>
-            {% else %}
-            <td>{{ board_writer }}</td>
-            {% endif %}
-            <td>{{ board_date_time }}</td>
-            <td>{{ board_view }}</td>
-            <td>{{ board_hit }}</td>
-        </tr>
-        {% endfor %}
     </tbody>
 </table>
-{% else %}
-</table>
-    {% if not isSearch %}
-        <p class="msg" align="center">아직 작성된 글이 없습니다.</p>
-    {% else %}
-        <p class="msg" align="center">검색된 결과가 없습니다.</p>
-    {% endif %}
-{% endif %}
+
+<p class="msg" id="board-msg" align="center"></p>
+
 <div class='board-bottom'>
     <button class="right-btn" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
     <div class='paging'>
-    {% if articles %}
-        <ui>
-        {% if left_arrow %}
-            {% if isSearch %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30, option=option, keyword=keyword) }}">◀</a></li>
-            {% else %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=start-1, art_per_page=30) }}">◀</a></li>
-            {% endif %}
-        {% endif %}
-
-        {% for i in range(start, end) %}
-            {% if i == page %}
-                <li class="page">{{ i }}</li>
-            {% elif isSearch %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=i, art_per_page=30, option=option, keyword=keyword) }}">{{ i }}</a></li>
-            {% else %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=i, art_per_page=30) }}">{{ i }}</a></li>
-            {% endif %}
-        {% endfor %}
-
-        {% if right_arrow %}
-            {% if isSearch %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=end, art_per_page=30, option=option, keyword=keyword) }}">▶</a></li>
-            {% else %}
-                <li class="page"><a href="{{ url_for('board', board=board, page=end, art_per_page=30) }}">▶</a></li>
-            {% endif %}
-        {% endif %}
+        <ui id='paging-ui'>
         </ui>
-    {% endif %}
     </div>
     <form class="search" action="{{ url_for('board') }}", method="GET">
         <input type="hidden" name="board" value="{{ board }}">

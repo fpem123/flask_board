@@ -539,14 +539,12 @@ def getComment():
             WHERE   comment.article_id = ? 
         """
         data = [aid,]
-
         # 익명 게시판 작성자 유출 방지
         if board != 'all':
             SELECT_COMMENTS += "and article.board = ? "
             data.append(board)
         
         SELECT_COMMENTS += "ORDER BY comment_id ASC"
-
         comments = sqliteObj.selectQuery(SELECT_COMMENTS, data)
 
         for idx, comment in enumerate(comments):
@@ -565,7 +563,7 @@ def getComment():
             comments[idx] = tuple(comment)
 
         return makeReturnDict(True, '성공', comments), 200
-    except:
+    except Exception as e:
         return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
@@ -791,33 +789,33 @@ def articleCreateCall():
         return redirect(url_for('board', board=board))
     except Exception as e:
         return errorPage(1)
-    
+
 
 ##############
-## 글 목록 가져오기
+## 글 목록 가져오기 요청
 ##############
-def getArticles(board, page, art_per_page, option, keyword):
+@app.route('/articles/get', methods=['GET'])
+def getArticles():
+    try:
+        board = request.args['board']
+
+        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
+    except:
+        return makeReturnDict(False, '실패'), 400
+
     try:
         page_length = 10
+        SELECT_ARTICLE, SELECT_BOARD_SIZE, data = boardQueryBuilder(board, option, keyword)
+        # 게시판 전체 글 개수 가져오기
+        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_SIZE, data)[0][0]      # 전체 글의 개수
+        p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
 
         # 게시물 가져오기
-        SELECT_ARTICLE, data = boardQueryBuilder(board, option, keyword)
         data.extend([1 + art_per_page * (page - 1), art_per_page * page])
         articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
-        # 게시판 전체 글 개수 가져오기
-        SELECT_BOARD_SIZE = """
-            SELECT  count(*)
-            FROM    article
-        """
-        data = []
-        if board == 'all':
-            SELECT_BOARD_SIZE += "WHERE	board != 'anonymous'"
-        else:
-            SELECT_BOARD_SIZE += "WHERE	board = ?"
-            data.append(board)
-
-        a_cnt = sqliteObj.selectQuery(SELECT_BOARD_SIZE, data)[0][0]    # 전체 글의 개수
-        p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
 
         if page < 1:
             page = 1
@@ -825,17 +823,15 @@ def getArticles(board, page, art_per_page, option, keyword):
             page = p_cnt
 
         page -= 1
-        tmp = page * art_per_page
-        start = (page // page_length) * page_length + 1               # 페이징 시작점
+        start = max((page // page_length) * page_length + 1, 1)       # 페이징 시작점
         end = min((page // page_length + 1) * page_length, p_cnt) + 1 # 페이징 끝점
-        
-        left_arrow = page_length < start
-        right_arrow = end < p_cnt 
 
         for idx, article in enumerate(articles):
             tmp = list(article)
             if not article[1]:
                 tmp[1] = "(탈퇴한 유저)"
+            elif board == "anonymous":
+                tmp[1] = "익명"
 
             if len(article[2]) > 15:
                 tmp[2] = tmp[2][:15] + "..."
@@ -848,12 +844,17 @@ def getArticles(board, page, art_per_page, option, keyword):
 
             articles[idx] = tuple(tmp)
 
-        return articles, start, end, left_arrow, right_arrow
+        data = {"articles": articles, "start": start, "end": end, "last_page": p_cnt}
+
+        return makeReturnDict(True, '성공', data), 200
 
     except Exception as e:
-        raise Exception('요청 처리 중 에러가 발생했습니다.')
+        return makeReturnDict(False, '실패'), 500
 
 
+##############
+## 글 가져오기
+##############
 @app.route('/article/get', methods=['GET'])
 def getArticle():
     try:
@@ -905,8 +906,7 @@ def acrticlePage():
     try:
         board = request.args.get('board', type=str)
         aid = request.args.get('aid', type=int)
-        page = request.args.get('page', type=int, default=1)          # 현재 페이지
-        art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
+        page = request.args.get('page', type=int, default=1)
         option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
@@ -924,13 +924,11 @@ def acrticlePage():
         """
         sqliteObj.updateQuery(UPDATE_ARTICLE_VIEW, (aid, ))
 
-        articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 글 보기
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
-        aid=aid, articles=articles, page=page, start=start, end=end, isSearch=isSearch, option=option, 
-        keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow, boards=boardObj.get_board_dict()), 200
+        aid=aid, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
@@ -1119,8 +1117,7 @@ def articleDaleteDone():
 def board():
     try:
         board = request.args.get('board', type=str)
-        page = request.args.get('page', type=int, default=1)          # 현재 페이지
-        art_per_page = request.args.get('art_per_page', type=int, default=30)     # 페이지 당 글 개수
+        page = request.args.get('page', type=int, default=1)
         option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
@@ -1130,16 +1127,12 @@ def board():
         return errorPage(0)
 
     try:
-        articles, start, end, left_arrow, right_arrow = getArticles(board, page, art_per_page, option, keyword)
         isSearch = option != 'all'
 
         # 게시판 페이지, db에서 가져온 정보
         return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board), 
-        aid=False, articles=articles, page=page, start=start, end=end, isSearch=isSearch, 
-        option=option, keyword=keyword, left_arrow=left_arrow, right_arrow=right_arrow,
-        boards=boardObj.get_board_dict()), 200
+        aid=False, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
-        print(e)
         return errorPage(1)
 
 
@@ -1149,60 +1142,80 @@ def board():
 ##############
 def boardQueryBuilder(board, option, keyword) -> str:
     try:
-        query = """
+        articles_query = """
             SELECT  ROW_NUMBER() OVER(ORDER BY article.article_id DESC) as row_num, article.article_id, 
-				    nickname, title, article_time, view, hit, count(comment_id) as num_comment
+				    nickname, title, article_time, view, hit, count(comment_id) as num_comment, board
             FROM    article 
                     left join comment
                     on article.article_id = comment.article_id
                     left join user
                     on article.user_id = user.user_id
             WHERE   """
+        count_query = """
+            SELECT  count(*)
+            FROM    article
+            WHERE   
+        """
         keyword = '%' + keyword + '%'
+        data = []
 
         if board == 'all':
-            query += "board != 'anonymous'"
-            data = []
+            append_query = "board != 'anonymous'"
+            articles_query += append_query
+            count_query += append_query
+        elif board == 'admin':
+            append_query =  "1 = 1"
+            articles_query += append_query
+            count_query += append_query
         else:
-            query += "board=?"
-            data = [board, ]
+            append_query = "board=?"
+            articles_query += append_query
+            count_query += append_query
+            data.append(board)
 
         if option == 'title, content':
-            query += """ and (
+            append_query = """ and (
             title like ? ESCAPE '$' or
             content like ? ESCAPE '$') """
+            articles_query += append_query
+            count_query += append_query
             data.extend([keyword, keyword])
         elif option == 'title':
-            query += """ and
+            append_query = """ and
             title like ? ESCAPE '$'
             """
+            articles_query += append_query
+            count_query += append_query
             data.append(keyword)
         elif option == 'content':
-            query += """ and
+            append_query = """ and
             content like ? ESCAPE '$'
             """
+            articles_query += append_query
             data.append(keyword)
         elif option == 'user' and board != 'anonymous':
-            query += """ and
+            append_query = """ and
             nickname like ? ESCAPE '$'
             """
+            articles_query += append_query
+            count_query += append_query
             data.append(keyword)
         
-        query += """
+        articles_query += """
         GROUP BY article.article_id
         """
 
-        query = """
-            SELECT  article_id, nickname, title, article_time, view, hit, num_comment
+        articles_query = """
+            SELECT  article_id, nickname, title, article_time, view, hit, num_comment, board
             FROM	(
         """     \
-        + query \
+        + articles_query \
         + """
             )
             WHERE row_num BETWEEN ? and ?
             ORDER BY row_num ASC;
         """
-        return query, data
+        return articles_query, count_query, data
     except Exception as e:
         raise Exception("DB 확인 중 에러가 발생했습니다.")
 
@@ -1215,14 +1228,21 @@ def admin():
     # TO-DO : frame_member에 접근 페이지 링크 추가
     try:
         request_uid = request.form['uid']
+
+        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
     except:
         return errorPage(2)
 
     # TO-DO : db에 is_admin 컬럼 추가
     # TO-DO : 어드민인지 체크
+    articles, start, end, left_arrow, right_arrow = getArticles('admin', page, art_per_page, option, keyword) 
+    isSearch = option != 'all'
 
     # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
-    return render_template('admin_page.html'), 200
+    return render_template('admin_page.html', boards=boardObj.get_board_dict()), 200
 
 
 ##############

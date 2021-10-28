@@ -1,6 +1,10 @@
 /* 게시판 목록을 사용하는 페이지에서 사용하는 css */
 
 /* 게시판 테이블 */
+.search_msg {
+    margin-bottom: 2em;
+}
+
 .board-table {
     width: 100%;
     border-top: thick dashed darkgrey;
