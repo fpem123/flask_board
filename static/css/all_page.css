@@ -8,6 +8,7 @@
 body {
     height: 100%;
     width: 100%;
+    position: relative;
 }
 
 a:link, a:visited, a:hover {
@@ -97,20 +98,20 @@ ul, li{
 
 /* 사이드바, frame wrapper */
 .wrapper {
-    height: auto;
     display: flex;
+    height: 100%;
     width: 100%;
     min-width: 75em;
-    border-bottom: 0.1em solid darkgray;
 }
 
 /* 사이드바 */
 .sidebar {
     background-color: #2980B9;
     max-width: 10em;
+    min-width: 9em;
+    min-height: 50em;
     border-right: thin grey solid;
     border-left: thin grey solid;
-    min-height: 50em;
     margin-left: auto;
 }
 
@@ -195,6 +196,7 @@ ul, li{
 
 /* top */
 .top {
+    height: 100%;
     width: calc(100% - 10em);
     margin: 0em auto;
 }
@@ -205,7 +207,6 @@ ul, li{
     padding: 3em;
     max-width: 62em;
     min-width: 60em;
-    margin-right: auto;
 }
 
 /* 페이지 전광판 */
@@ -233,6 +234,25 @@ ul, li{
 p.msg{
     height: 10em;
     line-height: 10em;
+}
+
+
+/* 화면 스크롤 리모콘 */
+.remote-controler {
+    margin-right: auto;
+}
+
+.remote-btns {
+    background-color: #2980B9;
+    border-radius: 0.75em;
+    position: fixed;
+    top: 30%;
+    padding: 1em;
+    display: flex;
+}
+
+.scroll-btn {
+    margin: 0.5em 0em;
 }
 
 /* footer */
