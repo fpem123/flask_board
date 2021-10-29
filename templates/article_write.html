@@ -8,45 +8,46 @@
 
     <body>
         {% include 'frame_header.html' %}
+        
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
 
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-
-            <div class="frame">
-                <div class="frame-sigh">
-                    {% include 'frame_board_sign.html' %}
-                </div>
-                
-                <div class="frame-contents">
-                    {% if session.get('uid') %}
-                    <form id="write-form" action="{{ url_for('articleCreateCall') }}" method="POST"
-                    onsubmit="return article_check(this)">
-                        <input type="hidden" name="board" value='{{ board }}'>
-                        <input type="hidden" name="uid" value="{{ session.get('uid') }}">
-                        <br>
-                        <input type="text" id="title" name="title" maxlength="20"
-                        placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">
-                        <br><br>
-                        <textarea id="editor" name="content" rows="30" onkeydown="return onKeydownTap(this);"></textarea>
-                        <script>setCkeditor( "{{board}}" )</script>
-                        <br><br>
-                        <div class="btns">
-                            <button class="right-btn" id="form-submit" type="submit" value="글쓰기">글쓰기</button>
-                            <button class="left-btn back-btn" type="button" onclick="javascript:history.back()">취소</button>
+                <div class="frame">
+                    <div class="frame-sigh">
+                        {% include 'frame_board_sign.html' %}
+                    </div>
+                    
+                    <div class="frame-contents">
+                        {% if session.get('uid') %}
+                        <form id="write-form" action="{{ url_for('articleCreateCall') }}" method="POST"
+                        onsubmit="return article_check(this)">
+                            <input type="hidden" name="board" value='{{ board }}'>
+                            <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                            <br>
+                            <input type="text" id="title" name="title" maxlength="20"
+                            placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">
+                            <br><br>
+                            <textarea id="editor" name="content" rows="30" onkeydown="return onKeydownTap(this);"></textarea>
+                            <script>setCkeditor( "{{board}}" )</script>
+                            <br><br>
+                            <div class="btns">
+                                <button class="right-btn" id="form-submit" type="submit" value="글쓰기">글쓰기</button>
+                                <button class="left-btn back-btn" type="button" onclick="javascript:history.back()">취소</button>
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="errMsg" align="center">
+                            비회원은 불가능한 작업입니다.
                         </div>
-                    </form>
-                    {% else %}
-                    <div class="errMsg" align="center">
-                        비회원은 불가능한 작업입니다.
+                        <div class="btns" align="center">   
+                            <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="btns" align="center">   
-                        <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
-        
         {% include 'frame_foot.html' %}
     </body>
 </html>

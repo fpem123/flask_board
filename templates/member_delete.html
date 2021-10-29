@@ -8,57 +8,58 @@
     <body>
         {% include 'frame_header.html' %}
 
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-            <div class="frame">
-                <div class="frame-sigh">
-                    <a>회원탈퇴</a>
-                </div>
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
+                <div class="frame">
+                    <div class="frame-sigh">
+                        <a>회원탈퇴</a>
+                    </div>
 
-                <div class="frame-contents">
-                    {% if session.get("uid") %}
-                    <div class="member-frame-wrapper">
-                        <p class="page-explain"><strong>{{ session.get("nickname") }}님</strong> 탈퇴를 원하면 비밀번호와 확인문자를 입력하세요.</p>
+                    <div class="frame-contents">
+                        {% if session.get("uid") %}
+                        <div class="member-frame-wrapper">
+                            <p class="page-explain"><strong>{{ session.get("nickname") }}님</strong> 탈퇴를 원하면 비밀번호와 확인문자를 입력하세요.</p>
 
-                        <form method="POST" onsubmit="return sendDeleteUser(this)">
-                            <input type="hidden" name="uid" value={{ session.get('uid') }}>
-                            <div class="form-block">
-                                <button class="input-type" type="button" tabindex="-1"
-                                onclick="document.getElementById('pwd').focus()">비밀번호</button>
-                                <div class="input-block">
-                                    <input class="member-input" type="password" name="pwd" id="pwd"
-                                    placeholder="PASSWORD" maxlength='10'" onkeydown="return onKeydownEnter()">
-                                    <p>현재 비밀번호를 입력하세요.</p>
+                            <form method="POST" onsubmit="return sendDeleteUser(this)">
+                                <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                                <div class="form-block">
+                                    <button class="input-type" type="button" tabindex="-1"
+                                    onclick="document.getElementById('pwd').focus()">비밀번호</button>
+                                    <div class="input-block">
+                                        <input class="member-input" type="password" name="pwd" id="pwd"
+                                        placeholder="PASSWORD" maxlength='10'" onkeydown="return onKeydownEnter()">
+                                        <p>현재 비밀번호를 입력하세요.</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-block">
-                                <button class="input-type" type="button" tabindex="-1"
-                                onclick="document.getElementById('confirm').focus()">확인문자</button>
-                                <div class="input-block">
-                                    <input class="member-input" type="text" name="confirm" id="confirm"
-                                    placeholder="탈퇴합니다" maxlength='5' onkeydown="return onKeydownEnter()">
-                                    <p>탈퇴를 원한다면 <strong>탈퇴합니다</strong>를 입력하세요.</p>
+                                <div class="form-block">
+                                    <button class="input-type" type="button" tabindex="-1"
+                                    onclick="document.getElementById('confirm').focus()">확인문자</button>
+                                    <div class="input-block">
+                                        <input class="member-input" type="text" name="confirm" id="confirm"
+                                        placeholder="탈퇴합니다" maxlength='5' onkeydown="return onKeydownEnter()">
+                                        <p>탈퇴를 원한다면 <strong>탈퇴합니다</strong>를 입력하세요.</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class='btns'>
-                                <button class="left-btn back-btn" type="button" onclick="javascript:history.back()">취소</button>
-                                <button class="right-btn del-btn" type="submit">회원탈퇴</button>
-                            </div>
-                        </form>
-                    </div>
-                    {% else %}
-                    <div class="errMsg" align="center">
-                        비회원은 할 수 없는 작업입니다.
-                    </div>
+                                <div class='btns'>
+                                    <button class="left-btn back-btn" type="button" onclick="javascript:history.back()">취소</button>
+                                    <button class="right-btn del-btn" type="submit">회원탈퇴</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="errMsg" align="center">
+                            비회원은 할 수 없는 작업입니다.
+                        </div>
 
-                    <div class="btns" align="center">
-                        <button class="back-btn" onclick="javascript:history.back()">뒤로가기</button>
+                        <div class="btns" align="center">
+                            <button class="back-btn" onclick="javascript:history.back()">뒤로가기</button>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
-        
         {% include 'frame_foot.html' %}
     </body>
 </html>

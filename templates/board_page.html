@@ -7,20 +7,21 @@
 
     <body>
         {% include 'frame_header.html' %}
-        
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-            <div class="frame">
-                <div class="frame-sigh">
-                    {% include 'frame_board_sign.html' %}
-                </div>
-                
-                <div class="frame-contents">
-                    {% include 'frame_board.html' %}
+
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
+                <div class="frame">
+                    <div class="frame-sigh">
+                        {% include 'frame_board_sign.html' %}
+                    </div>
+                    
+                    <div class="frame-contents">
+                        {% include 'frame_board.html' %}
+                    </div>
                 </div>
             </div>
         </div>
-
         {% include 'frame_foot.html' %}
     </body>
 </html>

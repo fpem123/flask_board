@@ -9,88 +9,90 @@
 
     <body>
         {% include 'frame_header.html' %}
+        
+        <div class="top">
+            <div class="wrapper">
+                    {% include 'frame_sidebar.html' %}
 
-        <div class="wrapper">
-                {% include 'frame_sidebar.html' %}
+                <div class='frame'>
+                    <div class="frame-sigh">
+                    {% include 'frame_board_sign.html' %}
+                    </div>
+                    <div class="frame-contents">
+                        <div class="article">
+                            <script>getArticleForReadPage('{{ aid }}', '{{ board }}');</script>
+                            <div class="article-info">
+                                <input type="hidden" id="aid" value='{{ aid }}'>
+                                <ul>
+                                    <li class="article-title"><label id="article-title"></label></li>
+                                    <li class="article-info-1"><label id="article-nickname"></label> | <label id="article-date"></label></li>
+                                    <li class="article-info-2">번호 <label id="article-id"></label> | 조회수 <label id="article-view"></label> | 추천 <label name="hit"></label></li>
+                                </ul>
+                            </div>
+                            <br>
+                            <textarea id="content" rows="30" onkeydown="return onKeydownTap(this);">
+                            </textarea>
+                            <script>setCkeditorReadOnly()</script>
+                            
 
-            <div class='frame'>
-                <div class="frame-sigh">
-                {% include 'frame_board_sign.html' %}
-                </div>
-                <div class="frame-contents">
-                    <div class="article">
-                        <script>getArticleForReadPage('{{ aid }}', '{{ board }}');</script>
-                        <div class="article-info">
-                            <input type="hidden" id="aid" value='{{ aid }}'>
-                            <ul>
-                                <li class="article-title"><label id="article-title"></label></li>
-                                <li class="article-info-1"><label id="article-nickname"></label> | <label id="article-date"></label></li>
-                                <li class="article-info-2">번호 <label id="article-id"></label> | 조회수 <label id="article-view"></label> | 추천 <label name="hit"></label></li>
-                            </ul>
+                            <div align="center">
+                                <button class="hit-btn" onclick="return sendHit()">추천하기 (<label name="hit"></label>)</button>
+                            </div>
                         </div>
-                        <br>
-                        <textarea id="content" rows="30" onkeydown="return onKeydownTap(this);">
-                        </textarea>
-                        <script>setCkeditorReadOnly()</script>
                         
+                        <div class="view-comment">
+                            <script>getComments('{{ aid }}', '{{ board }}', '{{ session.get("uid") }}');</script>
+                            <table id="comments">
+                                <caption>
+                                    <h5>댓글 <label id="num-comments"></label>개</h5>
+                                </caption>
+                                <colgroup>
+                                    <col class="col-writer">
+                                    <col class="col-comment">
+                                    <col class="col-date">
+                                    <col class="col-btn">
+                                </colgroup>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
 
-                        <div align="center">
-                            <button class="hit-btn" onclick="return sendHit()">추천하기 (<label name="hit"></label>)</button>
+                        <div class="write-comment">
+                            {% if session['uid'] %}
+                            <label>{{ session.get('nickname') }}</label>
+                            <form class="form-comment" method="POST" onsubmit="return sendInsertComment(this)">
+                                <input type="hidden" name="uid" value={{ session.get('uid') }}>
+                                <input type="hidden" name="aid" value={{ aid }}>
+                                <input type="hidden" name="board" value={{ board }}>
+                                <input type="text" id="input-comment" name="input_comment"></textarea>
+                                <button class="write-btn" type="submit">댓글 달기</button>
+                            </form>
+                            {% else %}
+                            <p class="msg" align='center'>로그인 한 유저만 댓글을 작성할 수 있습니다.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="article-btns">
+                            <button class="back-btn left-btn" type="button" onclick="location.href='{{ url_for('board', board=board, art_per_page=30) }}'">글목록</button>   
+                            {% if session.get('uid') %}
+                            <button class="right-btn need-board-check" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
+                            {% endif %}
+                            <form name="delete_article" onsubmit="return sendDeleteArticle(this, '{{ board }}')" method="POST">
+                                <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                                <input type="hidden" name="aid" value="{{ aid }}">
+                                <button class="right-btn del-btn flag-need" type="submit">삭제</button>
+                            </form>
+                            <form name="update_article" action="{{ url_for('acrticleUpdate', board=board) }}" method="POST">
+                                <input type="hidden" name="uid" value="{{ session.get('uid') }}">
+                                <input type="hidden" name="aid" value="{{ aid }}">
+                                <button class="right-btn flag-need" type="submit">수정</button>
+                            </form>
                         </div>
                     </div>
                     
-                    <div class="view-comment">
-                        <script>getComments('{{ aid }}', '{{ board }}', '{{ session.get("uid") }}');</script>
-                        <table id="comments">
-                            <caption>
-                                <h5>댓글 <label id="num-comments"></label>개</h5>
-                            </caption>
-                            <colgroup>
-                                <col class="col-writer">
-                                <col class="col-comment">
-                                <col class="col-date">
-                                <col class="col-btn">
-                            </colgroup>
-                            <tbody>
-                            </tbody>
-                        </table>
+                    <div class="frame-contents">
+                        {% include 'frame_board.html' %}
                     </div>
-
-                    <div class="write-comment">
-                        {% if session['uid'] %}
-                        <label>{{ session.get('nickname') }}</label>
-                        <form class="form-comment" method="POST" onsubmit="return sendInsertComment(this)">
-                            <input type="hidden" name="uid" value={{ session.get('uid') }}>
-                            <input type="hidden" name="aid" value={{ aid }}>
-                            <input type="hidden" name="board" value={{ board }}>
-                            <input type="text" id="input-comment" name="input_comment"></textarea>
-                            <button class="write-btn" type="submit">댓글 달기</button>
-                        </form>
-                        {% else %}
-                        <p class="msg" align='center'>로그인 한 유저만 댓글을 작성할 수 있습니다.</p>
-                        {% endif %}
-                    </div>
-
-                    <div class="article-btns">
-                        <button class="back-btn left-btn" type="button" onclick="location.href='{{ url_for('board', board=board, art_per_page=30) }}'">글목록</button>   
-                        {% if session.get('uid') %}
-                        <button class="right-btn need-board-check" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
-                        {% endif %}
-                        <form name="delete_article" onsubmit="return sendDeleteArticle(this, '{{ board }}')" method="POST">
-                            <input type="hidden" name="uid" value="{{ session.get('uid') }}">
-                            <input type="hidden" name="aid" value="{{ aid }}">
-                            <button class="right-btn del-btn flag-need" type="submit">삭제</button>
-                        </form>
-                        <form name="update_article" action="{{ url_for('acrticleUpdate', board=board) }}" method="POST">
-                            <input type="hidden" name="uid" value="{{ session.get('uid') }}">
-                            <input type="hidden" name="aid" value="{{ aid }}">
-                            <button class="right-btn flag-need" type="submit">수정</button>
-                        </form>
-                    </div>
-                </div>
-                
-                <div class="frame-contents">
-                    {% include 'frame_board.html' %}
                 </div>
             </div>
         </div>

@@ -9,24 +9,26 @@
     <body>
         {% include 'frame_header.html' %}
         
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-            <div class="frame">
-                <div class="frame-sigh">
-                    <a class="board-sign">어드민 페이지</a>
-                </div>
-                
-                <div class="frame-contents">
-                    {% if session.get('uid') %}
-                        {% include 'frame_board.html' %}
-                    {% else %}
-                    <div class="errMsg" align="center">
-                        비회원은 불가능한 작업입니다.
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
+                <div class="frame">
+                    <div class="frame-sigh">
+                        <a class="board-sign">어드민 페이지</a>
                     </div>
-                    <div class="btns" align="center">   
-                        <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
+                    
+                    <div class="frame-contents">
+                        {% if session.get('uid') %}
+                            {% include 'frame_board.html' %}
+                        {% else %}
+                        <div class="errMsg" align="center">
+                            비회원은 불가능한 작업입니다.
+                        </div>
+                        <div class="btns" align="center">   
+                            <button class="back-btn" type="button" onclick="javascript:history.back()">뒤로가기</button>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
             </div>
         </div>

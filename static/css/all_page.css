@@ -108,8 +108,10 @@ ul, li{
 .sidebar {
     background-color: #2980B9;
     max-width: 10em;
-    border-right: 0.01em grey solid;
+    border-right: thin grey solid;
+    border-left: thin grey solid;
     min-height: 50em;
+    margin-left: auto;
 }
 
     .member {
@@ -191,12 +193,19 @@ ul, li{
     color: #353535;
 }
 
+/* top */
+.top {
+    width: calc(100% - 10em);
+    margin: 0em auto;
+}
+
 /* 페이지 */
 .frame {
-    width: calc(80% - 10em);
-    padding: 3em 0em 0em 3em;
+    width: 100%;
+    padding: 3em;
     max-width: 62em;
     min-width: 60em;
+    margin-right: auto;
 }
 
 /* 페이지 전광판 */

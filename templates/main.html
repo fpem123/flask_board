@@ -8,27 +8,29 @@
     <body>
         {% include 'frame_header.html' %}
         
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-            <div class="frame">
-                <div class="frame-sigh">
-                    <a>게시판 리스트</a>
-                </div>
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
+                <div class="frame">
+                    <div class="frame-sigh">
+                        <a>게시판 리스트</a>
+                    </div>
 
-                <div class="frame-contents">
-                    <script>getMainArticles()</script>
-                    <div class="boards-frame">
-                    {% for board, name in boards.items() %}
-                        {% if board != 'all' %}
-                        <div class="board-block">
-                            <ul>
-                                <li class="name-block"><a class="board-name" href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a></li>
-                                <ul id="{{ board }}-articles" class="article-block">
+                    <div class="frame-contents">
+                        <script>getMainArticles()</script>
+                        <div class="boards-frame">
+                        {% for board, name in boards.items() %}
+                            {% if board != 'all' %}
+                            <div class="board-block">
+                                <ul>
+                                    <li class="name-block"><a class="board-name" href="{{ url_for('board', board=board, art_per_page=30) }}">{{ name }} 게시판</a></li>
+                                    <ul id="{{ board }}-articles" class="article-block">
+                                    </ul>
                                 </ul>
-                            </ul>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
                         </div>
-                        {% endif %}
-                    {% endfor %}
                     </div>
                 </div>
             </div>

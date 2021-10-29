@@ -9,24 +9,25 @@
     <body>
         {% include 'frame_header.html' %}
         
-        <div class="wrapper">
-            {% include 'frame_sidebar.html' %}
-            <div class="frame">
-                <div class="frame-sigh">
-                    {% include 'frame_board_sign.html' %}
-                </div>
-
-                <div class="frame-contents">
-                    <div class="errMsg" align="center">
-                        삭제되었습니다.
+        <div class="top">
+            <div class="wrapper">
+                {% include 'frame_sidebar.html' %}
+                <div class="frame">
+                    <div class="frame-sigh">
+                        {% include 'frame_board_sign.html' %}
                     </div>
-                    <div class="btns" align="center">   
-                        <button class="back-btn" type="button" onclick="location.href='{{ url_for('board', board=board) }}'">{{ board_name }}</button>
+
+                    <div class="frame-contents">
+                        <div class="errMsg" align="center">
+                            삭제되었습니다.
+                        </div>
+                        <div class="btns" align="center">   
+                            <button class="back-btn" type="button" onclick="location.href='{{ url_for('board', board=board) }}'">{{ board_name }}</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
         {% include 'frame_foot.html' %}
     </body>
 </html>
