@@ -1,5 +1,4 @@
 class BoardClass():
-
     def __init__(self):
         self.board_dict = {
             'all' : '전체',
@@ -8,6 +7,7 @@ class BoardClass():
             'game' : '게임',
             'anonymous' : '익명',
         }
+        self.not_allow_write = {'all', 'admin'}
 
     def get_board_dict(self):
         return self.board_dict

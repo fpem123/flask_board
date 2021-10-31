@@ -1,7 +1,7 @@
 <div class='sidebar'>
 {% include 'frame_member.html' %}
     <div class='boards'>
-        {% if True %}
+        {% if session.get('is_admin') is true %}
         <div class="board_list_title">관리자</div>
         <ul class="board_list">
             <li class="board">

@@ -15,6 +15,8 @@ from sqlite_class import SquliteClass
 
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 300 * 1024      # 업로드 파일 크기 300kb 로 제한
+app.config['UPLOAD_EXTENSIONS'] = ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']     # 파일 확장자 제한
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
@@ -300,6 +302,7 @@ def memberLoginRequest():
         # 세션에 유저 추가
         session['uid'] = request_uid
         session['nickname'] = getNickname(request_uid)
+        session['is_admin'] = isAdmin(request_uid)
         session['last_comment_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()   # 마지막 댓글 작성 시간
         session['last_article_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()    # 마지막 글 작성 시간
 
@@ -328,6 +331,7 @@ def memberLogout():
         # 세션 나가기
         session.pop("uid", None)
         session.pop("nickname", None)
+        session.pop('is_admin', False)
         session.pop("last_article_write", None)
         session.pop("last_comment_write", None)
         return makeReturnDict(True, '로그아웃 성공'), 200
@@ -708,7 +712,7 @@ def articleCreate():
 
     if boardObj.isNotAllowBoard(board):
         return errorPage(0)
-    elif board == 'etc':
+    elif board in boardObj.not_allow_write:
         return errorPage(msg="해당 게시판은 글을 작성할 수 없습니다.")
     elif not isLogin():
         return errorPage(4)
@@ -745,8 +749,9 @@ def imageUploadCall(board):
             )
         """
         image_id = sqliteObj.insertQuery(INSERT_IMAGE_FILE, (image_file_name, extension))
+        FILE_NAME = f"{board}-{image_id}{extension}"
         SAVE_DIR = f"static/image/{board}"
-        SAVE_PATH = SAVE_DIR + f"/{board}-{image_id}{extension}"
+        SAVE_PATH = SAVE_DIR + f"/" + FILE_NAME
         
         if not os.path.exists(SAVE_DIR):
             os.makedirs(SAVE_DIR)
@@ -755,6 +760,7 @@ def imageUploadCall(board):
 
         return {"uploaded": True, "url": "/" + SAVE_PATH}, 200
     except Exception as e:
+        print(e)
         return {"uploaded": False, "url": False}, 400
 
 
@@ -783,12 +789,22 @@ def articleCreateCall():
         return errorPage(5)
     elif not isExistUser(uid):
         return errorPage(2)
-    elif datetime.now().timestamp() - session.get('last_article_write') < 20:
+    elif datetime.now().timestamp() - session.get('last_article_write') < 5:
         return errorPage(msg="도배 방지.")
-    elif board in ['etc', 'admin']:
+    elif board in boardObj.not_allow_write:
         return errorPage(msg="해당 페이지는 글을 작성할 수 없습니다.")
 
     try:
+        SELECT_LAST_ARTICLE = """
+            SELCT   user_id, article_time
+            FROM    article
+            WHERE   board = ?
+        """
+        last_article = sqliteObj.selectQuery(SELECT_LAST_ARTICLE, (board,))
+        if last_article == uid and \
+            datetime.now().timestamp() - datetime.strptime(last_article[1], '%Y-%m-%d %H:%M:%S').timestamp() < 20:
+            return errorPage(msg="보배 방지.")
+
         INSERT_ARTICLE = """
             INSERT INTO article (
                 user_id,
@@ -803,7 +819,7 @@ def articleCreateCall():
             )
         """
         sqliteObj.insertQuery(INSERT_ARTICLE, (uid, board, title, content))
-        session['last_article_write'] = datetime.now().timestamp()
+        session['last_article_write'] = datetime.now().timestamp()      # 글 작성 시간 업데이트
 
         return redirect(url_for('board', board=board))
     except Exception as e:
@@ -1151,7 +1167,7 @@ def board():
         isSearch = option != 'all'
 
         # 게시판 페이지, db에서 가져온 정보
-        return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board), 
+        return render_template(f'board_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=False, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)

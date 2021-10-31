@@ -1,11 +1,9 @@
 function page_scroll_top() {
-    const wrapper = document.getElementsByClassName("wrapper")[0];
-    wrapper.scrollIntoView(true);
+    document.body.scrollIntoView(true);
 }
 
 function page_scroll_bottom() {
-    const wrapper = document.getElementsByClassName("wrapper")[0];
-    wrapper.scrollIntoView(false);
+    document.body.scrollIntoView(false);
 }
 
 function page_scroll_up() {
