@@ -15,8 +15,9 @@ from sqlite_class import SquliteClass
 
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 300 * 1024      # 업로드 파일 크기 300kb 로 제한
-app.config['UPLOAD_EXTENSIONS'] = ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']     # 파일 확장자 제한
+ALLOW_FILE_EXTENSION = {'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'}
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024      # 업로드 파일 크기 100kb 로 제한
+app.config['UPLOAD_EXTENSIONS'] = ALLOW_FILE_EXTENSION     # 파일 확장자 제한
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
@@ -738,6 +739,9 @@ def imageUploadCall(board):
     try:
         image_file_name = pathlib.Path(image.filename).name
         extension = pathlib.Path(image_file_name).suffix
+
+        if extension not in ALLOW_FILE_EXTENSION:
+            return {"uploaded": False, "url": False}, 400
 
         INSERT_IMAGE_FILE = """
             INSERT INTO image_files (
