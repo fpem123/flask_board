@@ -33,6 +33,7 @@ class SquliteClass():
         except Exception as e:
             cursor.close()
             self.conn.rollback()
+            raise e
 
 
     def selectQuery(self, query, data):
@@ -59,6 +60,7 @@ class SquliteClass():
         except Exception as e:
             print(e)
             cursor.close()
+            raise e
 
 
     def updateQuery(self, query, data):
@@ -85,6 +87,7 @@ class SquliteClass():
         except Exception as e:
             cursor.close()
             self.conn.rollback()
+            raise e
 
 
     def deleteQuery(self, query, data):
@@ -111,3 +114,4 @@ class SquliteClass():
         except Exception as e:
             cursor.close()
             self.conn.rollback()
+            raise e

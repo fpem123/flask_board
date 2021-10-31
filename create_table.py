@@ -84,7 +84,10 @@ CREATE_IMAGE_FILE_TABLE = """
         file_id integer not null primary key autoincrement,
         file_name char(50),
         file_type char(10) not null,
-        upload_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null
+        article_id int,
+        upload_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
+        CONSTRAINT article_fk FOREIGN KEY(article_id) REFERENCES article(article_id)
+         ON UPDATE CASCADE ON DELETE CASCADE 
     );
 """
 

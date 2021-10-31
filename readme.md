@@ -4,7 +4,7 @@
 
 * 사용한 오픈소스 : [CKEditor5](https://ckeditor.com/ckeditor-5/download/)
 
-* requirements : Flask, sqlite3
+* requirements : Flask, sqlite3, bs4
 
 * create_table.py 먼저 실행하고 server.py 실행하기
 
@@ -50,10 +50,6 @@
 * 리펙토링
 
 * 호스팅
-
-* 글 작성, 수정 js request로 변경
-
-* 글 작성 안내 문구: 사진 크기 제한(100kb), 사진 개수 제한(5개)
 
 ---
 

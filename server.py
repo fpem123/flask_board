@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import session, request
-from flask import render_template, redirect, url_for, escape
+from flask import render_template, escape
+from bs4 import BeautifulSoup as bs
 from datetime import datetime
 
 import pathlib
@@ -15,7 +16,7 @@ from sqlite_class import SquliteClass
 
 
 app = Flask(__name__)
-ALLOW_FILE_EXTENSION = {'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'}
+ALLOW_FILE_EXTENSION = {'jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'tiff'}
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024      # 업로드 파일 크기 100kb 로 제한
 app.config['UPLOAD_EXTENSIONS'] = ALLOW_FILE_EXTENSION     # 파일 확장자 제한
 app.secret_key = b"1q2w3e4r!"
@@ -740,7 +741,7 @@ def imageUploadCall(board):
         image_file_name = pathlib.Path(image.filename).name
         extension = pathlib.Path(image_file_name).suffix
 
-        if extension not in ALLOW_FILE_EXTENSION:
+        if extension[1:].lower() not in ALLOW_FILE_EXTENSION:
             return {"uploaded": False, "url": False}, 400
 
         INSERT_IMAGE_FILE = """
@@ -764,7 +765,6 @@ def imageUploadCall(board):
 
         return {"uploaded": True, "url": "/" + SAVE_PATH}, 200
     except Exception as e:
-        print(e)
         return {"uploaded": False, "url": False}, 400
 
 
@@ -809,6 +809,11 @@ def articleCreateCall():
             datetime.now().timestamp() - datetime.strptime(last_article[1], '%Y-%m-%d %H:%M:%S').timestamp() < 20:
             return makeReturnDict(False, '도배 방지.'), 400
 
+        content_soup = bs(content, 'html.parser')
+        img_soup = content_soup.find_all('img')
+        if len(img_soup) > 5:
+            return makeReturnDict(False, '사진은 5개 까지 업로드할 수 있습니다.'), 400
+
         INSERT_ARTICLE = """
             INSERT INTO article (
                 user_id,
@@ -824,6 +829,15 @@ def articleCreateCall():
         """
         article_id = sqliteObj.insertQuery(INSERT_ARTICLE, (uid, board, title, content))
         session['last_article_write'] = datetime.now().timestamp()      # 글 작성 시간 업데이트
+        
+        for img in img_soup:
+            img_id = re.search("\d+", img.get('src')).group()
+            UPDATE_IMAGE_ARTICLE_ID = """
+                UPDATE  image_files
+                SET     article_id = ?
+                WHERE   file_id = ?;
+            """
+            sqliteObj.updateQuery(UPDATE_IMAGE_ARTICLE_ID, (article_id, img_id))
 
         return makeReturnDict(True, '성공', article_id), 200
     except Exception as e:
