@@ -21,7 +21,7 @@ app.config['UPLOAD_EXTENSIONS'] = ALLOW_FILE_EXTENSION     # 파일 확장자 �
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
-sqliteObj = SquliteClass("flask_board.db")
+sqliteObj = SquliteClass("test.db")
 
 
 def isAdmin(uid: str) -> bool:
@@ -236,9 +236,9 @@ def memberJoinRequest():
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
 
     if isExistUser(uid=request_uid):
-        return makeReturnDict(False, '이미 존재하는 아이디입니다.', 0), 200
+        return makeReturnDict(False, '이미 존재하는 아이디입니다.', 0), 400
     elif isExistUser(nickname=request_nickname):
-        return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 200
+        return makeReturnDict(False, '이미 존재하는 닉네임입니다.', 2), 400
     elif isLogin():
         return makeReturnDict(False, '로그인한 유저는 할 수 없는 작업입니다.'), 400
     elif not isCorrectUidForm(request_uid):
@@ -295,7 +295,7 @@ def memberLoginRequest():
 
     # 존재하는 않는 유저
     if not isExistUser(request_uid):
-        return makeReturnDict(False, '존재하지 않는 유저입니다.', 0), 200
+        return makeReturnDict(False, '존재하지 않는 유저입니다.', 0), 400
     elif isLogin():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
     # 비밀번호가 일치하는지
@@ -307,9 +307,9 @@ def memberLoginRequest():
         session['last_comment_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()   # 마지막 댓글 작성 시간
         session['last_article_write'] = datetime(2000, 1, 1, 0, 0, 0).timestamp()    # 마지막 글 작성 시간
 
-        return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 200
+        return makeReturnDict(True, f"{session.get('nickname')}님 반갑습니다."), 400
     else:
-        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 1), 200
+        return makeReturnDict(False, '비밀번호가 일치하지 않습니다.', 1), 400
 
 
 ##############
@@ -494,7 +494,7 @@ def articleHit():
         res = sqliteObj.selectQuery(SELECT_HIT_HISTORY, (aid, uid))
 
         if res:
-            return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 200
+            return makeReturnDict(False, '추천은 게시물당 1번만 할 수 있습니다.'), 400
 
         # 추천 기록 추가
         INSERT_HIT_USER = """
@@ -779,35 +779,35 @@ def articleCreateCall():
         title = escape(request.form['title'])
         content = request.form['content']
     except Exception as e:
-        return errorPage(2)
+        return makeReturnDict(False, '잘못된 요청입니다.'), 400
 
     if len(title) == 0:
-        return errorPage(msg="제목을 전달받지 못했습니다.")
+        return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
-        return errorPage(msg="내용을 전달받지 못했습니다.")
+        return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
     elif boardObj.isNotAllowBoard(board):
-        return errorPage(0)
+        return makeReturnDict(False, '존재하지 않는 게시판 입니다.'), 400
     elif not isLogin():
-        return errorPage(4)
+        return makeReturnDict(False, '비회원은 할 수 없는 작업입니다.'), 400
     elif not isSessionUser(uid):
-        return errorPage(5)
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
     elif not isExistUser(uid):
-        return errorPage(2)
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
     elif datetime.now().timestamp() - session.get('last_article_write') < 5:
-        return errorPage(msg="도배 방지.")
+        return makeReturnDict(False, '도배 방지.'), 400
     elif board in boardObj.not_allow_write:
-        return errorPage(msg="해당 페이지는 글을 작성할 수 없습니다.")
+        return makeReturnDict(False, '해당 페이지는 글을 작성할 수 없습니다.'), 400
 
     try:
         SELECT_LAST_ARTICLE = """
-            SELCT   user_id, article_time
+            SELECT   user_id, article_time
             FROM    article
             WHERE   board = ?
         """
         last_article = sqliteObj.selectQuery(SELECT_LAST_ARTICLE, (board,))
         if last_article == uid and \
             datetime.now().timestamp() - datetime.strptime(last_article[1], '%Y-%m-%d %H:%M:%S').timestamp() < 20:
-            return errorPage(msg="보배 방지.")
+            return makeReturnDict(False, '도배 방지.'), 400
 
         INSERT_ARTICLE = """
             INSERT INTO article (
@@ -822,12 +822,12 @@ def articleCreateCall():
                 ?
             )
         """
-        sqliteObj.insertQuery(INSERT_ARTICLE, (uid, board, title, content))
+        article_id = sqliteObj.insertQuery(INSERT_ARTICLE, (uid, board, title, content))
         session['last_article_write'] = datetime.now().timestamp()      # 글 작성 시간 업데이트
 
-        return redirect(url_for('board', board=board))
+        return makeReturnDict(True, '성공', article_id), 200
     except Exception as e:
-        return errorPage(1)
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -1037,27 +1037,26 @@ def acrticleUpdate():
 def acrticleUpdateCall():
     # 글 수정
     try:
-        board = request.args.get('board', type=str)
-
         request_uid = request.form['uid']
         aid = request.form['aid']
+        board = request.form['board']
         title = escape(request.form['title'])
         content = request.form['content']
     except:
-        return errorPage(2)
+        return makeReturnDict(False, '잘못된 요청입니다.'), 400
 
     if len(title) == 0:
-        return errorPage(msg="제목을 전달받지 못했습니다.") 
+        return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
-        return errorPage(msg="내용을 전달받지 못했습니다.")
+        return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
     elif boardObj.isNotAllowBoard(board):
-        return errorPage(0)
+        return makeReturnDict(False, '존재하지 않는 게시판 입니다.'), 400
     elif not isLogin():
-        return errorPage(3)
+        return makeReturnDict(False, '비회원은 할 수 없는 작업입니다.'), 400
     elif not isSessionUser(request_uid):
-        return errorPage(5)
+        return makeReturnDict(False, '세션과 정보가 동일하지 않습니다.'), 400
     elif not isExistUser(request_uid):
-        return errorPage(2)
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
     
     try:
         # 회원은 아이디만으로도 글을 수정할 수 있다.
@@ -1069,7 +1068,7 @@ def acrticleUpdateCall():
         writer = sqliteObj.selectQuery(SELECT_ARTICLE_WRITER, (aid, ))[0][0]
 
         if writer != request_uid:
-            return errorPage(2)
+            return makeReturnDict(False, '수정 권한이 없습니다.'), 400
 
         # 회원용 게시물 수정
         UPDATE_ARTICLE = """
@@ -1080,9 +1079,9 @@ def acrticleUpdateCall():
             """
         sqliteObj.updateQuery(UPDATE_ARTICLE, (title, content, aid))
 
-        return redirect(url_for('board', board=board))
+        return makeReturnDict(True, '성공', aid), 200
     except Exception as e:
-        return errorPage(1)
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
 
 
 ##############
@@ -1126,7 +1125,6 @@ def articleDalete():
             WHERE article_id = ?;
         """
         sqliteObj.deleteQuery(DELETE_ARTIECLE, (aid, ))
-
 
         return makeReturnDict(True, '성공', board), 200
     except Exception as e:

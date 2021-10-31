@@ -20,9 +20,9 @@
                     <div class="frame-contents">
                         {% if session.get('uid') %}
                         <script>getArticleForUpdatePage('{{ aid }}', '{{ board }}');</script>
-                        <form action="{{ url_for('acrticleUpdateCall', board=board) }}" method="POST"
-                        onsubmit="return article_check(this)">
+                        <form id="write-form" method="POST" onsubmit="return sendUpdateArticle(this)">
                             <input type="hidden" name="aid" value='{{ aid }}'>
+                            <input type="hidden" name="board" value='{{ board }}'>
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <br>
                             <input type="text" id="title" name="title" value=""  maxlength="20"

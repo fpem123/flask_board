@@ -59,6 +59,98 @@ function sendHit(){
 }
 
 
+// 글 작성 리퀘스트
+function sendWriteArticle(form) {
+    try{
+        const uid_element = form.uid;
+        const board = form.board.value;
+
+        if (uid_element.value === undefined){
+            alert("로그인이 필요한 작업입니다.");
+    
+            return false;
+        }
+
+        if (article_check(form)){
+            return false;}
+
+        const formData = new FormData(form);
+        const url = '/board/write_submit';
+        formData.set('content', ckEditor.getData());
+
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (ALLOW_RESPONSE_STATUS.includes(response.status))
+                return response.json();
+            else
+                alert('작성 실패');
+        })
+        .then(result => {
+            if (result['result'])
+                window.location.replace(`/board/view?board=${board}&aid=${result['data']}`);
+            else
+                alert(result['msg']);
+        })
+        .catch(err => {
+            console.log(err);
+            alert("작성 실패");
+        });
+        return false;
+    }
+    catch(err){
+        console.log(err)
+        alert("에러가 발생했습니다.");
+        return false;
+    }
+}
+
+
+// 글 수정 리퀘스트
+function sendUpdateArticle(form) {
+    try{
+        const uid_element = form.uid;
+        const board = form.board.value;
+
+        if (uid_element.value === undefined){
+            alert("로그인이 필요한 작업입니다.");
+    
+            return false;
+        }
+
+        if (article_check(form)){
+            return false;}
+
+        const formData = new FormData(form);
+        const url = '/board/update_submit';
+        formData.set('content', ckEditor.getData());
+
+        fetch (url, { method: 'POST', body: formData })
+        .then(response=>{
+            if (ALLOW_RESPONSE_STATUS.includes(response.status))
+                return response.json();
+            else
+                alert('수정 실패');
+        })
+        .then(result => {
+            if (result['result'])
+                window.location.replace(`/board/view?board=${board}&aid=${result['data']}`);
+            else
+                alert(result['msg']);
+        })
+        .catch(err => {
+            console.log(err);
+            alert("수정 실패");
+        });
+        return false;
+    }
+    catch(err){
+        console.log(err)
+        alert("에러가 발생했습니다.");
+        return false;
+    }
+}
+
+
 // 글 삭제 리퀘스트
 function sendDeleteArticle(form, board) {
     try{

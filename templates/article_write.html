@@ -19,8 +19,7 @@
                     
                     <div class="frame-contents">
                         {% if session.get('uid') %}
-                        <form id="write-form" action="{{ url_for('articleCreateCall') }}" method="POST"
-                        onsubmit="return article_check(this)">
+                        <form id="write-form" method="POST" onsubmit="return sendWriteArticle(this)">
                             <input type="hidden" name="board" value='{{ board }}'>
                             <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <br>

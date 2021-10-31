@@ -5,7 +5,7 @@ function article_check(form){
         // CKEditor는 getData를 통해 값을 가져온다.
         let content = ckEditor.getData();
         content = content.replace(reg, "");
-
+        
         if (title.length < 1){
             form.title.focus();
             alert("제목을 작성해주세요.");
