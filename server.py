@@ -1083,6 +1083,11 @@ def acrticleUpdateCall():
 
         if writer != request_uid:
             return makeReturnDict(False, '수정 권한이 없습니다.'), 400
+        
+        content_soup = bs(content, 'html.parser')
+        img_soup = content_soup.find_all('img')
+        if len(img_soup) > 5:
+            return makeReturnDict(False, '사진은 5개 까지 업로드할 수 있습니다.'), 400
 
         # 회원용 게시물 수정
         UPDATE_ARTICLE = """
@@ -1092,6 +1097,15 @@ def acrticleUpdateCall():
             WHERE article_id = ?
             """
         sqliteObj.updateQuery(UPDATE_ARTICLE, (title, content, aid))
+        
+        for img in img_soup:
+            img_id = re.search("\d+", img.get('src')).group()
+            UPDATE_IMAGE_ARTICLE_ID = """
+                UPDATE  image_files
+                SET     article_id = ?
+                WHERE   file_id = ?;
+            """
+            sqliteObj.updateQuery(UPDATE_IMAGE_ARTICLE_ID, (aid, img_id))
 
         return makeReturnDict(True, '성공', aid), 200
     except Exception as e:
