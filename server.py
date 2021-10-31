@@ -20,7 +20,7 @@ app.config['UPLOAD_EXTENSIONS'] = ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff'] 
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
-sqliteObj = SquliteClass("test.db")
+sqliteObj = SquliteClass("flask_board.db")
 
 
 def isAdmin(uid: str) -> bool:

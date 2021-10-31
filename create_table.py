@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect("test.db")
+conn = sqlite3.connect("flask_board.db")
 
 
 #   user_id : pk, 유저 id
@@ -9,10 +9,10 @@ conn = sqlite3.connect("test.db")
 #   is_admin : 어드민 여부
 CREATE_USER_TABLE = """
     create table if not exists user(
-        user_id char(16) not null primary key,
-        password char(64) not null,
-        nickname char(10) UNIQUE not null
-        is_admin INTEGER default 0 not null
+        user_id     char(16) not null primary key,
+        password    char(64) not null,
+        nickname    char(10) UNIQUE not null,
+	    is_admin    INTEGER NOT NULL DEFAULT 0
     );
 """
 
