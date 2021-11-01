@@ -28,7 +28,6 @@ function sendHit(){
     let signal = true;
 
     formData.append('aid', aid);
-    formData.append('uid', UID);
 
     fetch (url, { method: 'POST', body: formData })
     .then(response=>{
@@ -62,17 +61,14 @@ function sendHit(){
 // 글 작성 리퀘스트
 function sendWriteArticle(form) {
     try{
-        const uid_element = form.uid;
         const board = form.board.value;
 
-        if (uid_element.value === undefined){
+        if (isUIDEmpty()){
             alert("로그인이 필요한 작업입니다.");
-    
-            return false;
+            return;
         }
-
-        if (article_check(form)){
-            return false;}
+        else if (article_check(form))
+            return false;
 
         const formData = new FormData(form);
         const url = '/board/write_submit';
@@ -108,17 +104,14 @@ function sendWriteArticle(form) {
 // 글 수정 리퀘스트
 function sendUpdateArticle(form) {
     try{
-        const uid_element = form.uid;
         const board = form.board.value;
 
-        if (uid_element.value === undefined){
+        if (isUIDEmpty()){
             alert("로그인이 필요한 작업입니다.");
-    
-            return false;
+            return;
         }
-
-        if (article_check(form)){
-            return false;}
+        else if (article_check(form))
+            return false;
 
         const formData = new FormData(form);
         const url = '/board/update_submit';
@@ -154,12 +147,9 @@ function sendUpdateArticle(form) {
 // 글 삭제 리퀘스트
 function sendDeleteArticle(form, board) {
     try{
-        const uid_element = form.uid;
-
-        if (uid_element.value === undefined){
+        if (isUIDEmpty()){
             alert("로그인이 필요한 작업입니다.");
-    
-            return false;
+            return;
         }
         
         const formData = new FormData(form);
@@ -193,16 +183,13 @@ function sendDeleteArticle(form, board) {
 // 댓글 작성 리퀘스트
 function sendInsertComment(form) {
     try{
-        const uid_element = form.uid;
         const comment_element = form.input_comment;
 
-        if (uid_element.value === undefined){
+        if (isUIDEmpty()){
             alert("로그인이 필요한 작업입니다.");
-
-            return false;
+            return;
         }
-
-        if (comment_element.value.length === 0)
+        else if (comment_element.value.length === 0)
         {
             alert("댓글을 작성해 주세요");
             comment_element.focus();
@@ -225,7 +212,7 @@ function sendInsertComment(form) {
         })
         .then(result => {
             if (result['result']){
-                getComments(form.aid.value, form.board.value, uid_element.value);
+                getComments(form.aid.value, form.board.value);
                 document.getElementById( 'input-comment' ).value = "";
             }
             else if (signal){
@@ -254,12 +241,9 @@ function sendInsertComment(form) {
 // 댓글 삭제 리퀘스트
 function sendDeleteComment(form){
     try{
-        const uid_element = form.uid
-        
-        if (uid_element.value === undefined){
+        if (isUIDEmpty()){
             alert("로그인이 필요한 작업입니다.");
-    
-            return false;
+            return;
         }
         
         const formData = new FormData(form);
@@ -278,7 +262,7 @@ function sendDeleteComment(form){
         .then(result => {
             if (result['result']){
                 alert(result['msg']);
-                getComments(form.aid.value, form.board.value, uid_element.value);
+                getComments(form.aid.value, form.board.value);
             }
             else if (signal){
                 signal = false;

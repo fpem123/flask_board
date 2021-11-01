@@ -23,7 +23,6 @@
                         <form id="write-form" method="POST" onsubmit="return sendUpdateArticle(this)">
                             <input type="hidden" name="aid" value='{{ aid }}'>
                             <input type="hidden" name="board" value='{{ board }}'>
-                            <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <br>
                             <input type="text" id="title" name="title" value=""  maxlength="20"
                             placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">

@@ -482,6 +482,8 @@ def articleHit():
     
     if not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'),400
+    elif not isExistUser(session.get('uid')):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
 
     try:
         # 추천했던 유저인지 확인
@@ -605,6 +607,8 @@ def commentCreateCall():
         return makeReturnDict(False, '존재하지 않는 게시판입니다.'), 400
     elif not isLogin():
         return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+    elif not isExistUser(session.get('uid')):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
     elif datetime.now().timestamp() - session.get('last_comment_write') < 1:
         return makeReturnDict(False, '도배 방지.'), 400
 
@@ -782,6 +786,8 @@ def articleCreateCall():
         return makeReturnDict(False, '존재하지 않는 게시판 입니다.'), 400
     elif not isLogin():
         return makeReturnDict(False, '비회원은 할 수 없는 작업입니다.'), 400
+    elif not isExistUser(session.get('uid')):
+        return makeReturnDict(False, '존재하지 않는 유저입니다.'), 400
     elif datetime.now().timestamp() - session.get('last_article_write') < 5:
         return makeReturnDict(False, '도배 방지.'), 400
     elif board in boardObj.not_allow_write:
@@ -1165,7 +1171,7 @@ def acrticleUpdateCall():
 
 
 ##############
-## 글 삭제 페이지
+## 글 삭제 요청
 ##############
 @app.route('/delete/article', methods=['POST'])
 def articleDalete():

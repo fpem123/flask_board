@@ -1,5 +1,5 @@
 // 댓글 상태 업데이트
-function commentBuilder(comments, uid, aid, board) {
+function commentBuilder(comments, aid, board) {
     document.getElementById( "num-comments" ).innerText = comments.length;
     let table = document.getElementById( "comments" );
     table.removeChild(table.getElementsByTagName( "tbody" )[0]);
@@ -27,7 +27,6 @@ function commentBuilder(comments, uid, aid, board) {
             const del_form = document.createElement('form');
             del_form.setAttribute("onsubmit", "return sendDeleteComment(this)");
             del_form.innerHTML = `
-            <input type="hidden" name="uid" value=${uid}>
             <input type="hidden" name="aid" value=${aid}>
             <input type="hidden" name="board" value=${board}>
             <input type="hidden" name="cid" value=${comment[0]}>
@@ -42,8 +41,8 @@ function commentBuilder(comments, uid, aid, board) {
 
 
 // 댓글 가져오기
-function getComments(aid, board, uid=undefined) {
-    const url = `/comments/get?aid=${aid}&board=${board}&uid=${uid}`;
+function getComments(aid, board) {
+    const url = `/comments/get?aid=${aid}&board=${board}`;
 
     fetch (url)
     .then(response=>{
@@ -52,7 +51,7 @@ function getComments(aid, board, uid=undefined) {
     })
     .then(result => {
         if (result['result'])
-            commentBuilder(result['data'], uid, aid, board);
+            commentBuilder(result['data'], aid, board);
     })
     .catch(err => {
         console.log(err);

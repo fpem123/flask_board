@@ -21,7 +21,6 @@
                         {% if session.get('uid') %}
                         <form id="write-form" method="POST" onsubmit="return sendWriteArticle(this)">
                             <input type="hidden" name="board" value='{{ board }}'>
-                            <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                             <br>
                             <input type="text" id="title" name="title" maxlength="20"
                             placeholder="제목을 입력하세요." onkeydown="return onKeydownEnter()">

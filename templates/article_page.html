@@ -41,7 +41,7 @@
                         </div>
                         
                         <div class="view-comment">
-                            <script>getComments('{{ aid }}', '{{ board }}', '{{ session.get("uid") }}');</script>
+                            <script>getComments('{{ aid }}', '{{ board }}');</script>
                             <table id="comments">
                                 <caption>
                                     <h5>댓글 <label id="num-comments"></label>개</h5>
@@ -61,7 +61,6 @@
                             {% if session['uid'] %}
                             <label>{{ session.get('nickname') }}</label>
                             <form class="form-comment" method="POST" onsubmit="return sendInsertComment(this)">
-                                <input type="hidden" name="uid" value={{ session.get('uid') }}>
                                 <input type="hidden" name="aid" value={{ aid }}>
                                 <input type="hidden" name="board" value={{ board }}>
                                 <input type="text" id="input-comment" name="input_comment" maxlength="50">
@@ -78,12 +77,10 @@
                             <button class="right-btn need-board-check" type="button" onclick="location.href='{{ url_for('articleCreate', board=board) }}'">글쓰기</button>
                             {% endif %}
                             <form name="delete_article" onsubmit="return sendDeleteArticle(this, '{{ board }}')" method="POST">
-                                <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                                 <input type="hidden" name="aid" value="{{ aid }}">
                                 <button class="right-btn del-btn flag-need" type="submit">삭제</button>
                             </form>
                             <form name="update_article" action="{{ url_for('acrticleUpdate', board=board) }}" method="POST">
-                                <input type="hidden" name="uid" value="{{ session.get('uid') }}">
                                 <input type="hidden" name="aid" value="{{ aid }}">
                                 <button class="right-btn flag-need" type="submit">수정</button>
                             </form>
