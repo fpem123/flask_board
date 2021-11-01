@@ -12,7 +12,8 @@ CREATE_USER_TABLE = """
         user_id     char(16) not null primary key,
         password    char(64) not null,
         nickname    char(10) UNIQUE not null,
-	    is_admin    INTEGER NOT NULL DEFAULT 0
+	    is_admin    INTEGER NOT NULL DEFAULT 0,
+        ban         TIMESTAMP
     );
 """
 
@@ -26,15 +27,15 @@ CREATE_USER_TABLE = """
 #   hit : 추천 수
 CREATE_ARTICLE_TABLE = """
     create table if not exists article(
-        article_id integer not null primary key autoincrement,
-        board char(10) not null,
-        user_id char(16),
-        title char(20) not null,
+        article_id  integer not null primary key autoincrement,
+        board       char(10) not null,
+        user_id     char(16),
+        title       char(20) not null,
         article_time TIMESTAMP DEFAULT (datetime(CURRENT_TIMESTAMP, 'localtime')) not null,
         content blob not null,
-        view unsigned int default 0 not null,
+        view        unsigned int default 0 not null,
         hit unsigend int default 0 not null,
-        CONSTRAINT user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id)
+        CONSTRAINT  user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id)
          ON UPDATE CASCADE ON DELETE SET NULL
     );
 """

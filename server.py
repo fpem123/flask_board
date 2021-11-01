@@ -24,8 +24,8 @@ app.config['UPLOAD_EXTENSIONS'] = ALLOW_FILE_EXTENSION     # 파일 확장자 �
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
-sqliteObj = SquliteClass(path.join(ROOT, "flask_board.db"))
-#sqliteObj = SquliteClass("test.db")
+#sqliteObj = SquliteClass(path.join(ROOT, "flask_board.db"))
+sqliteObj = SquliteClass("test.db")
 
 
 def isAdmin(uid: str) -> bool:
@@ -856,6 +856,93 @@ def articleCreateCall():
 
 
 ##############
+## 게시판 페이지에 사용할 SQL 쿼리
+##############
+def boardQueryBuilder(board, option, keyword) -> str:
+    try:
+        articles_query = """
+            SELECT  ROW_NUMBER() OVER(ORDER BY article.article_id DESC) as row_num, article.article_id, 
+				    nickname, title, article_time, view, hit, count(comment_id) as num_comment, board
+            FROM    article 
+                    left join comment
+                    on article.article_id = comment.article_id
+                    left join user
+                    on article.user_id = user.user_id
+            WHERE   """
+        count_query = """
+            SELECT  count(*)
+            FROM    article
+                    left join user
+                    on article.user_id = user.user_id
+            WHERE   
+        """
+        keyword = '%' + keyword + '%'
+        data = []
+
+        # 게시판 확인
+        if board == 'all':
+            append_query = "board != 'anonymous'"
+            articles_query += append_query
+            count_query += append_query
+        elif board == 'admin':
+            append_query =  "1 = 1"
+            articles_query += append_query
+            count_query += append_query
+        else:
+            append_query = "board=?"
+            articles_query += append_query
+            count_query += append_query
+            data.append(board)
+
+        # 검색 옵션 추가
+        if option == 'title, content':
+            append_query = """ and (
+            title like ? ESCAPE '$' or
+            content like ? ESCAPE '$') """
+            articles_query += append_query
+            count_query += append_query
+            data.extend([keyword, keyword])
+        elif option == 'title':
+            append_query = """ and
+            title like ? ESCAPE '$'
+            """
+            articles_query += append_query
+            count_query += append_query
+            data.append(keyword)
+        elif option == 'content':
+            append_query = """ and
+            content like ? ESCAPE '$'
+            """
+            articles_query += append_query
+            data.append(keyword)
+        elif option == 'user' and board != 'anonymous':
+            append_query = """ and
+            nickname like ? ESCAPE '$'
+            """
+            articles_query += append_query
+            count_query += append_query
+            data.append(keyword)
+        
+        articles_query += """
+        GROUP BY article.article_id
+        """
+
+        articles_query = """
+            SELECT  article_id, nickname, title, article_time, view, hit, num_comment, board
+            FROM	(
+        """     \
+        + articles_query \
+        + """
+            )
+            WHERE row_num BETWEEN ? and ?
+            ORDER BY row_num ASC;
+        """
+        return articles_query, count_query, data
+    except Exception as e:
+        raise Exception("DB 확인 중 에러가 발생했습니다.")
+
+
+##############
 ## 글 목록 가져오기 요청
 ##############
 @app.route('/articles/get', methods=['GET'])
@@ -873,10 +960,10 @@ def getArticles():
     try:
         page_length = 10
         SELECT_ARTICLE, SELECT_BOARD_SIZE, data = boardQueryBuilder(board, option, keyword)
+        print(SELECT_BOARD_SIZE)
         # 게시판 전체 글 개수 가져오기
         a_cnt = sqliteObj.selectQuery(SELECT_BOARD_SIZE, data)[0][0]      # 전체 글의 개수
         p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
-
         # 게시물 가져오기
         data.extend([1 + art_per_page * (page - 1), art_per_page * page])
         articles = sqliteObj.selectQuery(SELECT_ARTICLE, data)
@@ -1202,98 +1289,42 @@ def board():
 
 
 ##############
-## 게시판 페이지에 사용할 SQL 쿼리
-##############
-def boardQueryBuilder(board, option, keyword) -> str:
-    try:
-        articles_query = """
-            SELECT  ROW_NUMBER() OVER(ORDER BY article.article_id DESC) as row_num, article.article_id, 
-				    nickname, title, article_time, view, hit, count(comment_id) as num_comment, board
-            FROM    article 
-                    left join comment
-                    on article.article_id = comment.article_id
-                    left join user
-                    on article.user_id = user.user_id
-            WHERE   """
-        count_query = """
-            SELECT  count(*)
-            FROM    article
-            WHERE   
-        """
-        keyword = '%' + keyword + '%'
-        data = []
-
-        if board == 'all':
-            append_query = "board != 'anonymous'"
-            articles_query += append_query
-            count_query += append_query
-        elif board == 'admin':
-            append_query =  "1 = 1"
-            articles_query += append_query
-            count_query += append_query
-        else:
-            append_query = "board=?"
-            articles_query += append_query
-            count_query += append_query
-            data.append(board)
-
-        if option == 'title, content':
-            append_query = """ and (
-            title like ? ESCAPE '$' or
-            content like ? ESCAPE '$') """
-            articles_query += append_query
-            count_query += append_query
-            data.extend([keyword, keyword])
-        elif option == 'title':
-            append_query = """ and
-            title like ? ESCAPE '$'
-            """
-            articles_query += append_query
-            count_query += append_query
-            data.append(keyword)
-        elif option == 'content':
-            append_query = """ and
-            content like ? ESCAPE '$'
-            """
-            articles_query += append_query
-            data.append(keyword)
-        elif option == 'user' and board != 'anonymous':
-            append_query = """ and
-            nickname like ? ESCAPE '$'
-            """
-            articles_query += append_query
-            count_query += append_query
-            data.append(keyword)
-        
-        articles_query += """
-        GROUP BY article.article_id
-        """
-
-        articles_query = """
-            SELECT  article_id, nickname, title, article_time, view, hit, num_comment, board
-            FROM	(
-        """     \
-        + articles_query \
-        + """
-            )
-            WHERE row_num BETWEEN ? and ?
-            ORDER BY row_num ASC;
-        """
-        return articles_query, count_query, data
-    except Exception as e:
-        raise Exception("DB 확인 중 에러가 발생했습니다.")
-
-
-##############
 ## 어드민용 게시판 페이지
 ##############
-@app.route('/admin/baord', methods=['POST'])
+@app.route('/admin/board', methods=['GET'])
 def adminBoard():
+    try:
+        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
+    except Exception as e:
+        return errorPage(2)
+    
+    try:
+        if not isLogin():
+            return errorPage(4)
+        elif not isAdmin(session.get('uid')):
+            return errorPage(msg="어드민 전용 페이지입니다.")
+        
+        isSearch = option != 'all'
+
+        # 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
+        return render_template('admin_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
+        option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
+    except Exception as e:
+        return errorPage(1)
+
+
+##############
+## 어드민용 유저 관리 페이지
+##############
+@app.route('/admin/user_management', methods=['POST'])
+def adminUserManage():
     try:
         request_uid = request.form['uid']
 
-        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
-        option = request.args.get('option', type=str, default='all')
+        page = request.args.get('page', type=int, default=1)        # 현재 페이지
+        option = request.args.get('option', type=str, default='all')    # id or nickname
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
         return errorPage(2)
@@ -1310,7 +1341,6 @@ def adminBoard():
         
         isSearch = option != 'all'
 
-        # TO-DO : 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
         return render_template('admin_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
         option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:

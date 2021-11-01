@@ -1,3 +1,4 @@
+// 게시글 삭제 요청
 function sendDeleteArticleForAdmin(form){
     try{
         const uid_element = form.uid;
@@ -35,41 +36,23 @@ function sendDeleteArticleForAdmin(form){
     }
 }
 
-
 // 페이징을 위한 li 생성
-function mkPagingLiForAdmin(uid, page, current_page, query, char){
+function mkPagingLiForAdmin(page, current_page, query, char){
     const paging_li = document.createElement( "li" );
-    const paging_form = document.createElement( "form" );
     const paging_anchor = document.createElement( "a" );
-    const paging_input = document.createElement( "input" );
 
     paging_li.className = "page";
 
-    if (page != current_page) {
-        paging_form.action = `/admin/baord?page=${page}&art_per_page=30`;
-        paging_form.name = `go_admin_page_${page}`;
-        paging_form.method = "POST";
-        paging_input.type = "hidden";
-        paging_input.value = uid;
-        paging_input.name = "uid";
-        
-        paging_anchor.href = "#";
-        paging_anchor.setAttribute("onClick", `document.go_admin_page_${page}.submit()`);
-        paging_anchor.innerText = char;
-
-        paging_form.appendChild(paging_input);
-        paging_form.appendChild(paging_anchor);
-    }
-    else
-        paging_li.innerText = page
-
-    paging_li.appendChild(paging_form);
+    if (page != current_page)
+        paging_anchor.href = "/admin/board" + query + `&page=${page}`;
+    paging_anchor.innerText = char;
+    paging_li.appendChild(paging_anchor);
 
     return paging_li
 }
 
 // 글 목록 상태 업데이트
-function boardBuilderForAdmin(data, uid, board, search_data) {
+function boardBuilderForAdmin(data, search_data) {
     const table = document.getElementById( "board-table" );
     const msg_block = document.getElementById( "board-msg" );
     table.removeChild(table.getElementsByTagName("tbody")[0]);
@@ -128,24 +111,23 @@ function boardBuilderForAdmin(data, uid, board, search_data) {
     const paging_ui = document.getElementById( "paging-ui" );
 
     if (data['start'] > 10) {
-        const paging_li = mkPagingLiForAdmin(uid, data['start'] - 1, search_data["page"], search_data['query'], "◀");
+        const paging_li = mkPagingLiForAdmin(data['start'] - 1, search_data["page"], search_data['query'], "◀");
         paging_ui.appendChild(paging_li);
     }
 
     for (let page = data['start']; page < data['end']; page++) {
-        const paging_li = mkPagingLiForAdmin(uid, page, search_data["page"], search_data['query'], page);
+        const paging_li = mkPagingLiForAdmin(page, search_data["page"], search_data['query'], page);
         paging_ui.appendChild(paging_li);
     }
 
     if (data['end'] < data['last_page']) {
-        const paging_li = mkPagingLiForAdmin(uid, data['end'], search_data["page"], search_data['query'], "▶");
+        const paging_li = mkPagingLiForAdmin(data['end'], search_data["page"], search_data['query'], "▶");
         paging_ui.appendChild(paging_li);
     }
 }
 
-
 // 글 목록 가져오기
-function getArticlesForAdmin(board, uid, aid=undefined, page=undefined, art_per_page=undefined, option=undefined, keyword=undefined) {
+function getArticlesForAdmin(board, aid=undefined, page=undefined, art_per_page=undefined, option=undefined, keyword=undefined) {
     let query = `?board=${board}`;
 
     if (art_per_page)
@@ -169,7 +151,7 @@ function getArticlesForAdmin(board, uid, aid=undefined, page=undefined, art_per_
     })
     .then(result => {
         if (result['result'])
-            boardBuilderForAdmin(result['data'], uid, board, search_data);
+            boardBuilderForAdmin(result['data'], search_data);
     })
     .catch(err => {
         console.log(err);

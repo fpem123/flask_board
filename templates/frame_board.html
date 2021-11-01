@@ -16,7 +16,11 @@
         <ui id='paging-ui'>
         </ui>
     </div>
+    {% if board == 'admin' %}
+    <form class="search" action="{{ url_for('adminBoard') }}", method="GET">
+    {% else %}
     <form class="search" action="{{ url_for('board') }}", method="GET">
+    {% endif %}
         <input type="hidden" name="board" value="{{ board }}">
         <input type="hidden" name="art_per_page" value="{{ 30 }}">
         <select class="search-option" name="option">
