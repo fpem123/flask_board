@@ -607,6 +607,8 @@ def commentCreateCall():
     
     if len(new_comment) == 0:
         return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
+    elif len(new_comment) > 50:
+        return makeReturnDict(False, '댓글은 50자 까지만 작성할 수 있습니다.'), 400 
     elif boardObj.isNotAllowBoard(board):
         return makeReturnDict(False, '존재하지 않는 게시판입니다.'), 400
     elif not isLogin():
@@ -790,6 +792,10 @@ def articleCreateCall():
         return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
         return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
+    elif len(title) > 20:
+        return makeReturnDict(False, '제목은 20자 까지만 작성 가능합니다.'), 400
+    elif len(content) > 1000:
+        return makeReturnDict(False, '내용은 1000자 까지만 작성 가능합니다.'), 400
     elif boardObj.isNotAllowBoard(board):
         return makeReturnDict(False, '존재하지 않는 게시판 입니다.'), 400
     elif not isLogin():
@@ -1051,6 +1057,10 @@ def acrticleUpdateCall():
         return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
         return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
+    elif len(title) > 20:
+        return makeReturnDict(False, '제목은 20자 까지만 작성 가능합니다.'), 400
+    elif len(content) > 1000:
+        return makeReturnDict(False, '내용은 1000자 까지만 작성 가능합니다.'), 400
     elif boardObj.isNotAllowBoard(board):
         return makeReturnDict(False, '존재하지 않는 게시판 입니다.'), 400
     elif not isLogin():
