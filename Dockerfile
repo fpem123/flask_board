@@ -13,7 +13,7 @@ RUN pip install flask \
 WORKDIR /app
 COPY . .
 
-EXPOSE 8000
+EXPOSE 80
 
 RUN python create_table.py
 
