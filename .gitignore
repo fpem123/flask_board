@@ -1,7 +1,8 @@
 test.db
 test.py
 
-static/ckeditor5
+static/ckeditor5/translations
+static/ckeditor5/sample
 static/image
 
 __pycache__
