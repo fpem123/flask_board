@@ -2,6 +2,8 @@
 
 ## 사용법
 
+* 호스팅 : [pythonanywhere](http://hoseop.pythonanywhere.com/)
+
 * 사용한 오픈소스 : [CKEditor5](https://ckeditor.com/ckeditor-5/download/)
 
 * requirements : Flask, sqlite3, bs4
@@ -16,6 +18,8 @@
 ---
 
 ## DONE
+
+* 호스팅
 
 * 게시판 검색
 
@@ -48,8 +52,6 @@
 * 중복 html코드들 frame화
 
 * 리펙토링
-
-* 호스팅
 
 ---
 
