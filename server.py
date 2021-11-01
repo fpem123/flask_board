@@ -732,17 +732,19 @@ def imageUploadCall(board):
     try:
         image = request.files['upload']
     except Exception as e:
-        return {"uploaded": False, "url": False}, 400
+        return {"uploaded": False, "error": {"message": "업로드 불가능한 사진입니다."}}, 400
 
     if boardObj.isNotAllowBoard(board):
-        return {"uploaded": False, "url": False}, 400
+        return {"uploaded": False, "error": {"message": "존재하지 않는 게시판 입니다."}}, 400
+    elif board in boardObj.not_allow_write:
+        return {"uploaded": False, "error": {"message": "업로드 불가능한 게시판 입니다."}}, 400
 
     try:
         image_file_name = pathlib.Path(image.filename).name
         extension = pathlib.Path(image_file_name).suffix
 
         if extension[1:].lower() not in ALLOW_FILE_EXTENSION:
-            return {"uploaded": False, "url": False}, 400
+            return {"uploaded": False, "error": {"message": "업로드 불가능한 확장자입니다."}}, 400
 
         INSERT_IMAGE_FILE = """
             INSERT INTO image_files (
@@ -754,7 +756,7 @@ def imageUploadCall(board):
             )
         """
         image_id = sqliteObj.insertQuery(INSERT_IMAGE_FILE, (image_file_name, extension))
-        FILE_NAME = f"{board}-{image_id}{extension}"
+        FILE_NAME = f"{image_id}{extension}"
         SAVE_DIR = f"static/image/{board}"
         SAVE_PATH = SAVE_DIR + f"/" + FILE_NAME
         
@@ -765,7 +767,7 @@ def imageUploadCall(board):
 
         return {"uploaded": True, "url": "/" + SAVE_PATH}, 200
     except Exception as e:
-        return {"uploaded": False, "url": False}, 400
+        return {"uploaded": False, "error": {"message": "서버에서 에러가 발생했습니다."}}, 400
 
 
 ##############
@@ -983,25 +985,8 @@ def acrticlePage():
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=aid, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
+        print(e)
         return errorPage(1)
-
-
-##############
-## 유저 체크 페이지
-## 비회원 게시판 전용 비밀번호 검문 페이지
-##############
-@app.route('/board/anonymous_check')
-def anonymousCheck():
-    try:
-        board = request.args.get('board', type=str)
-        uid = request.args.get('uid', type=str)
-        aid = request.args.get('aid', type=int)
-        check_type = request.args.get('check_type', type=str)
-
-        return render_template('anonymous_check.html', board=board, board_name=boardObj.get_board_name(board), 
-        uid=uid, aid=aid, check_type=check_type, boards=boardObj.get_board_dict()), 200
-    except Exception as e:
-        return errorPage(2)
 
 
 ##############
