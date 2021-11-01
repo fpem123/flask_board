@@ -3,6 +3,7 @@ from flask import session, request
 from flask import render_template, escape
 from bs4 import BeautifulSoup as bs
 from datetime import datetime
+from os import path
 
 import pathlib
 import hashlib
@@ -15,6 +16,7 @@ from board_class import BoardClass
 from sqlite_class import SquliteClass
 
 
+ROOT = path.dirname(path.realpath(__file__))
 app = Flask(__name__)
 ALLOW_FILE_EXTENSION = {'jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'tiff'}
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024      # 업로드 파일 크기 100kb 로 제한
@@ -22,7 +24,7 @@ app.config['UPLOAD_EXTENSIONS'] = ALLOW_FILE_EXTENSION     # 파일 확장자 �
 app.secret_key = b"1q2w3e4r!"
 #app.permanent_session_lifetime = timedelta(minutes=10)  # 세션 시간 10분으로 설정
 boardObj = BoardClass()
-sqliteObj = SquliteClass("flask_board.db")
+sqliteObj = SquliteClass(path.join(ROOT, "flask_board.db"))
 #sqliteObj = SquliteClass("test.db")
 
 
@@ -1391,5 +1393,5 @@ def errorPage(signal: int=-1, msg=None) -> str:
 
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=80, debug=True)
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80, debug=True)
+    #app.run(host='0.0.0.0', port=80)
