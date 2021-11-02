@@ -1439,6 +1439,10 @@ def setNicknameForAdmin():
             return makeReturnDict(False, '접근 권한이 없습니다.'), 400
         elif isAdmin(target_user):
             return makeReturnDict(False, '어드민은 닉네임은 바꿀 수 없습니다.'), 400
+        elif isExistUser(nickname=new_nickname):
+            return makeReturnDict(False, '이미 존재하는 닉네임입니다.'), 400
+        elif not isCorrectNicknameForm(new_nickname):
+            return makeReturnDict(False, '올바르지 않은 닉네임입니다.'), 400
 
         UPDATE_USER_NICKNAME = """
             UPDATE  user
