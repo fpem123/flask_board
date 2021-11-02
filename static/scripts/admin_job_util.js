@@ -35,7 +35,7 @@ function sendDeleteArticleForAdmin(form){
     return false;
 }
 
-// 페이징을 위한 li 생성
+// 게시글 목록 페이징을 위한 li 생성
 function mkPagingLiForAdmin(page, current_page, query, char){
     const paging_li = document.createElement( "li" );
     const paging_anchor = document.createElement( "a" );
@@ -158,8 +158,23 @@ function getArticlesForAdmin(board, aid=undefined, page=undefined, art_per_page=
 }
 
 
+// 유저 목록 페이징을 위한 li 생성
+function mkPagingUserLiForrAdmin(page, current_page, query, char){
+    const paging_li = document.createElement( "li" );
+    const paging_anchor = document.createElement( "a" );
+
+    paging_li.className = "page";
+
+    if (page != current_page)
+        paging_anchor.href = "/admin/user_management" + query + `&page=${page}`;
+    paging_anchor.innerText = char;
+    paging_li.appendChild(paging_anchor);
+
+    return paging_li
+}
+
 // 유저 목록 상태 업데이트
-function userBuilderForAdmin(data) {
+function userBuilderForAdmin(data, search_data) {
     const table = document.getElementById( "board-table" );
     const msg_block = document.getElementById( "board-msg" );
     table.removeChild(table.getElementsByTagName("tbody")[0]);
@@ -194,7 +209,7 @@ function userBuilderForAdmin(data) {
             nickname_change_form.setAttribute("onsubmit", "return userNicknameChange(this)");
             nickname_change_form.innerHTML = `
                 <input type="hidden" name="uid" value=${userinfo[0]}>
-                <input type="text" name="new_nickname" maxlength=10 value=${userinfo[1]}>
+                <input type="text" class="nickname_input" name="new_nickname" maxlength=10 value=${userinfo[1]}>
                 <button class="admin-submit" type="submit">변경</button>
             `;
             user_nickname_change_cell.appendChild(nickname_change_form);
@@ -231,25 +246,24 @@ function userBuilderForAdmin(data) {
         }
     }
 
-    /*
+    
     // 페이징 상태 업데이트
     const paging_ui = document.getElementById( "paging-ui" );
 
     if (data['start'] > 10) {
-        const paging_li = mkPagingLiForAdmin(data['start'] - 1, search_data["page"], search_data['query'], "◀");
+        const paging_li = mkPagingUserLiForrAdmin(data['start'] - 1, search_data["page"], search_data['query'], "◀");
         paging_ui.appendChild(paging_li);
     }
 
     for (let page = data['start']; page < data['end']; page++) {
-        const paging_li = mkPagingLiForAdmin(page, search_data["page"], search_data['query'], page);
+        const paging_li = mkPagingUserLiForrAdmin(page, search_data["page"], search_data['query'], page);
         paging_ui.appendChild(paging_li);
     }
 
     if (data['end'] < data['last_page']) {
-        const paging_li = mkPagingLiForAdmin(data['end'], search_data["page"], search_data['query'], "▶");
+        const paging_li = mkPagingUserLiForrAdmin(data['end'], search_data["page"], search_data['query'], "▶");
         paging_ui.appendChild(paging_li);
     }
-    */
 }
 
 
@@ -264,6 +278,8 @@ function getUsersForAdmin(page=undefined, art_per_page=undefined, option=undefin
 
     let url = "/userinfos/get" + query;
 
+    const search_data = { "query": query, "page": page, "art_per_page": art_per_page, "option": option, "keyword": keyword };
+
     if (page)
         url += `&page=${page}`;
 
@@ -274,7 +290,7 @@ function getUsersForAdmin(page=undefined, art_per_page=undefined, option=undefin
     })
     .then(result => {
         if (result['result'])
-            userBuilderForAdmin(result["data"]);
+            userBuilderForAdmin(result["data"], search_data);
     })
     .catch(err => {
         console.log(err);

@@ -1382,7 +1382,6 @@ def getUserinfos():
     try:
         if not isAdmin(session.get('uid')):
             return makeReturnDict(False, '접근 권한이 없습니다.'), 400
-
         page_length = 10
         SELECT_USERS, SELECT_USER_SIZE, data = userQueryBuilder(option, keyword)
         # 유저 수 가져오기

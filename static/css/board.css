@@ -68,7 +68,7 @@ col.col-nickname-change-btn {
 }
 
 col.col-state, col.col-user-grade {
-    width: 7.5%;
+    width: 10%;
 }
 
 col.col-user-nickname {
@@ -77,6 +77,10 @@ col.col-user-nickname {
 
 col.col-user-id {
     width: 10%;
+}
+
+.nickname_input {
+    width: 10em;
 }
 
 .admin-submit {
