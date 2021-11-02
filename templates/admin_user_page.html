@@ -14,12 +14,35 @@
                 {% include 'frame_sidebar.html' %}
                 <div class="frame">
                     <div class="frame-sigh">
-                        <a class="board-sign">어드민 페이지</a>
+                        <a href="{{ url_for('adminUserManage', art_per_page=30) }}" class="board-sign">유저 관리 페이지</a>
                     </div>
                     
                     <div class="frame-contents">
                         {% if session.get('uid') %}
-                            
+                            {% if isSearch %}
+                                <p class="search_msg">"<b>{{ keyword }}</b>" 검색 결과</p>
+                            {% endif %}
+
+                            {% include 'frame_user_admin_table.html' %}
+
+                            <p class="msg" id="board-msg" align="center"></p>
+
+                            <div class='board-bottom'>
+                                <div class='paging'>
+                                    <ui id='paging-ui'>
+                                    </ui>
+                                </div>
+                                <form class="search" action="{{ url_for('adminUserManage') }}", method="GET">
+                                    <input type="hidden" name="board" value="{{ board }}">
+                                    <input type="hidden" name="art_per_page" value="{{ 30 }}">
+                                    <select class="search-option" name="option">
+                                        <option value="id">아이디</option>
+                                        <option value="nickname">닉네임</option>
+                                    </select>
+                                    <input class="search-input" type="search" name="keyword">
+                                    <button type="submit">검색</button>
+                                </form>
+                            </div>    
                         {% else %}
                         <div class="errMsg" align="center">
                             비회원은 불가능한 작업입니다.

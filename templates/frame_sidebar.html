@@ -5,7 +5,10 @@
         <div class="board_list_title">관리자</div>
         <ul class="board_list">
             <li class="board">
-                <a class="board-anchor" href="{{ url_for('adminBoard', art_per_page=30) }}">관리자 페이지</a>
+                <a class="board-anchor" href="{{ url_for('adminUserManage', art_per_page=30) }}">유저 관리</a>
+            </li>
+            <li class="board">
+                <a class="board-anchor" href="{{ url_for('adminBoard', art_per_page=30) }}">게시물 관리</a>
             </li>
         </ul>
         {% endif %}

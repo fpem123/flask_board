@@ -2,7 +2,7 @@ from flask import Flask
 from flask import session, request
 from flask import render_template, escape
 from bs4 import BeautifulSoup as bs
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import path
 
 import pathlib
@@ -173,6 +173,30 @@ def isCorrectNicknameForm(nickname) -> bool:
     return True
 
 
+def isBan(uid: str) -> bool:
+    """
+    ### 회원이 밴 당했는지 검사
+    """
+    try:
+        SELECT_USER_IS_BAN = """
+            SELECT  ban
+            FROM    user
+            WHERE   user_id = ?
+        """
+        is_ban = sqliteObj.selectQuery(SELECT_USER_IS_BAN, (uid, ))[0][0]
+        if is_ban is None:
+            return False
+
+        is_ban = datetime.strptime(is_ban, '%Y-%m-%d %H:%M:%S.%f')
+
+        if is_ban <= datetime.now():
+            return False
+        else:
+            return True
+    except:
+        return True
+
+
 def getNickname(uid: str) -> bool:
     """
     ### 회원의 닉네임을 가져옴
@@ -190,6 +214,24 @@ def getNickname(uid: str) -> bool:
         return nickname
     except Exception as e:
         return False
+
+
+def getBanTime(uid: str):
+    """
+    ### 회원이 밴 해제 시간 가져오기
+    """
+    try:
+        SELECT_USER_IS_BAN = """
+            SELECT  ban
+            FROM    user
+            WHERE   user_id = ?
+        """
+        is_ban = sqliteObj.selectQuery(SELECT_USER_IS_BAN, (uid, ))[0][0]
+        is_ban = datetime.strptime(is_ban, '%Y-%m-%d %H:%M:%S.%f')
+
+        return is_ban
+    except:
+        return None
 
 
 def makeReturnDict(result: bool, msg: str, data=None) -> dict:
@@ -304,6 +346,9 @@ def memberLoginRequest():
         return makeReturnDict(False, '로그인 된 유저는 할 수 없는 작업입니다.'), 400
     # 비밀번호가 일치하는지
     elif isCorrectPWD(request_uid, request_pwd):
+        if isBan(request_uid):
+            return makeReturnDict(False, str(getBanTime(request_uid)) + '까지 밴 된 유저입니다.'), 400
+
         # 세션에 유저 추가
         session['uid'] = request_uid
         session['nickname'] = getNickname(request_uid)
@@ -942,9 +987,11 @@ def getArticles():
         return makeReturnDict(False, '실패'), 400
 
     try:
+        if board == 'admin' and not isAdmin(session.get('uid')):
+            return makeReturnDict(False, '접근 권한이 없습니다.'), 400
+
         page_length = 10
         SELECT_ARTICLE, SELECT_BOARD_SIZE, data = boardQueryBuilder(board, option, keyword)
-        print(SELECT_BOARD_SIZE)
         # 게시판 전체 글 개수 가져오기
         a_cnt = sqliteObj.selectQuery(SELECT_BOARD_SIZE, data)[0][0]      # 전체 글의 개수
         p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
@@ -1065,7 +1112,6 @@ def acrticlePage():
         return render_template('article_page.html', board=board, board_name=boardObj.get_board_name(board),
         aid=aid, isSearch=isSearch, page=page, option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
     except Exception as e:
-        print(e)
         return errorPage(1)
 
 
@@ -1262,6 +1308,7 @@ def board():
 def adminBoard():
     try:
         page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
         option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
@@ -1276,40 +1323,214 @@ def adminBoard():
         isSearch = option != 'all'
 
         # 어드민 페이지, 모든 글을 볼 수 있음, 모든 글과 댓글에 삭제 권한이 있음, 수정권한은 X
-        return render_template('admin_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
-        option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
+        return render_template('admin_article_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
+        option=option, keyword=keyword, art_per_page=art_per_page, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 
 
 ##############
+## 유저 목록 쿼리 빌더
+##############
+def userQueryBuilder(option, keyword):
+    users_query = """
+        SELECT  user_id, nickname, is_admin, ban
+        FROM	(
+            SELECT	ROW_NUMBER() OVER(ORDER BY user_id ASC) as row_num, user_id, nickname, is_admin, ban
+            FROM	user
+            WHERE	1 = 1
+    """
+    count_query = """
+        SELECT	count(*)
+        FROM	user
+        WHERE	1 = 1
+    """
+    keyword = '%' + keyword + '%'
+    data = [] if option == 'all' else [keyword, ]
+
+    if option == "id":
+        append_query = " and user_id like ? ESCAPE '$'"
+        users_query += append_query
+        count_query += append_query
+    elif option == "nickname":
+        append_query = " and nickname like ? ESCAPE '$'"
+        users_query += append_query
+        count_query += append_query
+
+    users_query += """
+        )
+        WHERE row_num BETWEEN ? and ?
+        ORDER BY row_num ASC;
+    """
+
+    return  users_query, count_query, data
+
+
+##############
+## 유저 목록 가져오기 요청
+##############
+@app.route('/userinfos/get', methods=['GET'])
+def getUserinfos():
+    try:
+        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
+        keyword = request.args.get('keyword', type=str, default='')
+    except:
+        return makeReturnDict(False, '실패'), 400
+
+    try:
+        if not isAdmin(session.get('uid')):
+            return makeReturnDict(False, '접근 권한이 없습니다.'), 400
+
+        page_length = 10
+        SELECT_USERS, SELECT_USER_SIZE, data = userQueryBuilder(option, keyword)
+        # 유저 수 가져오기
+        a_cnt = sqliteObj.selectQuery(SELECT_USER_SIZE, data)[0][0]      # 유저의 수
+        p_cnt = math.ceil(a_cnt / art_per_page)     # 전체 페이지 개수
+        # 유저 가져오기
+        data.extend([1 + art_per_page * (page - 1), art_per_page * page])
+        user_infos = sqliteObj.selectQuery(SELECT_USERS, data)
+
+        if page < 1:
+            page = 1
+        elif page > p_cnt:
+            page = p_cnt
+
+        page -= 1
+        start = max((page // page_length) * page_length + 1, 1)         # 페이징 시작점
+        end = min((page // page_length + 1) * page_length, p_cnt) + 1   # 페이징 끝점
+
+        data = {"user_infos": user_infos, "start": start, "end": end, "last_page": p_cnt}
+
+        return makeReturnDict(True, '성공', data), 200
+
+    except Exception as e:
+        return makeReturnDict(False, '실패'), 500
+
+
+##############
+## 유저 닉네임 변경
+##############
+@app.route('/user/set_nickname', methods=["POST"])
+def setNicknameForAdmin():
+    try:
+        target_user = request.form['uid']           # 현재 페이지
+        new_nickname = request.form['new_nickname'] # 페이지 당 글 개수
+    except Exception as e:
+        return makeReturnDict(False, '잘못된 요청입니다.'), 400
+
+    try:
+        if not isLogin():
+            return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+        elif not isAdmin(session.get('uid')):
+            return makeReturnDict(False, '접근 권한이 없습니다.'), 400
+        elif isAdmin(target_user):
+            return makeReturnDict(False, '어드민은 닉네임은 바꿀 수 없습니다.'), 400
+
+        UPDATE_USER_NICKNAME = """
+            UPDATE  user
+            SET     nickname = ?
+            WHERE   user_id = ?;
+        """
+        sqliteObj.updateQuery(UPDATE_USER_NICKNAME, (new_nickname, target_user))
+
+        return makeReturnDict(True, '변경 성공'), 200
+    except Exception as e:
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
+
+
+##############
+## 유저 밴
+##############
+@app.route('/user/ban', methods=["POST"])
+def setBanUserForAdmin():
+    try:
+        target_user = request.form['uid']           # 현재 페이지
+        ban_option = int(request.form['ban-option'])     # 페이지 당 글 개수
+    except Exception as e:
+        return makeReturnDict(False, '잘못된 요청입니다.'), 400
+
+    try:
+        if not isLogin():
+            return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+        elif not isAdmin(session.get('uid')):
+            return makeReturnDict(False, '접근 권한이 없습니다.'), 400
+        elif isAdmin(target_user):
+            return makeReturnDict(False, '어드민인 밴이 불가능합니다.'), 400
+        elif isBan(target_user):
+            return makeReturnDict(False, '이미 밴을 당한 유저입니다.'), 400
+
+        end_of_ban = datetime.now() + timedelta(days=ban_option)
+
+        UPDATE_USER_BAN = """
+            UPDATE  user
+            SET     ban = ?
+            WHERE   user_id = ?;
+        """
+        sqliteObj.updateQuery(UPDATE_USER_BAN, (end_of_ban, target_user))
+
+        return makeReturnDict(True, '밴 성공'), 200
+    except Exception as e:
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
+
+
+##############
+## 유저 밴 해제
+##############
+@app.route('/user/unban', methods=["POST"])
+def setUnbanUserForAdmin():
+    try:
+        target_user = request.form['uid']           # 현재 페이지
+    except Exception as e:
+        return makeReturnDict(False, '잘못된 요청입니다.'), 400
+
+    try:
+        if not isLogin():
+            return makeReturnDict(False, '로그인이 필요한 작업입니다.'), 400
+        elif not isAdmin(session.get('uid')):
+            return makeReturnDict(False, '접근 권한이 없습니다.'), 400
+        elif isAdmin(target_user):
+            return makeReturnDict(False, '어드민은 밴이 불가능합니다.'), 400
+        elif not isBan(target_user):
+            return makeReturnDict(False, '밴을 당하지 않은 유저입니다.'), 400
+
+        UPDATE_USER_BAN = """
+            UPDATE  user
+            SET     ban = NULL
+            WHERE   user_id = ?;
+        """
+        sqliteObj.updateQuery(UPDATE_USER_BAN, (target_user, ))
+
+        return makeReturnDict(True, '밴 해제 성공'), 200
+    except Exception as e:
+        return makeReturnDict(False, '서버에서 에러가 발생했습니다.'), 500
+
+
+##############
 ## 어드민용 유저 관리 페이지
 ##############
-@app.route('/admin/user_management', methods=['POST'])
+@app.route('/admin/user_management', methods=['GET'])
 def adminUserManage():
     try:
-        request_uid = request.form['uid']
-
-        page = request.args.get('page', type=int, default=1)        # 현재 페이지
-        option = request.args.get('option', type=str, default='all')    # id or nickname
+        page = request.args.get('page', type=int, default=1)                    # 현재 페이지
+        art_per_page = request.args.get('art_per_page', type=int, default=30)   # 페이지 당 글 개수
+        option = request.args.get('option', type=str, default='all')
         keyword = request.args.get('keyword', type=str, default='')
     except Exception as e:
         return errorPage(2)
-    
+
     try:
         if not isLogin():
             return errorPage(4)
-        elif not isSessionUser(request_uid):
-            return errorPage(5)
-        elif not isExistUser(request_uid):
-            return errorPage(2)
-        elif not isAdmin(request_uid):
+        elif not isAdmin(session.get('uid')):
             return errorPage(msg="어드민 전용 페이지입니다.")
         
         isSearch = option != 'all'
 
-        return render_template('admin_page.html', board="admin", aid=False, isSearch=isSearch, page=page, 
-        option=option, keyword=keyword, boards=boardObj.get_board_dict()), 200
+        # 유저 관리 페이지
+        return render_template('admin_user_page.html', board="user_manage", aid=False, isSearch=isSearch, page=page, 
+        option=option, keyword=keyword, art_per_page=art_per_page, boards=boardObj.get_board_dict()), 200
     except Exception as e:
         return errorPage(1)
 

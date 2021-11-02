@@ -14,7 +14,7 @@
                 {% include 'frame_sidebar.html' %}
                 <div class="frame">
                     <div class="frame-sigh">
-                        <a class="board-sign">어드민 페이지</a>
+                        <a href="{{ url_for('adminBoard', art_per_page=30) }}" class="board-sign">게시물 관리 페이지</a>
                     </div>
                     
                     <div class="frame-contents">

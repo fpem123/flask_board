@@ -59,6 +59,29 @@
     width: 2em;
 }
 
+col.col-ban-btn {
+    width: 20%;
+}
+
+col.col-nickname-change-btn {
+    width: 30%;
+}
+
+col.col-state, col.col-user-grade {
+    width: 7.5%;
+}
+
+col.col-user-nickname {
+    width: 20%;
+}
+
+col.col-user-id {
+    width: 10%;
+}
+
+.admin-submit {
+    width: 4em;
+}
 
 /* 게시판 테이블 아랫부분 */
 .board-bottom {
@@ -77,10 +100,14 @@
 }
 
 /* 검색옵션 */
-.search-option {
+.search-option, .ban-option {
     height: 2.5em;
     width: 7em;
     text-align: center;
+}
+
+.ban-option {
+    width: 5em;
 }
 
 .search {
