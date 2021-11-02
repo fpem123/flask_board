@@ -190,6 +190,13 @@ def isBan(uid: str) -> bool:
         is_ban = datetime.strptime(is_ban, '%Y-%m-%d %H:%M:%S.%f')
 
         if is_ban <= datetime.now():
+            UPDATE_USER_BAN = """
+            UPDATE  user
+            SET     ban = NULL
+            WHERE   user_id = ?;
+            """
+            sqliteObj.updateQuery(UPDATE_USER_BAN, (uid, ))
+
             return False
         else:
             return True
@@ -229,7 +236,7 @@ def getBanTime(uid: str):
         is_ban = sqliteObj.selectQuery(SELECT_USER_IS_BAN, (uid, ))[0][0]
         is_ban = datetime.strptime(is_ban, '%Y-%m-%d %H:%M:%S.%f')
 
-        return is_ban
+        return str(is_ban)
     except:
         return None
 
@@ -347,7 +354,7 @@ def memberLoginRequest():
     # 비밀번호가 일치하는지
     elif isCorrectPWD(request_uid, request_pwd):
         if isBan(request_uid):
-            return makeReturnDict(False, str(getBanTime(request_uid)) + '까지 밴 된 유저입니다.'), 400
+            return makeReturnDict(False, getBanTime(request_uid) + '까지 밴 된 유저입니다.'), 400
 
         # 세션에 유저 추가
         session['uid'] = request_uid
@@ -644,7 +651,9 @@ def commentCreateCall():
     except Exception as e:
         return makeReturnDict(False, '잘못된 리퀘스트입니다.'), 400
     
-    if len(new_comment) == 0:
+    if isBan(session.get('uid')):
+        return makeReturnDict(False, getBanTime(session.get('uid')) + '까지 밴 당한 유저입니다.'), 400 
+    elif len(new_comment) == 0:
         return makeReturnDict(False, '댓글을 작성해 주세요.'), 400 
     elif len(new_comment) > 50:
         return makeReturnDict(False, '댓글은 50자 까지만 작성할 수 있습니다.'), 400 
@@ -819,7 +828,9 @@ def articleCreateCall():
     except Exception as e:
         return makeReturnDict(False, '잘못된 요청입니다.'), 400
 
-    if len(title) == 0:
+    if isBan(session.get('uid')):
+        return makeReturnDict(False, getBanTime(session.get('uid')) + '까지 밴 당한 유저입니다.'), 400 
+    elif len(title) == 0:
         return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
         return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
@@ -1163,7 +1174,9 @@ def acrticleUpdateCall():
     except:
         return makeReturnDict(False, '잘못된 요청입니다.'), 400
 
-    if len(title) == 0:
+    if isBan(session.get('uid')):
+        return makeReturnDict(False, getBanTime(session.get('uid')) + '까지 밴 당한 유저입니다.'), 400 
+    elif len(title) == 0:
         return makeReturnDict(False, '제목을 전달받지 못했습니다.'), 400
     elif len(content) == 0:
         return makeReturnDict(False, '내용을 전달받지 못했습니다.'), 400
