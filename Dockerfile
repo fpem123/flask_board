@@ -17,4 +17,4 @@ EXPOSE 80
 
 RUN python create_table.py
 
-CMD ["python", "server.py"]
+CMD ["python", "flask_app.py"]
