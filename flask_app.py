@@ -881,6 +881,7 @@ def articleCreateCall():
         article_id = sqliteObj.insertQuery(INSERT_ARTICLE, (session.get('uid'), board, title, content))
         session['last_article_write'] = datetime.now().timestamp()      # 글 작성 시간 업데이트
         
+	'''
         for img in img_soup:
             img_id = re.search("\d+", img.get('src')).group()
             UPDATE_IMAGE_ARTICLE_ID = """
@@ -889,6 +890,7 @@ def articleCreateCall():
                 WHERE   file_id = ?;
             """
             sqliteObj.updateQuery(UPDATE_IMAGE_ARTICLE_ID, (article_id, img_id))
+	'''
 
         return makeReturnDict(True, '성공', article_id), 200
     except Exception as e:
